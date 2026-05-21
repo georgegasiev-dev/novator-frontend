@@ -329,7 +329,7 @@ function dClass(d,isIncome){
 
 let curMonth='Май', uploadMonth='Май', serverFacts={}, monthsWithFact=new Set(['Май'])
 const grpState={} // gid -> collapsed
-GROUPS.forEach(g=>grpState[g.id]=false)
+GROUPS.forEach(g=>grpState[g.id]=true)
 
 function toggleGroup(gid){
   grpState[gid]=!grpState[gid]
