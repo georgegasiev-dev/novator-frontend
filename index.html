@@ -122,6 +122,21 @@ tr.hidden-row{display:none}
 .toast.show{opacity:1}
 .toast.ok{background:#f0a500;color:#000}
 .toast.err{background:#d95f5f;color:#fff}
+
+/* панель нераспознанных */
+.unk-panel{background:#1a1208;border:1px solid #3a2800;border-radius:8px;margin:12px 20px;padding:16px;display:none}
+.unk-panel.show{display:block}
+.unk-title{font-size:12px;font-weight:700;color:#f0a500;letter-spacing:.5px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.unk-title .cnt{background:#f0a500;color:#000;border-radius:3px;padding:1px 7px;font-size:10px}
+.unk-table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:12px}
+.unk-table th{padding:6px 10px;text-align:left;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#555;border-bottom:1px solid #2a2000}
+.unk-table td{padding:7px 10px;border-bottom:1px solid #1e1400;color:#999;vertical-align:middle}
+.unk-table td:first-child{color:#ccc;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cat-select{background:#111;border:1px solid #2a2a2a;border-radius:4px;color:#e0e0e0;font-size:11px;padding:4px 8px;cursor:pointer;width:100%}
+.cat-select:focus{outline:none;border-color:#f0a500}
+.unk-save{padding:8px 18px;border:none;border-radius:6px;background:#f0a500;color:#000;cursor:pointer;font-size:11px;font-weight:700}
+.unk-save:disabled{opacity:.5;cursor:default}
+.unk-dismiss{padding:8px 14px;border:1px solid #2a2a2a;border-radius:6px;background:transparent;color:#555;cursor:pointer;font-size:11px;margin-left:8px}
 </style>
 </head>
 <body>
@@ -522,7 +537,18 @@ async function handleFile(e){
   try{
     const r=await fetch(`${API}/api/upload`,{method:'POST',headers:{Authorization:AUTH},body:form})
     pb.style.width='90%'
-    if(r.ok){const res=await r.json();toast(`✓ ${res.processed} операций · ${uploadMonth}`,'ok');await fetchData()}
+    if(r.ok){
+      const res=await r.json()
+      toast(`✓ ${res.processed} операций · ${uploadMonth}${res.unknown?` · ${res.unknown} не распознано`:'`}`,'ok')
+      await fetchData()
+      if(res.unknown && res.unknown > 0){
+        // запрашиваем список нераспознанных
+        try{
+          const dr=await fetch(`${API}/api/data?month=${encodeURIComponent(uploadMonth)}`,{mode:'cors'})
+          if(dr.ok){const dd=await dr.json();if(dd.unknown&&dd.unknown.length)showUnknown(dd.unknown,uploadMonth)}
+        }catch(e){}
+      }
+    }
     else toast('Ошибка: '+r.status,'err')
   }catch(ex){toast('Нет соединения с сервером','err')}
   pb.style.width='100%';setTimeout(()=>{pw.classList.remove('show');pb.style.width='0';btn.disabled=false},500)
@@ -532,6 +558,78 @@ async function handleFile(e){
 function toast(msg,type){
   const t=document.getElementById('toast');t.textContent=msg;t.className=`toast ${type} show`
   setTimeout(()=>t.classList.remove('show'),4000)
+}
+
+
+const CATS = ['Лес','Перевозка леса','Смола','Плёнка','ГСМ','Расходники','Свет','Вывоз мусора','НДС','НДФЛ','Упаковка','Перевозчик','ЗП','Аренда','Адм.','Прочее']
+
+let unkData = []   // [{contractor, desc, amount, week}, ...]
+let unkMonth = ''
+
+function showUnknown(unknowns, month) {
+  unkData = unknowns
+  unkMonth = month
+  document.getElementById('unk-cnt').textContent = unknowns.length
+  const tbody = document.getElementById('unk-tbody')
+  tbody.innerHTML = unknowns.map((u, i) => `
+    <tr>
+      <td title="${u.c}">${u.c.slice(0,40)}${u.c.length>40?'…':''}</td>
+      <td style="color:#666;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${u.d}">${u.d.slice(0,50)}${u.d.length>50?'…':''}</td>
+      <td style="text-align:right;font-family:monospace;color:#f0a500;white-space:nowrap">${new Intl.NumberFormat('ru-RU').format(u.a)} ₽</td>
+      <td>
+        <select class="cat-select" id="cat-${i}">
+          ${CATS.map(c => `<option value="${c}"${c==='Прочее'?' selected':''}>${c}</option>`).join('')}
+        </select>
+      </td>
+    </tr>
+  `).join('')
+  document.getElementById('unk-panel').classList.add('show')
+  // скроллим к панели
+  document.getElementById('unk-panel').scrollIntoView({behavior:'smooth', block:'nearest'})
+}
+
+async function saveClassifications() {
+  const btn = document.getElementById('unk-save')
+  btn.disabled = true
+  btn.textContent = 'Сохраняю...'
+
+  const corrections = unkData.map((u, i) => ({
+    contractor: u.c,
+    cat: document.getElementById(`cat-${i}`).value,
+    week: u.week || -1,
+    amount: u.a,
+  })).filter(c => c.cat !== 'Прочее')  // Прочее = не трогаем
+
+  if (!corrections.length) {
+    toast('Нет изменений — все оставлены в «Прочее»', 'ok')
+    dismissUnk()
+    return
+  }
+
+  try {
+    const r = await fetch(`${API}/api/classify`, {
+      method: 'POST',
+      headers: { Authorization: AUTH, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ month: unkMonth, corrections })
+    })
+    if (r.ok) {
+      const res = await r.json()
+      toast(`✓ Классифицировано ${res.corrected} операций`, 'ok')
+      dismissUnk()
+      await fetchData()
+    } else {
+      toast('Ошибка сохранения: ' + r.status, 'err')
+    }
+  } catch(e) {
+    toast('Нет соединения с сервером', 'err')
+  }
+  btn.disabled = false
+  btn.textContent = 'Сохранить классификацию'
+}
+
+function dismissUnk() {
+  document.getElementById('unk-panel').classList.remove('show')
+  unkData = []
 }
 
 renderTabs();render();fetchData()
