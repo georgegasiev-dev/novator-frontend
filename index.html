@@ -367,22 +367,20 @@ function buildThead(){
   return h
 }
 
-function numCells(planArr,factArr,isIncome,isFury,bg,isLast,isFirst){
+function numCells(planArr,factArr,isIncome,isFury,bg){
+  const fmt=isFury?fF:fN
   let h=''
   planArr.forEach((p,wi)=>{
     const f=factArr?factArr[wi]:null
     const d=f!=null?f-p:null
-    const fmt=isFury?fF:fN
-    const br=wi===4?'sep-r2':wi===isLast?'sep-r1':'sep-r1'
+    const br=wi===4?'border-right:2px solid #252525':'border-right:1px solid #252525'
     h+=`<td class="v plan-c col-num" style="background:${bg};border-right:1px solid #1e1e1e">${fmt(p)}</td>`
     h+=`<td class="v ${fClass(p,f,isIncome)} col-num" style="background:${bg};border-right:1px solid #1e1e1e">${f==null?'—':fmt(f)}</td>`
-    h+=`<td class="v ${dClass(d,isIncome)} col-sep" style="background:${bg};${wi===4?'border-right:2px solid #252525':'border-right:1px solid #252525'}">${d==null?'—':(isFury?(d>=0?'+':'−')+Math.abs(d).toFixed(2):fD(d))}</td>`
+    h+=`<td class="v ${dClass(d,isIncome)} col-sep" style="background:${bg};${br}">${d==null?'—':(isFury?(d>=0?'+':'−')+Math.abs(d).toFixed(2):fD(d))}</td>`
   })
-  // итого
   const tP=planArr.reduce((s,v)=>s+(v||0),0)
   const tF=factArr?factArr.reduce((s,v)=>s+(v||0),0):null
   const tD=tF!=null?tF-tP:null
-  const fmt=isFury?fF:fN
   h+=`<td class="v plan-c col-num" style="background:${bg};border-left:2px solid #252525;border-right:1px solid #1e1e1e">${fmt(tP)}</td>`
   h+=`<td class="v ${fClass(tP,tF,isIncome)} col-num" style="background:${bg};border-right:1px solid #1e1e1e">${tF==null?'—':fmt(tF)}</td>`
   h+=`<td class="v ${dClass(tD,isIncome)} col-sep" style="background:${bg};border-right:1px solid #1e1e1e">${tF==null?'—':(isFury&&tD!=null?(tD>=0?'+':'−')+Math.abs(tD).toFixed(2):fD(tD))}</td>`
@@ -413,7 +411,7 @@ function buildTbody(){
           <span class="lbl-txt" style="font-weight:700;color:#ccc;letter-spacing:.3px">${grp.label}</span>
         </div>
       </td>`
-    html+=numCells(gPlan,gFact,false,false,bg,4,0)
+    html+=numCells(gPlan,gFact,false,false,bg)
     html+=`</tr>`
 
     // Дочерние строки
@@ -429,7 +427,7 @@ function buildTbody(){
             <span class="lbl-txt">${row.label}</span>
           </div>
         </td>`
-      html+=numCells(pArr,fArr,false,false,alt,4,0)
+      html+=numCells(pArr,fArr,false,false,alt)
       html+=`</tr>`
     })
     idx++
@@ -468,7 +466,7 @@ function buildTbody(){
           </span>
         </div>
       </td>`
-    html+=numCells(pArr,fArr,isIncome,isFury,bg,4,0)
+    html+=numCells(pArr,fArr,isIncome,isFury,bg)
     html+=`</tr>`
   })
 
@@ -539,7 +537,7 @@ async function handleFile(e){
     pb.style.width='90%'
     if(r.ok){
       const res=await r.json()
-      toast(`✓ ${res.processed} операций · ${uploadMonth}${res.unknown?` · ${res.unknown} не распознано`:'`}`,'ok')
+      toast(`✓ ${res.processed} операций · ${uploadMonth}` + (res.unknown ? ` · ${res.unknown} не распознано` : ''), 'ok')
       await fetchData()
       if(res.unknown && res.unknown > 0){
         // запрашиваем список нераспознанных
