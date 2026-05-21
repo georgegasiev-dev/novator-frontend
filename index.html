@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Новатор — Платёжный календарь 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0b0b0b;color:#e0e0e0;font-family:system-ui,-apple-system,sans-serif;min-height:100vh;display:flex;flex-direction:column}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:#111}
+::-webkit-scrollbar-thumb{background:#2a2a2a;border-radius:2px}
+
+/* header */
+.hdr{padding:14px 20px 12px;border-bottom:1px solid #222;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#0b0b0b;position:sticky;top:0;z-index:100}
+.brand{display:flex;align-items:center;gap:12px}
+.mark{width:34px;height:34px;background:#1a3a6b;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;flex-shrink:0}
+.brand-name{font-size:20px;font-weight:800}
+.brand-name span{color:#f0a500}
+.brand-sub{font-size:9px;letter-spacing:2px;color:#444;text-transform:uppercase;margin-bottom:3px}
+.hdr-right{display:flex;align-items:center;gap:14px}
+.status-dot{display:flex;align-items:center;gap:6px;font-size:11px;color:#555}
+.dot{width:7px;height:7px;border-radius:50%;background:#2a2a2a;flex-shrink:0}
+.dot.ok{background:#3db88a}
+.dot.err{background:#d95f5f}
+.dot.loading{background:#f0a500;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.upload-btn{padding:7px 14px;border:1px solid #2a2a2a;border-radius:6px;background:transparent;color:#666;cursor:pointer;font-size:11px;font-weight:600;letter-spacing:.5px;transition:all .15s}
+.upload-btn:hover,.upload-btn.active{border-color:#f0a500;color:#f0a500;background:rgba(240,165,0,.08)}
+.last-update{font-size:10px;color:#3a3a3a;text-align:right;line-height:1.7}
+.last-update span{color:#555}
+
+/* upload panel */
+.upload-panel{background:#111;border-bottom:1px solid #222;padding:12px 20px;display:none;align-items:center;gap:14px;flex-wrap:wrap}
+.upload-panel.show{display:flex}
+.month-btns{display:flex;gap:4px;flex-wrap:wrap}
+.mbtn{padding:4px 10px;border:1px solid #222;border-radius:4px;background:transparent;color:#444;cursor:pointer;font-size:11px;transition:all .15s}
+.mbtn.sel{border-color:#f0a500;color:#f0a500;background:rgba(240,165,0,.08)}
+.file-btn{padding:7px 16px;border:none;border-radius:6px;background:#f0a500;color:#000;cursor:pointer;font-size:11px;font-weight:700}
+.file-btn:disabled{opacity:.5;cursor:default}
+.prog-wrap{flex:1;min-width:100px;height:3px;background:#222;border-radius:2px;overflow:hidden;display:none}
+.prog-wrap.show{display:block}
+.prog{height:100%;background:#f0a500;width:0;transition:width .3s}
+.upload-hint{font-size:10px;color:#333}
+
+/* month tabs */
+.mtabs{display:flex;background:#0d0d0d;border-bottom:1px solid #222;overflow-x:auto;flex-shrink:0}
+.mtab{padding:10px 18px;border:none;border-bottom:2px solid transparent;background:transparent;color:#444;cursor:pointer;font-size:12px;font-weight:400;white-space:nowrap;flex-shrink:0;transition:all .15s}
+.mtab:hover{color:#888}
+.mtab.active{color:#f0a500;border-bottom-color:#f0a500;font-weight:700;background:#111}
+.mtab .fact-dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:#3db88a;margin-left:5px;vertical-align:middle}
+
+/* month bar */
+.mbar{padding:8px 16px;background:#111;border-bottom:1px solid #222;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.mbar-title{font-size:14px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.mbar-title .fact-tag{margin-left:10px;font-size:10px;color:#3db88a;font-weight:400;letter-spacing:1px}
+.mbar-right{font-size:10px;color:#3a3a3a}
+.mbar-right .pos{color:#d95f5f}
+.mbar-right .neg{color:#3db88a}
+
+/* table */
+.tbl-wrap{flex:1;overflow:auto}
+table{border-collapse:collapse;min-width:max-content;width:100%}
+.th-label{padding:10px 14px;text-align:left;font-size:11px;color:#f0a500;font-weight:700;border-right:2px solid #252525;border-bottom:1px solid #222;position:sticky;left:0;background:#0d0d0d;z-index:12;min-width:220px;letter-spacing:.5px;text-transform:uppercase}
+.th-week{padding:7px 6px;text-align:center;font-size:10px;font-weight:700;border-bottom:1px solid #1e1e1e;background:#0d0d0d}
+.th-week-n{color:#f0a500;font-size:11px}
+.th-week-d{color:#444;font-size:9px;margin-top:1px}
+.th-total{padding:7px 6px;text-align:center;font-size:10px;font-weight:700;border-left:2px solid #252525;border-bottom:1px solid #1e1e1e;background:#0d0d0d}
+.th-sub{padding:4px 5px;text-align:right;font-size:9px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;background:#0a0a0a;border-bottom:2px solid #252525;min-width:80px}
+.th-sub.plan{color:#444}
+.th-sub.fact{color:#888}
+.th-sub.diff{color:#555}
+
+.sep-row td{padding:3px 14px;font-size:9px;letter-spacing:2px;color:#252525;background:#0c0c0c;text-transform:uppercase;border-bottom:1px solid #1a1a1a}
+
+td.label{padding:5px 10px 5px 14px;font-size:11px;white-space:nowrap;border-right:2px solid #252525;border-bottom:1px solid #1a1a1a;position:sticky;left:0;z-index:1;min-width:220px}
+td.v{padding:5px 8px;text-align:right;font-size:11px;border-bottom:1px solid #1a1a1a;white-space:nowrap}
+td.v.plan{color:#4a4a4a}
+td.v.fact-val{color:#e0e0e0}
+td.v.fact-over{color:#f0a500}
+td.v.fact-under{color:#3db88a}
+td.v.fact-none{color:#2a2a2a;font-size:9px}
+td.v.diff-pos{color:#d95f5f}
+td.v.diff-neg{color:#3db88a}
+td.v.diff-zero{color:#3a3a3a}
+td.v.diff-none{color:#252525;font-size:9px}
+td.v.income-ok{color:#3db88a}
+td.v.income-bad{color:#f0a500}
+td.sep-r{border-right:2px solid #252525!important}
+td.sep-l{border-left:2px solid #252525!important}
+tr.total-row td{font-weight:700!important}
+tr.total-row td.label{color:#ccc!important;letter-spacing:.4px;text-transform:uppercase}
+tr.grand-row td{font-weight:700!important}
+tr.grand-row td.label{color:#3db88a!important;letter-spacing:.4px;text-transform:uppercase}
+tr.income-row td.label{color:#f0a500!important}
+tr.other-row td.label{color:#e0e0e0}
+
+/* footer */
+.footer{padding:7px 16px;background:#0d0d0d;border-top:1px solid #1e1e1e;display:flex;gap:20px;font-size:10px;color:#333;flex-shrink:0;flex-wrap:wrap}
+.footer .api-url{margin-left:auto;color:#444}
+.footer .api-url span{color:#3db88a}
+
+/* toast */
+.toast{position:fixed;bottom:16px;right:16px;padding:10px 16px;border-radius:6px;font-size:11px;font-weight:700;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999;max-width:340px}
+.toast.show{opacity:1}
+.toast.ok{background:#f0a500;color:#000}
+.toast.err{background:#d95f5f;color:#fff}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="hdr">
+  <div class="brand">
+    <div class="mark">НВТ</div>
+    <div>
+      <div class="brand-sub">Новатор · Производство</div>
+      <div class="brand-name">Платёжный <span>календарь</span> 2026</div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <div class="last-update" id="last-update"></div>
+    <div class="status-dot"><div class="dot loading" id="status-dot"></div><span id="status-txt">подключение...</span></div>
+    <button class="upload-btn" id="upload-toggle" onclick="toggleUpload()">↑ Загрузить выписку</button>
+  </div>
+</div>
+
+<!-- Upload panel -->
+<div class="upload-panel" id="upload-panel">
+  <div style="font-size:11px;color:#444">Месяц:</div>
+  <div class="month-btns" id="month-sel-btns"></div>
+  <input type="file" id="file-input" accept=".xlsx,.xls" style="display:none" onchange="handleFile(event)">
+  <button class="file-btn" id="file-btn" onclick="document.getElementById('file-input').click()">Выбрать файл</button>
+  <div class="prog-wrap" id="prog-wrap"><div class="prog" id="prog"></div></div>
+  <div class="upload-hint">Файл уйдёт на сервер и дашборд обновится</div>
+</div>
+
+<!-- Month tabs -->
+<div class="mtabs" id="mtabs"></div>
+
+<!-- Month bar -->
+<div class="mbar">
+  <div class="mbar-title" id="mbar-title">МАЙ 2026</div>
+  <div class="mbar-right">
+    Нед <span id="mbar-weeks"></span> &nbsp;·&nbsp;
+    <span class="pos">+перерасход</span> / <span class="neg">−экономия</span>
+  </div>
+</div>
+
+<!-- Table -->
+<div class="tbl-wrap"><table id="main-table"><tbody id="tbody"></tbody></table></div>
+
+<!-- Footer -->
+<div class="footer">
+  <span>± = факт − план</span>
+  <span><span style="color:#d95f5f">+</span> переплатили</span>
+  <span><span style="color:#3db88a">−</span> сэкономили</span>
+  <span class="api-url">Сервер: <span>zavod-production.up.railway.app</span></span>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'https://zavod-production.up.railway.app'
+const ADMIN = 'Basic ' + btoa('admin:novator2026')
+
+const MONTHS = ['Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь']
+const WEEK_META = {
+  'Май':     [{n:9,d:'27 апр — 3 мая'},{n:10,d:'4 — 10 мая'},{n:11,d:'11 — 17 мая'},{n:12,d:'18 — 24 мая'},{n:13,d:'25 — 31 мая'}],
+  'Июнь':    [{n:14,d:'1 — 7 июн'},{n:15,d:'8 — 14 июн'},{n:16,d:'15 — 21 июн'},{n:17,d:'22 — 28 июн'},{n:18,d:'29 июн — 5 июл'}],
+  'Июль':    [{n:18,d:'29 июн — 5 июл'},{n:19,d:'6 — 12 июл'},{n:20,d:'13 — 19 июл'},{n:21,d:'20 — 26 июл'},{n:22,d:'27 июл — 2 авг'}],
+  'Август':  [{n:22,d:'27 июл — 2 авг'},{n:23,d:'3 — 9 авг'},{n:24,d:'10 — 16 авг'},{n:25,d:'17 — 23 авг'},{n:26,d:'24 — 30 авг'}],
+  'Сентябрь':[{n:27,d:'31 авг — 6 сен'},{n:28,d:'7 — 13 сен'},{n:29,d:'14 — 20 сен'},{n:30,d:'21 — 27 сен'},{n:31,d:'28 сен — 4 окт'}],
+  'Октябрь': [{n:31,d:'28 сен — 4 окт'},{n:32,d:'5 — 11 окт'},{n:33,d:'12 — 18 окт'},{n:34,d:'19 — 25 окт'},{n:35,d:'26 окт — 1 ноя'}],
+  'Ноябрь':  [{n:35,d:'26 окт — 1 ноя'},{n:36,d:'2 — 8 ноя'},{n:37,d:'9 — 15 ноя'},{n:38,d:'16 — 22 ноя'},{n:39,d:'23 — 29 ноя'}],
+  'Декабрь': [{n:40,d:'30 ноя — 6 дек'},{n:41,d:'7 — 13 дек'},{n:42,d:'14 — 20 дек'},{n:43,d:'21 — 27 дек'},{n:44,d:'28 дек — 3 янв'}],
+}
+
+const ROWS = [
+  {id:'les',         label:'Лес',                       group:'prod'},
+  {id:'dolg_les',    label:'Долг по лесу',              group:'prod'},
+  {id:'perev_les',   label:'Перевозка леса',            group:'prod'},
+  {id:'smola',       label:'Смола',                     group:'prod'},
+  {id:'plenka',      label:'Плёнка',                    group:'prod'},
+  {id:'gsm',         label:'ГСМ',                       group:'prod'},
+  {id:'rashod',      label:'Расходники',                group:'prod'},
+  {id:'svet',        label:'Свет',                      group:'prod'},
+  {id:'vuvozmys',    label:'Вывоз мусора',              group:'prod'},
+  {id:'nds',         label:'НДС',                       group:'prod'},
+  {id:'ndfl',        label:'НДФЛ + Взносы',             group:'prod'},
+  {id:'upakovka',    label:'Упаковка',                  group:'prod'},
+  {id:'perevozch',   label:'Перевозчик',                group:'prod'},
+  {id:'zp_avans',    label:'ЗП — аванс официалка',      group:'zp'},
+  {id:'zp_ofic',     label:'ЗП — официалка',            group:'zp'},
+  {id:'zp_bolnich',  label:'ЗП — больничные/отпускные', group:'zp'},
+  {id:'zp_shpon',    label:'ЗП — шпон',                 group:'zp'},
+  {id:'zp_av_shpon', label:'ЗП — аванс шпон',           group:'zp'},
+  {id:'adm',         label:'Административные расходы',  group:'adm'},
+  {id:'_tbeznal',    label:'ИТОГО БЕЗНАЛ',              group:'total'},
+  {id:'arenda',      label:'Аренда у Сем-Прогресс',     group:'other'},
+  {id:'_tproch',     label:'ИТОГО ПРОЧИЕ РАСХОДЫ',      group:'total'},
+  {id:'_tall',       label:'ИТОГО ВСЕГО',               group:'grand'},
+  {id:'_fury',       label:'В фурах  (÷ 1 260 000)',    group:'info'},
+  {id:'prikhod',     label:'Планируем принять',         group:'income'},
+  {id:'proizvod',    label:'Планируем произвести, л.',  group:'income'},
+]
+
+const STD = {
+  les:[5000000,5000000,5000000,5000000,5000000],dolg_les:[0,0,0,0,0],
+  perev_les:[250000,250000,250000,250000,250000],smola:[1000000,2400000,1200000,1200000,1200000],
+  plenka:[0,2500000,0,0,3500000],gsm:[250000,250000,250000,250000,250000],
+  rashod:[200000,200000,200000,200000,200000],svet:[350000,350000,350000,500000,350000],
+  vuvozmys:[0,0,140000,0,140000],nds:[0,0,0,0,0],ndfl:[0,0,0,0,0],
+  upakovka:[0,0,0,0,0],perevozch:[0,0,0,0,0],
+  zp_avans:[0,5600000,1000000,0,1000000],zp_ofic:[0,0,0,0,0],
+  zp_bolnich:[100000,0,100000,0,100000],zp_shpon:[931500,1150000,0,0,0],
+  zp_av_shpon:[0,0,0,0,0],adm:[0,0,0,0,0],
+  arenda:[50000,50000,50000,50000,50000],
+  prikhod:[7224000,7224000,7224000,7224000,7224000],proizvod:[0,0,0,0,0],
+}
+
+const MAY_FACT = {
+  les:[4795518,4662613,6129447,3500000,null],dolg_les:[null,null,null,null,null],
+  perev_les:[500000,350000,400000,500000,null],smola:[1200000,2400000,1200000,0,null],
+  plenka:[1001650,2500000,600000,0,null],gsm:[250000,300000,100000,100000,null],
+  rashod:[527963,30000,802997,35421,null],svet:[1403000,0,910226,413989,null],
+  vuvozmys:[0,0,15383,0,null],nds:[null,null,null,null,null],ndfl:[null,null,null,null,null],
+  upakovka:[181009,0,233640,0,null],perevozch:[100802,0,201840,0,null],
+  zp_avans:[0,4833000,0,0,null],zp_ofic:[null,null,null,null,null],
+  zp_bolnich:[null,null,null,null,null],zp_shpon:[null,null,null,null,null],
+  zp_av_shpon:[null,null,null,null,null],adm:[20200,192500,294636,0,null],
+  arenda:[200000,0,100000,0,null],prikhod:[10915909,12438892,13019370,7095000,null],
+  proizvod:[null,null,null,null,null],
+}
+
+const CAT_TO_ID = {
+  'лес':'les','перевозка леса':'perev_les','смола':'smola','пленка':'plenka',
+  'плёнка':'plenka','гсм':'gsm','расходники':'rashod','свет':'svet',
+  'вывоз мусора':'vuvozmys','ндс':'nds','ндфл':'ndfl','упаковка':'upakovka',
+  'перевозчик':'perevozch','зп':'zp_avans','аренда':'arenda','адм':'adm','адм.':'adm',
+}
+
+// состояние
+let currentMonth = 'Май'
+let uploadMonth  = 'Май'
+let serverFacts  = {}  // {Май: {les:[...], ...}, ...}
+let monthsWithFact = new Set(['Май'])
+
+function computeTotals(plan, fact) {
+  const BEZNAL=['les','dolg_les','perev_les','smola','plenka','gsm','rashod','svet',
+                'vuvozmys','nds','ndfl','upakovka','perevozch',
+                'zp_avans','zp_ofic','zp_bolnich','zp_shpon','zp_av_shpon','adm']
+  const s5=(ids,src)=>Array(5).fill(0).map((_,i)=>ids.reduce((s,id)=>s+(src[id]?.[i]||0),0))
+  const bp=s5(BEZNAL,plan), bf=fact?s5(BEZNAL,fact):null
+  return {
+    _tbeznal:{plan:bp, fact:bf},
+    _tproch: {plan:plan.arenda, fact:fact?fact.arenda:null},
+    _tall:   {plan:bp.map((v,i)=>v+(plan.arenda[i]||0)), fact:bf?bf.map((v,i)=>v+(fact?.arenda?.[i]||0)):null},
+    _fury:   {plan:bp.map((v,i)=>(v+(plan.arenda[i]||0))/1260000), fact:null},
+  }
+}
+
+const N = n => n==null||n===0 ? '—' : new Intl.NumberFormat('ru-RU').format(Math.round(Math.abs(n)))
+const ND = d => { if(d==null)return'—'; if(d===0)return'0'; return(d>0?'+':'−')+N(Math.abs(d)) }
+const NF = n => (!n||n===0)?'—':n.toFixed(2)
+
+function factClass(p,f,isIncome) {
+  if(f==null) return 'fact-none'
+  if(isIncome) return f>=p?'income-ok':'income-bad'
+  if(p===0&&f===0) return 'fact-val'
+  if(p===0) return 'fact-over'
+  const r=f/p
+  return r>1.05?'fact-over':r<0.9?'fact-under':'fact-val'
+}
+function diffClass(d,isIncome) {
+  if(d==null) return 'diff-none'
+  if(d===0) return 'diff-zero'
+  if(isIncome) return d>0?'diff-neg':'diff-pos'
+  return d>0?'diff-pos':'diff-neg'
+}
+
+function buildTheadHTML(weeks) {
+  let h1 = `<tr style="position:sticky;top:0;z-index:10;background:#0d0d0d">
+    <th class="th-label" rowspan="2">Статья расходов</th>`
+  weeks.forEach((w,i) => {
+    const br = i===4 ? 'border-right:2px solid #252525' : 'border-right:1px solid #252525'
+    h1 += `<th colspan="3" class="th-week" style="${br}"><div class="th-week-n">Нед ${w.n}</div><div class="th-week-d">${w.d}</div></th>`
+  })
+  h1 += `<th colspan="3" class="th-total" style="border-left:2px solid #252525"><div style="color:#bbb;font-size:11px">Итого</div><div style="color:#444;font-size:9px;margin-top:1px">за месяц</div></th></tr>`
+
+  let h2 = `<tr style="position:sticky;top:38px;z-index:9;background:#0a0a0a">`
+  for(let wi=0;wi<6;wi++) {
+    const bl = wi===5 ? 'border-left:2px solid #252525;' : ''
+    const br3 = wi===4 ? 'border-right:2px solid #252525' : wi===5 ? 'border-right:1px solid #1e1e1e' : 'border-right:1px solid #252525'
+    h2 += `<th class="th-sub plan" style="${bl}border-right:1px solid #1e1e1e">план</th>`
+    h2 += `<th class="th-sub fact">факт</th>`
+    h2 += `<th class="th-sub diff" style="${br3}">±</th>`
+  }
+  h2 += `</tr>`
+  return h2
+}
+
+function renderTable() {
+  const weeks = WEEK_META[currentMonth]
+  const plan  = STD
+  const fact  = serverFacts[currentMonth] || (currentMonth==='Май'?MAY_FACT:null)
+  const hasFact = !!fact
+  const totals = computeTotals(plan, fact)
+
+  // thead
+  const thead = document.querySelector('thead') || document.createElement('thead')
+  thead.innerHTML = buildTheadHTML(weeks)
+  const tbl = document.getElementById('main-table')
+  if(!tbl.querySelector('thead')) tbl.insertBefore(thead, tbl.firstChild)
+
+  const tbody = document.getElementById('tbody')
+  let html = ''
+  let prevGroup = null
+
+  ROWS.forEach((row, idx) => {
+    const isTotal  = row.group==='total'
+    const isGrand  = row.group==='grand'
+    const isInfo   = row.group==='info'
+    const isIncome = row.group==='income'
+    const isFury   = row.id==='_fury'
+    const isBold   = isTotal||isGrand
+
+    // separator
+    if(prevGroup && row.group!==prevGroup && !['total','grand','info'].includes(row.group)) {
+      const sep = row.group==='zp'?'── Заработная плата':row.group==='adm'?'── Административные':row.group==='other'?'── Прочие расходы':row.group==='income'?'── Поступления / Производство':''
+      html += `<tr class="sep-row"><td colspan="22">${sep}</td></tr>`
+    }
+    prevGroup = row.group
+
+    // bg
+    const altBg = idx%2===0?'#161616':'#111'
+    let bg = altBg
+    if(isTotal) bg='#111928'
+    if(isGrand) bg='#0d1f0d'
+    if(isInfo)  bg='#121212'
+    if(isIncome)bg='#141414'
+    if(row.group==='other') bg='#181212'
+
+    // data
+    let planArr, factArr
+    if(row.id.startsWith('_')) {
+      const t = totals[row.id]
+      planArr = t?.plan||[0,0,0,0,0]
+      factArr = t?.fact||null
+    } else {
+      planArr = plan[row.id]||[0,0,0,0,0]
+      factArr = fact?(fact[row.id]||Array(5).fill(null)):null
+    }
+
+    const tP = planArr.reduce((s,v)=>s+(v||0),0)
+    const tF = factArr?factArr.reduce((s,v)=>s+(v||0),0):null
+    const tD = tF!=null?tF-tP:null
+
+    const lblColor = isGrand?'#3db88a':isTotal?'#ccc':isIncome?'#f0a500':'#e0e0e0'
+    const rowClass = isTotal?'total-row':isGrand?'grand-row':isIncome?'income-row':isInfo?'info-row':row.group==='other'?'other-row':''
+
+    html += `<tr class="${rowClass}" style="background:${bg}">`
+    html += `<td class="label sep-r" style="background:${bg};color:${lblColor};${isBold?'letter-spacing:.4px;text-transform:uppercase':''}">`
+    if(!isBold&&!isIncome) html += `<span style="width:3px;height:3px;border-radius:50%;background:#2e2e2e;display:inline-block;margin-right:8px"></span>`
+    html += `${row.label}</td>`
+
+    planArr.forEach((p,wi) => {
+      const f = factArr?factArr[wi]:null
+      const d = f!=null?f-p:null
+      const fmt = isFury?NF:N
+      const fmtD = isFury?(d!=null?(d>=0?'+':'')+d.toFixed(2):'—'):(ND(d))
+      const sepR = wi===4?'border-right:2px solid #252525':'border-right:1px solid #252525'
+      html += `<td class="v plan" style="border-right:1px solid #1e1e1e;background:${bg}">${fmt(p)}</td>`
+      html += `<td class="v ${factClass(p,f,isIncome)}" style="border-right:1px solid #1e1e1e;background:${bg}">${f==null?'—':fmt(f)}</td>`
+      html += `<td class="v ${diffClass(d,isIncome)}" style="${sepR};background:${bg}">${fmtD}</td>`
+    })
+
+    // итого
+    const fmt = isFury?NF:N
+    html += `<td class="v plan sep-l" style="border-right:1px solid #1e1e1e;background:${bg}">${fmt(tP)}</td>`
+    html += `<td class="v ${factClass(tP,tF,isIncome)}" style="border-right:1px solid #1e1e1e;background:${bg}">${tF==null?'—':fmt(tF)}</td>`
+    html += `<td class="v ${diffClass(tD,isIncome)}" style="border-right:1px solid #1e1e1e;background:${bg}">${tF==null?'—':(isFury?(tD>=0?'+':'')+tD.toFixed(2):ND(tD))}</td>`
+    html += `</tr>`
+  })
+
+  tbody.innerHTML = html
+
+  // mbar
+  document.getElementById('mbar-title').innerHTML =
+    `${currentMonth.toUpperCase()} 2026${hasFact?'<span class="fact-tag">● ФАКТ ЗАГРУЖЕН</span>':''}`
+  const wm = WEEK_META[currentMonth]
+  document.getElementById('mbar-weeks').textContent =
+    `${wm[0].n} — ${wm[4].n} · ${wm[0].d.split('—')[0].trim()} — ${wm[4].d.split('—')[1]?.trim()}`
+}
+
+function renderTabs() {
+  const tabs = document.getElementById('mtabs')
+  tabs.innerHTML = MONTHS.map(m => {
+    const hf = monthsWithFact.has(m)
+    return `<button class="mtab${m===currentMonth?' active':''}" onclick="switchMonth('${m}')">
+      ${m}${hf?'<span class="fact-dot"></span>':''}
+    </button>`
+  }).join('')
+
+  const sel = document.getElementById('month-sel-btns')
+  sel.innerHTML = MONTHS.map(m =>
+    `<button class="mbtn${m===uploadMonth?' sel':''}" onclick="setUploadMonth('${m}')">${m}</button>`
+  ).join('')
+}
+
+function switchMonth(m) {
+  currentMonth = m
+  renderTabs()
+  renderTable()
+}
+
+function setUploadMonth(m) {
+  uploadMonth = m
+  document.querySelectorAll('.mbtn').forEach(b => b.classList.toggle('sel', b.textContent.trim()===m))
+}
+
+function toggleUpload() {
+  const p = document.getElementById('upload-panel')
+  const b = document.getElementById('upload-toggle')
+  const show = !p.classList.contains('show')
+  p.classList.toggle('show', show)
+  b.classList.toggle('active', show)
+}
+
+// ── API ───────────────────────────────────────────────────────────────────────
+async function fetchData() {
+  try {
+    const r = await fetch(`${API}/api/data`, {mode:'cors'})
+    if(!r.ok) throw new Error(r.status)
+    const d = await r.json()
+    // парсим ops → factArr по row id
+    for(const [month, v] of Object.entries(d)) {
+      if(!v||!v.ops) continue
+      const fact = {}
+      for(const id of Object.keys(STD)) fact[id] = Array(5).fill(null)
+      for(const op of v.ops) {
+        if(!op.is_debit) continue
+        const rowId = CAT_TO_ID[op.cat?.toLowerCase()]
+        if(rowId && op.week>=0 && op.week<5) {
+          if(fact[rowId][op.week]==null) fact[rowId][op.week]=0
+          fact[rowId][op.week] += op.amount
+        }
+      }
+      serverFacts[month] = fact
+      monthsWithFact.add(month)
+    }
+    setStatus('ok')
+    // last update
+    try {
+      const sr = await fetch(`${API}/api/status`)
+      if(sr.ok) {
+        const sd = await sr.json()
+        if(sd.month) {
+          const dt = new Date(sd.created_at)
+          document.getElementById('last-update').innerHTML =
+            `Обновлено: <span>${sd.month} · ${dt.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</span>`
+        }
+      }
+    } catch(e){}
+  } catch(e) {
+    setStatus('err')
+  }
+  renderTabs()
+  renderTable()
+}
+
+function setStatus(s) {
+  const dot = document.getElementById('status-dot')
+  const txt = document.getElementById('status-txt')
+  dot.className = 'dot ' + (s==='ok'?'ok':'err')
+  txt.textContent = s==='ok'?'онлайн':'недоступен'
+}
+
+async function handleFile(e) {
+  const file = e.target.files[0]
+  if(!file) return
+  const btn = document.getElementById('file-btn')
+  const pw  = document.getElementById('prog-wrap')
+  const pb  = document.getElementById('prog')
+  btn.disabled=true; pw.classList.add('show'); pb.style.width='20%'
+
+  const form = new FormData()
+  form.append('file', file)
+  form.append('month', uploadMonth)
+  pb.style.width='40%'
+
+  try {
+    const r = await fetch(`${API}/api/upload`, {method:'POST', headers:{Authorization:ADMIN}, body:form})
+    pb.style.width='90%'
+    if(r.ok) {
+      const res = await r.json()
+      showToast(`✓ ${res.processed} операций загружено · ${uploadMonth}`, 'ok')
+      await fetchData()
+    } else {
+      showToast('Ошибка сервера: '+r.status, 'err')
+    }
+  } catch(ex) {
+    showToast('Не удалось подключиться к серверу', 'err')
+  }
+  pb.style.width='100%'
+  setTimeout(()=>{pw.classList.remove('show');pb.style.width='0';btn.disabled=false},500)
+  e.target.value=''
+}
+
+function showToast(msg, type='ok') {
+  const t = document.getElementById('toast')
+  t.textContent=msg; t.className=`toast ${type} show`
+  setTimeout(()=>t.classList.remove('show'),4000)
+}
+
+// ── init ──────────────────────────────────────────────────────────────────────
+renderTabs()
+renderTable()
+fetchData()
+</script>
+</body>
+</html>
