@@ -522,6 +522,8 @@ async function fetchData(){
   }catch(e){
     const dot=document.getElementById('sdot'),txt=document.getElementById('stxt')
     dot.className='dot err';txt.textContent='недоступен'
+    renderTabs();render()  // fallback — показываем локальные данные
+    return
   }
   renderTabs();render()
 }
@@ -630,7 +632,10 @@ function dismissUnk() {
   unkData = []
 }
 
-renderTabs();render();fetchData()
+renderTabs()
+// Показываем скелетон пока грузятся данные с сервера
+document.getElementById('tbody').innerHTML = '<tr><td colspan="22" style="text-align:center;padding:60px 20px;color:#333;font-size:11px;letter-spacing:1px;text-transform:uppercase">Загрузка данных...</td></tr>'
+fetchData()
 </script>
 </body>
 </html>
