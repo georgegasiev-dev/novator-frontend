@@ -90,6 +90,66 @@ tr.hidden-row{display:none}
 .footer .api{margin-left:auto;color:#444}.footer .api span{color:#3db88a}
 .toast{position:fixed;bottom:16px;right:16px;padding:10px 16px;border-radius:6px;font-size:11px;font-weight:700;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999;max-width:340px}
 .toast.show{opacity:1}.toast.ok{background:#f0a500;color:#000}.toast.err{background:#d95f5f;color:#fff}
+
+/* строка поступлений */
+tr.income-highlight td { border-top: 2px solid #1a3a1a !important; }
+tr.income-highlight td.lbl .lbl-txt { font-size: 12px !important; font-weight: 700 !important; letter-spacing: .3px; }
+tr.income-highlight td.lbl { background: #0c1f0c !important; }
+tr.income-highlight { background: #0c1f0c; }
+.fact-link { cursor: pointer; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 3px; }
+.fact-link:hover { opacity: .8; }
+
+/* модальное окно */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 500; display: none; align-items: flex-start; justify-content: center; padding: 40px 20px; overflow-y: auto; }
+.modal-overlay.show { display: flex; }
+.modal { background: #111; border: 1px solid #252525; border-radius: 10px; width: 100%; max-width: 800px; flex-shrink: 0; }
+.modal-hdr { padding: 16px 20px 14px; border-bottom: 1px solid #1e1e1e; display: flex; align-items: center; justify-content: space-between; }
+.modal-title { font-size: 14px; font-weight: 700; }
+.modal-title span { color: #3db88a; }
+.modal-close { width: 28px; height: 28px; border: 1px solid #2a2a2a; border-radius: 5px; background: transparent; color: #666; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+.modal-close:hover { border-color: #d95f5f; color: #d95f5f; }
+.modal-body { padding: 16px 20px; }
+.modal-summary { display: flex; gap: 20px; margin-bottom: 16px; flex-wrap: wrap; }
+.modal-kpi { background: #161616; border: 1px solid #1e1e1e; border-radius: 6px; padding: 10px 14px; }
+.modal-kpi-l { font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: #444; margin-bottom: 4px; }
+.modal-kpi-v { font-size: 16px; font-weight: 700; font-family: monospace; color: #3db88a; }
+.pay-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+.pay-tbl th { padding: 7px 10px; text-align: left; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: #444; border-bottom: 1px solid #1e1e1e; background: #0d0d0d; }
+.pay-tbl td { padding: 8px 10px; border-bottom: 1px solid #161616; color: #aaa; }
+.pay-tbl td:first-child { color: #ccc; }
+.pay-tbl td.amount { text-align: right; font-family: monospace; color: #3db88a; white-space: nowrap; }
+.pay-tbl td.date { color: #666; white-space: nowrap; }
+.pay-tbl tr:last-child td { border-bottom: none; }
+.pay-tbl tr:hover td { background: #141414; }
+.modal-empty { text-align: center; padding: 40px; color: #333; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; }
+
+/* блок Планируем принять */
+tr.income-row td { border-top: 2px solid #1a3a1a !important; }
+tr.income-row td.lbl .lbl-txt { color: #f0a500 !important; font-weight: 700; letter-spacing: .3px; }
+tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; padding: 0; }
+.fact-link { color: inherit; cursor: pointer; text-decoration: underline dotted; text-decoration-color: #3db88a; text-underline-offset: 3px; transition: color .15s; }
+.fact-link:hover { color: #3db88a; }
+
+/* модальное окно */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 500; display: none; align-items: flex-start; justify-content: center; padding: 40px 20px; overflow-y: auto; }
+.modal-overlay.show { display: flex; }
+.modal { background: #111; border: 1px solid #252525; border-radius: 10px; width: 100%; max-width: 900px; display: flex; flex-direction: column; max-height: 85vh; }
+.modal-hdr { padding: 16px 20px 14px; border-bottom: 1px solid #222; display: flex; align-items: flex-start; justify-content: space-between; flex-shrink: 0; }
+.modal-title { font-size: 14px; font-weight: 700; color: #e0e0e0; }
+.modal-sub { font-size: 11px; color: #555; margin-top: 3px; }
+.modal-close { width: 28px; height: 28px; border: 1px solid #2a2a2a; border-radius: 5px; background: transparent; color: #555; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: all .15s; }
+.modal-close:hover { border-color: #d95f5f; color: #d95f5f; }
+.modal-body { overflow-y: auto; flex: 1; }
+.modal-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+.modal-tbl th { padding: 8px 14px; text-align: left; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: #444; border-bottom: 1px solid #1e1e1e; background: #0d0d0d; position: sticky; top: 0; }
+.modal-tbl th:last-child { text-align: right; }
+.modal-tbl td { padding: 9px 14px; border-bottom: 1px solid #161616; color: #aaa; vertical-align: middle; }
+.modal-tbl td:last-child { text-align: right; font-family: monospace; color: #3db88a; font-size: 13px; font-weight: 600; }
+.modal-tbl td:first-child { color: #e0e0e0; }
+.modal-tbl tr:hover td { background: #141414; }
+.modal-footer { padding: 12px 20px; border-top: 1px solid #1e1e1e; display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: #444; flex-shrink: 0; }
+.modal-total { font-size: 14px; font-weight: 700; color: #3db88a; font-family: monospace; }
+.modal-empty { text-align: center; padding: 50px 20px; color: #333; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; }
 </style>
 </head>
 <body>
@@ -166,6 +226,60 @@ const WK_RANGES = {
   'Октябрь':[[9,28,10,4],[10,5,10,11],[10,12,10,18],[10,19,10,25],[10,26,11,1]],
   'Ноябрь':[[10,26,11,1],[11,2,11,8],[11,9,11,15],[11,16,11,22],[11,23,11,29]],
   'Декабрь':[[11,30,12,6],[12,7,12,13],[12,14,12,20],[12,21,12,27],[12,28,1,3]],
+}
+
+
+// Маппинг row.id → массив значений op.cat для фильтрации
+const ID2CATS = {
+  'les':         ['Лес','лес'],
+  'dolg_les':    ['Лес','лес'],
+  'perev_les':   ['Перевозка леса','перевозка леса'],
+  'smola':       ['Смола','смола'],
+  'plenka':      ['Плёнка','пленка','плёнка'],
+  'gsm':         ['ГСМ','гсм'],
+  'rashod':      ['Расходники','расходники'],
+  'svet':        ['Свет','свет'],
+  'vuvozmys':    ['Вывоз мусора','вывоз мусора'],
+  'nds':         ['НДС','ндс'],
+  'ndfl':        ['НДФЛ','ндфл','НДФЛ + Взносы'],
+  'upakovka':    ['Упаковка','упаковка'],
+  'perevozch':   ['Перевозчик','перевозчик'],
+  'zp_avans':    ['ЗП','зп','зп-1 - аванс - официалка','зп - аванс'],
+  'zp_ofic':     ['ЗП','зп','зп-1 - официалка'],
+  'zp_bolnich':  ['ЗП','зп','зп-1 - больничные'],
+  'zp_shpon':    ['ЗП','зп','шпон','зп - шпон'],
+  'zp_av_shpon': ['ЗП','зп','зп - аванс шпон'],
+  'adm':         ['Адм.','адм','адм.','административные'],
+  'arenda':      ['Аренда','аренда'],
+  'prikhod':     null,  // кредит — обрабатывается отдельно
+  'proizvod':    null,
+  // группы
+  'g_les':    ['Лес','лес','Перевозка леса','перевозка леса'],
+  'g_smola':  ['Смола','смола'],
+  'g_plenka': ['Плёнка','пленка','плёнка'],
+  'g_nalog':  ['НДС','ндс','НДФЛ','ндфл','НДФЛ + Взносы'],
+  'g_zp':     ['ЗП','зп'],
+  'g_svet':   ['Свет','свет'],
+  'g_gsm':    ['ГСМ','гсм'],
+  'g_other':  ['Расходники','расходники','Вывоз мусора','вывоз мусора','Упаковка','упаковка','Перевозчик','перевозчик','Адм.','адм','адм.','Аренда','аренда'],
+  // итого
+  '_tbeznal': null,  // все дебеты
+  '_tproch':  ['Аренда','аренда'],
+  '_tall':    null,  // все дебеты
+  '_fury':    null,  // не кликабельно
+}
+
+const ROW_LABELS = {
+  'les':'Лес','dolg_les':'Долг по лесу','perev_les':'Перевозка леса',
+  'smola':'Смола','plenka':'Плёнка','gsm':'ГСМ','rashod':'Расходники',
+  'svet':'Свет','vuvozmys':'Вывоз мусора','nds':'НДС','ndfl':'НДФЛ+Взносы',
+  'upakovka':'Упаковка','perevozch':'Перевозчик','zp_avans':'ЗП аванс',
+  'zp_ofic':'ЗП официалка','zp_bolnich':'ЗП больничные','zp_shpon':'ЗП шпон',
+  'zp_av_shpon':'ЗП аванс шпон','adm':'Адм. расходы','arenda':'Аренда',
+  'prikhod':'Поступления','_tbeznal':'Итого безнал','_tproch':'Прочие расходы',
+  '_tall':'ИТОГО ВСЕГО','g_les':'Лес (группа)','g_smola':'Смола (группа)',
+  'g_plenka':'Плёнка (группа)','g_nalog':'Налоги (группа)','g_zp':'Зарплата (группа)',
+  'g_svet':'Электричество (группа)','g_gsm':'ГСМ (группа)','g_other':'Прочее (группа)',
 }
 
 function getCurWeekIdx(month) {
@@ -303,46 +417,48 @@ const grpState = {}
 GROUPS.forEach(g => grpState[g.id] = true)  // по умолчанию свёрнуты
 const wkCollapsed = {0:false,1:false,2:false,3:false,4:false}
 
-// ── ячейки одной недели ────────────────────────────────────────────────────────
-function weekCells(p, f, isIncome, isFury, wbg, isLast) {
+// ── строка с 5 неделями + итого ──────────────────────────────────────────────
+function rowCells(planArr, factArr, isIncome, isFury, bg, cwi, rowId) {
   const fmt = isFury ? fF : fN
-  const d = f!=null ? f-p : null
-  const br = isLast ? 'border-right:2px solid #252525' : 'border-right:1px solid #252525'
-  const diff = d==null ? '—' : (isFury ? (d>=0?'+':'−')+Math.abs(d).toFixed(2) : fD(d))
-  return `<td class="v c-plan" style="background:${wbg};border-right:1px solid #1e1e1e">${fmt(p)}</td>` +
-         `<td class="v ${fClass(p,f,isIncome)}" style="background:${wbg};border-right:1px solid #1e1e1e">${f==null?'—':fmt(f)}</td>` +
-         `<td class="v ${dClass(d,isIncome)}" style="background:${wbg};${br}">${diff}</td>`
-}
-
-// ── строка с 5 неделями + итого ────────────────────────────────────────────────
-function rowCells(planArr, factArr, isIncome, isFury, bg, cwi) {
-  const fmt = isFury ? fF : fN
+  const clickable = rowId && rowId !== '_fury' && rowId !== 'proizvod'
   let h = ''
 
   for (let wi = 0; wi < 5; wi++) {
     const p = planArr[wi] || 0
     const f = factArr ? factArr[wi] : null
-    const d = f!=null ? f-p : null
-    const wbg = wi===cwi ? '#0f2818' : bg
-    const isLast = wi===4
+    const d = f != null ? f - p : null
+    const wbg = wi === cwi ? '#0f2818' : bg
+    const isLast = wi === 4
+    const br = isLast ? 'border-right:2px solid #252525' : 'border-right:1px solid #252525'
+    const diff = d == null ? '—' : (isFury ? (d>=0?'+':'−')+Math.abs(d).toFixed(2) : fD(d))
 
     if (wkCollapsed[wi]) {
       // свёрнутая неделя — только факт
-      const br = isLast ? 'border-right:2px solid #252525' : 'border-right:1px solid #252525'
-      h += `<td class="v ${fClass(p,f,isIncome)}" style="background:${wbg};${br}">${f==null?'—':fmt(f)}</td>`
+      const fVal = f == null ? '—' : (clickable
+        ? '<span class="fact-link" onclick="showOpsModal(\'' + rowId + '\',' + wi + ')">' + fmt(f) + '</span>'
+        : fmt(f))
+      h += '<td class="v ' + fClass(p,f,isIncome) + '" style="background:' + wbg + ';' + br + '">' + fVal + '</td>'
     } else {
-      h += weekCells(p, f, isIncome, isFury, wbg, isLast)
+      const fVal = f == null ? '—' : (clickable
+        ? '<span class="fact-link" onclick="showOpsModal(\'' + rowId + '\',' + wi + ')">' + fmt(f) + '</span>'
+        : fmt(f))
+      h += '<td class="v c-plan" style="background:' + wbg + ';border-right:1px solid #1e1e1e">' + fmt(p) + '</td>'
+      h += '<td class="v ' + fClass(p,f,isIncome) + '" style="background:' + wbg + ';border-right:1px solid #1e1e1e">' + fVal + '</td>'
+      h += '<td class="v ' + dClass(d,isIncome) + '" style="background:' + wbg + ';' + br + '">' + diff + '</td>'
     }
   }
 
-  // итого за месяц — всегда полное
-  const tP = planArr.reduce((s,v) => s+(v||0), 0)
-  const tF = factArr ? factArr.reduce((s,v) => s+(v||0), 0) : null
-  const tD = tF!=null ? tF-tP : null
-  const tDiff = tD==null ? '—' : (isFury ? (tD>=0?'+':'−')+Math.abs(tD).toFixed(2) : fD(tD))
-  h += `<td class="v c-plan" style="background:${bg};border-left:2px solid #252525;border-right:1px solid #1e1e1e">${fmt(tP)}</td>`
-  h += `<td class="v ${fClass(tP,tF,isIncome)}" style="background:${bg};border-right:1px solid #1e1e1e">${tF==null?'—':fmt(tF)}</td>`
-  h += `<td class="v ${dClass(tD,isIncome)}" style="background:${bg};border-right:1px solid #1e1e1e">${tDiff}</td>`
+  // итого за месяц
+  const tP = planArr.reduce((s,v) => s + (v||0), 0)
+  const tF = factArr ? factArr.reduce((s,v) => s + (v||0), 0) : null
+  const tD = tF != null ? tF - tP : null
+  const tDiff = tD == null ? '—' : (isFury ? (tD>=0?'+':'−')+Math.abs(tD).toFixed(2) : fD(tD))
+  const tFVal = tF == null ? '—' : (clickable
+    ? '<span class="fact-link" onclick="showOpsModal(\'' + rowId + '\',-1)">' + fmt(tF) + '</span>'
+    : fmt(tF))
+  h += '<td class="v c-plan" style="background:' + bg + ';border-left:2px solid #252525;border-right:1px solid #1e1e1e">' + fmt(tP) + '</td>'
+  h += '<td class="v ' + fClass(tP,tF,isIncome) + '" style="background:' + bg + ';border-right:1px solid #1e1e1e">' + tFVal + '</td>'
+  h += '<td class="v ' + dClass(tD,isIncome) + '" style="background:' + bg + ';border-right:1px solid #1e1e1e">' + tDiff + '</td>'
   return h
 }
 
@@ -416,7 +532,7 @@ function buildTbody() {
         <button class="grp-btn" onclick="toggleGroup('${gid}')">${collapsed?'+':'−'}</button>
         <span class="lbl-txt" style="font-weight:700;color:#ccc">${grp.label}</span>
       </div></td>`
-    html += rowCells(gPlan, gFact, false, false, bg, cwi)
+    html += rowCells(gPlan, gFact, false, false, bg, cwi, gid)
     html += '</tr>'
 
     // дочерние строки
@@ -434,6 +550,7 @@ function buildTbody() {
   })
 
   // Итоговые строки
+  let prevWasIncome = false
   ROWS.filter(r => r.grp===null).forEach(row => {
     const isTotal = row.rt==='total', isGrand = row.rt==='grand'
     const isIncome = row.rt==='income', isFury = row.id==='_fury'
@@ -453,18 +570,66 @@ function buildTbody() {
       fArr = fact ? (fact[row.id] || Array(5).fill(null)) : null
     }
 
+    // Разделитель перед первой income строкой
+    if (isIncome && !prevWasIncome) {
+      html += '<tr class="income-sep"><td colspan="22"></td></tr>'
+    }
+    prevWasIncome = isIncome
     const lblColor = isGrand?'#3db88a':isTotal?'#ccc':isIncome?'#f0a500':'#e0e0e0'
     const bold = isTotal||isGrand
-    html += `<tr class="${isTotal?'total-row':isGrand?'grand-row':isIncome?'income-row':''}">
-      <td class="lbl" style="background:${bg}">
+    const isPrikhod = row.id === 'prikhod'
+    const rowClass = isPrikhod ? 'income-row income-highlight' : (isTotal?'total-row':isGrand?'grand-row':isIncome?'income-row':'')
+    html += `<tr class="${rowClass}">
+      <td class="lbl" style="background:${isPrikhod?'#0c1f0c':bg}">
         <div class="inner" style="padding-left:14px">
           <span class="lbl-txt" style="color:${lblColor};${bold?'font-weight:700;letter-spacing:.4px;text-transform:uppercase':''}">${row.label}</span>
         </div></td>`
-    html += rowCells(pArr, fArr, isIncome, isFury, bg, cwi)
+    if (isPrikhod) {
+      html += rowCellsClickable(pArr, fArr, isIncome, isFury, isPrikhod?'#0c1f0c':bg, cwi)
+    } else {
+      html += rowCells(pArr, fArr, isIncome, isFury, bg, cwi, isIncome ? row.id : null)
+    }
     html += '</tr>'
   })
 
   return html
+}
+
+
+// ── rowCells с кликабельными ячейками факта ───────────────────────────────────
+function rowCellsClickable(planArr, factArr, isIncome, isFury, bg, cwi) {
+  const fmt = isFury ? fF : fN
+  let h = ''
+
+  for (let wi = 0; wi < 5; wi++) {
+    const p = planArr[wi] || 0
+    const f = factArr ? factArr[wi] : null
+    const d = f!=null ? f-p : null
+    const wbg = wi===cwi ? '#0f2818' : bg
+    const isLast = wi===4
+    const br = isLast ? 'border-right:2px solid #252525' : 'border-right:1px solid #252525'
+    const factVal = f==null ? '—' : `<span class="fact-link ${fClass(p,f,isIncome)}" onclick="openPayModal('${curMonth}',${wi})" title="Показать платежи">${fmt(f)}</span>`
+
+    if (wkCollapsed[wi]) {
+      h += `<td class="v" style="background:${wbg};${br}">${factVal}</td>`
+    } else {
+      const diff = d==null ? '—' : (isFury ? (d>=0?'+':'−')+Math.abs(d).toFixed(2) : fD(d))
+      h += `<td class="v c-plan" style="background:${wbg};border-right:1px solid #1e1e1e">${fmt(p)}</td>`
+      h += `<td class="v" style="background:${wbg};border-right:1px solid #1e1e1e">${factVal}</td>`
+      h += `<td class="v ${dClass(d,isIncome)}" style="background:${wbg};${br}">${diff}</td>`
+    }
+  }
+
+  // итого за месяц — кликабельное
+  const tP = planArr.reduce((s,v) => s+(v||0), 0)
+  const tF = factArr ? factArr.reduce((s,v) => s+(v||0), 0) : null
+  const tD = tF!=null ? tF-tP : null
+  const tDiff = tD==null ? '—' : (isFury ? (tD>=0?'+':'−')+Math.abs(tD).toFixed(2) : fD(tD))
+  const tFactVal = tF==null ? '—' : `<span class="fact-link ${fClass(tP,tF,isIncome)}" onclick="openPayModal('${curMonth}',-1)" title="Все поступления за месяц">${fmt(tF)}</span>`
+  h += `<td class="v c-plan" style="background:${bg};border-left:2px solid #252525;border-right:1px solid #1e1e1e">${fmt(tP)}</td>`
+  h += `<td class="v" style="background:${bg};border-right:1px solid #1e1e1e">${tFactVal}</td>`
+  h += `<td class="v ${dClass(tD,isIncome)}" style="background:${bg};border-right:1px solid #1e1e1e">${tDiff}</td>`
+  return h
 }
 
 // ── render ────────────────────────────────────────────────────────────────────
@@ -509,6 +674,7 @@ async function fetchData() {
     const d = await r.json()
     for (const [m, v] of Object.entries(d)) {
       if (!v||!v.ops) continue
+      serverOpsCache[m] = v.ops  // кэшируем все операции
       const fact = {}
       for (const id of Object.keys(STD)) fact[id] = Array(5).fill(null)
       for (const op of v.ops) {
@@ -520,6 +686,7 @@ async function fetchData() {
         }
       }
       serverFacts[m] = fact
+      serverCredits[m] = parseCreditsFromOps(v.ops, m)
       monthsWithFact.add(m)
     }
     document.getElementById('sdot').className = 'dot ok'
@@ -599,10 +766,187 @@ function showToast(msg, type) {
   setTimeout(()=>t.classList.remove('show'), 4000)
 }
 
+
+// ── Хранилище кредитных операций ──────────────────────────────────────────────
+// serverCredits[month] = [{date, contractor, desc, amount, week}, ...]
+let serverCredits = {}
+
+// Сохраняем при fetchData — добавим парсинг кредитов
+const _origFetch = fetchData
+// переопределим внизу
+
+// ── Открытие модального окна ──────────────────────────────────────────────────
+function openPayModal(month, weekIdx) {
+  const wm = WM[month]
+  const wLabel = weekIdx >= 0 ? 'Нед ' + wm[weekIdx].n + ' · ' + wm[weekIdx].d : 'Итого за месяц'
+  document.getElementById('modal-subtitle').textContent = month + ' 2026 — ' + wLabel
+
+  // Берём операции
+  const allOps = serverCredits[month] || []
+  const ops = weekIdx >= 0
+    ? allOps.filter(op => op.week === weekIdx)
+    : allOps  // итого = все
+
+  // Сортируем по дате
+  const sorted = [...ops].sort((a,b) => a.date.localeCompare(b.date))
+
+  // KPI
+  const total = ops.reduce((s, op) => s + op.amount, 0)
+  const count = ops.length
+  document.getElementById('modal-summary').innerHTML = `
+    <div class="modal-kpi"><div class="modal-kpi-l">Итого поступлений</div>
+      <div class="modal-kpi-v">${new Intl.NumberFormat('ru-RU').format(Math.round(total))} ₽</div></div>
+    <div class="modal-kpi"><div class="modal-kpi-l">Платежей</div>
+      <div class="modal-kpi-v">${count}</div></div>`
+
+  // Таблица
+  if (!sorted.length) {
+    document.getElementById('modal-tbody').innerHTML =
+      '<tr><td colspan="4" class="modal-empty">Данных нет — загрузите выписку</td></tr>'
+  } else {
+    document.getElementById('modal-tbody').innerHTML = sorted.map(op => `
+      <tr>
+        <td>${(op.contractor||'').slice(0,50)}</td>
+        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#666">${(op.desc||'').slice(0,60)}</td>
+        <td class="date">${op.date}</td>
+        <td class="amount">${new Intl.NumberFormat('ru-RU').format(Math.round(op.amount))} ₽</td>
+      </tr>`).join('')
+  }
+
+  document.getElementById('pay-modal').classList.add('show')
+  document.body.style.overflow = 'hidden'
+}
+
+function closePayModal() {
+  document.getElementById('pay-modal').classList.remove('show')
+  document.body.style.overflow = ''
+}
+function closeModal(e) {
+  if (e.target === document.getElementById('pay-modal')) closePayModal()
+}
+// ESC закрывает
+document.addEventListener('keydown', e => { if(e.key==='Escape') closePayModal() })
+
+// ── Парсинг кредитных операций из ответа API ──────────────────────────────────
+function parseCreditsFromOps(ops, month) {
+  return (ops || [])
+    .filter(op => !op.is_debit)
+    .map(op => ({
+      date: op.date || '—',
+      contractor: op.contractor || '',
+      desc: op.desc || '',
+      amount: op.amount || 0,
+      week: op.week != null ? op.week : -1,
+    }))
+}
+
+
+// ── модальное окно операций ───────────────────────────────────────────────────
+let serverOpsCache = {}
+
+function showOpsModal(rowId, weekIdx) {
+  if (rowId === '_fury' || rowId === 'proizvod') return
+  const month = curMonth
+  const allOps = serverOpsCache[month] || []
+  const wm = WM[month]
+  const weekLabel = weekIdx >= 0 && weekIdx < 5
+    ? 'Нед ' + wm[weekIdx].n + ' · ' + wm[weekIdx].d
+    : 'весь месяц'
+  const label = ROW_LABELS[rowId] || rowId
+  const isCredit = rowId === 'prikhod'
+  const isAllDebit = (rowId === '_tbeznal' || rowId === '_tall')
+  const catsFilter = ID2CATS[rowId]
+
+  // Фильтруем операции
+  let ops = allOps.filter(op => {
+    if (weekIdx >= 0 && op.week !== weekIdx) return false
+    if (isCredit) return !op.is_debit
+    if (!op.is_debit) return false  // только дебет для расходов
+    if (isAllDebit || catsFilter === null) return true
+    if (!catsFilter) return false
+    const cat = (op.cat||'').toLowerCase()
+    return catsFilter.some(c => c.toLowerCase() === cat || cat.includes(c.toLowerCase()))
+  })
+  ops = [...ops].sort((a,b) => (a.date||'').localeCompare(b.date||''))
+
+  document.getElementById('modal-title').textContent = label + ' — ' + month + ' 2026'
+  document.getElementById('modal-sub').textContent = weekLabel + (isCredit ? ' · поступления' : ' · расходы')
+
+  const tbody = document.getElementById('modal-tbody')
+  if (!ops.length) {
+    tbody.innerHTML = '<tr><td colspan="4"><div class="modal-empty">Нет данных<br>Загрузите выписку из банка</div></td></tr>'
+    document.getElementById('modal-count').textContent = ''
+    document.getElementById('modal-total').textContent = ''
+  } else {
+    const total = ops.reduce((s,op) => s + (op.amount||0), 0)
+    tbody.innerHTML = ops.map(op => `
+      <tr>
+        <td>${(op.contractor||'—').slice(0,50)}</td>
+        <td style="color:#555;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(op.desc||'').replace(/"/g,'&quot;')}">${(op.desc||'—').slice(0,55)}</td>
+        <td style="white-space:nowrap;color:#666">${op.date||'—'}</td>
+        <td>${new Intl.NumberFormat('ru-RU').format(Math.round(op.amount||0))} ₽</td>
+      </tr>`).join('')
+    document.getElementById('modal-count').textContent = ops.length + ' операций'
+    document.getElementById('modal-total').textContent = new Intl.NumberFormat('ru-RU').format(Math.round(total)) + ' ₽'
+  }
+  document.getElementById('income-modal').classList.add('show')
+  document.body.style.overflow = 'hidden'
+}
+
+function showIncome(rowId, weekIdx) { showOpsModal(rowId, weekIdx) }
+
+function hideModal() {
+  document.getElementById('income-modal').classList.remove('show')
+  document.body.style.overflow = ''
+}
+function closeModal(e) { if (e.target.id === 'income-modal') hideModal() }
+document.addEventListener('keydown', e => { if (e.key==='Escape') hideModal() })
+
 // ── init ──────────────────────────────────────────────────────────────────────
 renderTabs()
 document.getElementById('tbody').innerHTML = '<tr><td colspan="22" style="text-align:center;padding:60px 20px;color:#333;font-size:11px;letter-spacing:1px;text-transform:uppercase">Загрузка данных...</td></tr>'
 fetchData()
 </script>
+
+<!-- Модальное окно — детализация поступлений -->
+<div class="modal-overlay" id="pay-modal" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="modal-title" id="modal-title">Поступления — <span id="modal-subtitle"></span></div>
+      <button class="modal-close" onclick="closePayModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-summary" id="modal-summary"></div>
+      <table class="pay-tbl">
+        <thead><tr><th>Плательщик</th><th>Назначение</th><th>Дата</th><th style="text-align:right">Сумма</th></tr></thead>
+        <tbody id="modal-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+
+<!-- Модальное окно: входящие платежи -->
+<div class="modal-overlay" id="income-modal" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div>
+        <div class="modal-title" id="modal-title">Поступления</div>
+        <div class="modal-sub" id="modal-sub"></div>
+      </div>
+      <button class="modal-close" onclick="hideModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <table class="modal-tbl">
+        <thead><tr><th>Контрагент</th><th>Назначение платежа</th><th>Дата</th><th>Сумма</th></tr></thead>
+        <tbody id="modal-tbody"></tbody>
+      </table>
+    </div>
+    <div class="modal-footer">
+      <span id="modal-count"></span>
+      <div class="modal-total" id="modal-total"></div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
