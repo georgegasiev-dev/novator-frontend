@@ -844,6 +844,16 @@ function parseCreditsFromOps(ops, month) {
 // ── модальное окно операций ───────────────────────────────────────────────────
 let serverOpsCache = {}
 
+
+function esc(s) {
+  return String(s||'—')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;')
+}
+
 function showOpsModal(rowId, weekIdx) {
   if (rowId === '_fury' || rowId === 'proizvod') return
   const month = curMonth
@@ -876,10 +886,7 @@ function showOpsModal(rowId, weekIdx) {
   ops = [...ops].sort((a,b) => (a.date||'').localeCompare(b.date||''))
 
   document.getElementById('modal-title').textContent = label + ' — ' + month + ' 2026'
-  document.getElementById('modal-sub').textContent = weekLabel
-    + (isCredit ? ' · поступления' : ' · расходы')
-    + ' | в кэше: ' + allOps.length + ' оп.'
-    + ' | отфильтровано: ' + ops.length
+  document.getElementById('modal-sub').textContent = weekLabel + (isCredit ? ' · поступления' : ' · расходы')
 
   const tbody = document.getElementById('modal-tbody')
   if (!ops.length) {
@@ -892,13 +899,18 @@ function showOpsModal(rowId, weekIdx) {
     document.getElementById('modal-total').textContent = ''
   } else {
     const total = ops.reduce((s,op) => s + (op.amount||0), 0)
-    tbody.innerHTML = ops.map(op => `
-      <tr>
-        <td>${(op.contractor||'—').slice(0,50)}</td>
-        <td style="color:#555;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(op.desc||'').replace(/"/g,'&quot;')}">${(op.desc||'—').slice(0,55)}</td>
-        <td style="white-space:nowrap;color:#666">${op.date||'—'}</td>
-        <td>${new Intl.NumberFormat('ru-RU').format(Math.round(op.amount||0))} ₽</td>
-      </tr>`).join('')
+    tbody.innerHTML = ops.map(op => {
+      const c = esc(op.contractor).slice(0,60)
+      const d = esc(op.desc).slice(0,70)
+      const dt = esc(op.date)
+      const amt = new Intl.NumberFormat('ru-RU').format(Math.round(op.amount||0)) + ' ₽'
+      return '<tr>'
+        + '<td style="color:#e0e0e0;padding:9px 14px;border-bottom:1px solid #161616">' + c + '</td>'
+        + '<td style="color:#555;padding:9px 14px;border-bottom:1px solid #161616;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + d + '</td>'
+        + '<td style="color:#666;padding:9px 14px;border-bottom:1px solid #161616;white-space:nowrap">' + dt + '</td>'
+        + '<td style="color:#3db88a;padding:9px 14px;border-bottom:1px solid #161616;text-align:right;font-family:monospace;font-size:13px;font-weight:600">' + amt + '</td>'
+        + '</tr>'
+    }).join('')
     document.getElementById('modal-count').textContent = ops.length + ' операций'
     document.getElementById('modal-total').textContent = new Intl.NumberFormat('ru-RU').format(Math.round(total)) + ' ₽'
   }
