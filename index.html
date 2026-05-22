@@ -848,6 +848,12 @@ function showOpsModal(rowId, weekIdx) {
   if (rowId === '_fury' || rowId === 'proizvod') return
   const month = curMonth
   const allOps = serverOpsCache[month] || []
+  console.log('[Modal] month:', month, 'ops count:', allOps.length, 'rowId:', rowId, 'weekIdx:', weekIdx)
+  if (allOps.length > 0) {
+    const cats = [...new Set(allOps.map(o=>o.cat))].slice(0,10)
+    console.log('[Modal] sample cats:', cats)
+    console.log('[Modal] sample op:', allOps[0])
+  }
   const wm = WM[month]
   const weekLabel = weekIdx >= 0 && weekIdx < 5
     ? 'Нед ' + wm[weekIdx].n + ' · ' + wm[weekIdx].d
@@ -870,11 +876,18 @@ function showOpsModal(rowId, weekIdx) {
   ops = [...ops].sort((a,b) => (a.date||'').localeCompare(b.date||''))
 
   document.getElementById('modal-title').textContent = label + ' — ' + month + ' 2026'
-  document.getElementById('modal-sub').textContent = weekLabel + (isCredit ? ' · поступления' : ' · расходы')
+  document.getElementById('modal-sub').textContent = weekLabel
+    + (isCredit ? ' · поступления' : ' · расходы')
+    + ' | в кэше: ' + allOps.length + ' оп.'
+    + ' | отфильтровано: ' + ops.length
 
   const tbody = document.getElementById('modal-tbody')
   if (!ops.length) {
-    tbody.innerHTML = '<tr><td colspan="4"><div class="modal-empty">Нет данных<br>Загрузите выписку из банка</div></td></tr>'
+    const hasCache = serverOpsCache[month] && serverOpsCache[month].length > 0
+    const emptyMsg = hasCache
+      ? 'Операции по этой категории не найдены'
+      : 'Для просмотра детализации загрузите<br>банковскую выписку через кнопку<br>«↑ Загрузить выписку»'
+    tbody.innerHTML = '<tr><td colspan="4"><div class="modal-empty">' + emptyMsg + '</div></td></tr>'
     document.getElementById('modal-count').textContent = ''
     document.getElementById('modal-total').textContent = ''
   } else {
