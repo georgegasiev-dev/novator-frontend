@@ -280,6 +280,7 @@ const ID2CATS = {
   'zp_av_shpon': ['ЗП','зп','зп - аванс шпон'],
   'adm':         ['Адм.','адм','адм.','административные'],
   'arenda':      ['Аренда','аренда'],
+  'prochie':     ['Прочие нераспознанные','прочие нераспознанные','Прочее','прочее'],
   'prikhod':     null,  // кредит — обрабатывается отдельно
   'proizvod':    null,
   // группы
@@ -290,7 +291,7 @@ const ID2CATS = {
   'g_zp':     ['ЗП','зп'],
   'g_svet':   ['Свет','свет'],
   'g_gsm':    ['ГСМ','гсм'],
-  'g_other':  ['Расходники','расходники','Вывоз мусора','вывоз мусора','Упаковка','упаковка','Перевозчик','перевозчик','Адм.','адм','адм.','Аренда','аренда'],
+  'g_other':  ['Расходники','расходники','Вывоз мусора','вывоз мусора','Упаковка','упаковка','Перевозчик','перевозчик','Адм.','адм','адм.','Аренда','аренда','Прочие нераспознанные','прочие нераспознанные','Прочее','прочее'],
   // итого
   '_tbeznal': null,  // все дебеты
   '_tproch':  ['Аренда','аренда'],
@@ -305,6 +306,7 @@ const ROW_LABELS = {
   'upakovka':'Упаковка','perevozch':'Перевозчик','zp_avans':'ЗП аванс',
   'zp_ofic':'ЗП официалка','zp_bolnich':'ЗП больничные','zp_shpon':'ЗП шпон',
   'zp_av_shpon':'ЗП аванс шпон','adm':'Адм. расходы','arenda':'Аренда',
+  'prochie':'Прочие нераспознанные',
   'prikhod':'Поступления','_tbeznal':'Итого безнал','_tproch':'Прочие расходы',
   '_tall':'ИТОГО ВСЕГО','g_les':'Лес (группа)','g_smola':'Смола (группа)',
   'g_plenka':'Плёнка (группа)','g_nalog':'Налоги (группа)','g_zp':'Зарплата (группа)',
@@ -644,7 +646,7 @@ function rowCellsClickable(planArr, factArr, isIncome, isFury, bg, cwi) {
     const wbg = wi===cwi ? '#0f2818' : bg
     const isLast = wi===4
     const br = isLast ? 'border-right:2px solid #252525' : 'border-right:1px solid #252525'
-    const factVal = f==null ? '—' : `<span class="fact-link ${fClass(p,f,isIncome)}" onclick="openPayModal('${curMonth}',${wi})" title="Показать платежи">${fmt(f)}</span>`
+    const factVal = f==null ? '—' : `<span class="fact-link ${fClass(p,f,isIncome)}" onclick="showOpsModal('prikhod',${wi})">${fmt(f)}</span>`
 
     if (wkCollapsed[wi]) {
       h += `<td class="v" style="background:${wbg};${br}">${factVal}</td>`
@@ -661,7 +663,7 @@ function rowCellsClickable(planArr, factArr, isIncome, isFury, bg, cwi) {
   const tF = factArr ? factArr.reduce((s,v) => s+(v||0), 0) : null
   const tD = tF!=null ? tF-tP : null
   const tDiff = tD==null ? '—' : (isFury ? (tD>=0?'+':'−')+Math.abs(tD).toFixed(2) : fD(tD))
-  const tFactVal = tF==null ? '—' : `<span class="fact-link ${fClass(tP,tF,isIncome)}" onclick="openPayModal('${curMonth}',-1)" title="Все поступления за месяц">${fmt(tF)}</span>`
+  const tFactVal = tF==null ? '—' : `<span class="fact-link ${fClass(tP,tF,isIncome)}" onclick="showOpsModal('prikhod',-1)">${fmt(tF)}</span>`
   h += `<td class="v c-plan" style="background:${bg};border-left:2px solid #252525;border-right:1px solid #1e1e1e">${fmt(tP)}</td>`
   h += `<td class="v" style="background:${bg};border-right:1px solid #1e1e1e">${tFactVal}</td>`
   h += `<td class="v ${dClass(tD,isIncome)}" style="background:${bg};border-right:1px solid #1e1e1e">${tDiff}</td>`
