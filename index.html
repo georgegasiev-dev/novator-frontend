@@ -171,6 +171,16 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
 
 .unk-progress{font-size:11px;color:#555}
 .unk-progress span{color:#3db88a;font-weight:600}
+
+/* категория в модальном окне */
+.modal-cat-sel{background:#161616;border:1px solid #2a2a2a;border-radius:4px;
+  color:#aaa;font-size:11px;padding:4px 7px;cursor:pointer;width:100%;min-width:130px;
+  transition:all .15s}
+.modal-cat-sel:focus{outline:none;border-color:#f0a500}
+.modal-cat-sel.changed{border-color:#3db88a;color:#3db88a;background:#0d1a0d}
+.modal-cat-sel.saving{border-color:#f0a500;color:#f0a500}
+.modal-cat-saved{font-size:10px;color:#3db88a;margin-top:2px;display:none}
+.modal-cat-saved.show{display:block}
 </style>
 </head>
 <body>
@@ -842,6 +852,7 @@ function showOpsModal(rowId, weekIdx) {
   })
   ops = [...ops].sort((a,b) => (a.date||'').localeCompare(b.date||''))
 
+  currentModalMonth = month
   document.getElementById('modal-title').textContent = label + ' — ' + month + ' 2026'
   document.getElementById('modal-sub').textContent = weekLabel + (isCredit ? ' · поступления' : ' · расходы')
 
@@ -856,15 +867,24 @@ function showOpsModal(rowId, weekIdx) {
     document.getElementById('modal-total').textContent = ''
   } else {
     const total = ops.reduce((s,op) => s + (op.amount||0), 0)
-    tbody.innerHTML = ops.map(op => {
+    // Сохраняем список операций для смены категории
+    currentModalOps = ops
+    tbody.innerHTML = ops.map((op, oi) => {
       const c = esc(op.contractor).slice(0,60)
       const d = esc(op.desc).slice(0,70)
       const dt = esc(op.date)
       const amt = new Intl.NumberFormat('ru-RU').format(Math.round(op.amount||0)) + ' ₽'
-      return '<tr>'
-        + '<td style="color:#e0e0e0;padding:9px 14px;border-bottom:1px solid #161616">' + c + '</td>'
+      const catOpts = CAT_DISPLAY_LIST.map(cat =>
+        '<option value="' + cat + '"' + (cat === op.cat ? ' selected' : '') + '>' + cat + '</option>'
+      ).join('')
+      return '<tr id="mop-row-' + oi + '">'
+        + '<td style="color:#e0e0e0;padding:9px 14px;border-bottom:1px solid #161616;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + c + '</td>'
         + '<td style="color:#555;padding:9px 14px;border-bottom:1px solid #161616;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + d + '</td>'
         + '<td style="color:#666;padding:9px 14px;border-bottom:1px solid #161616;white-space:nowrap">' + dt + '</td>'
+        + '<td style="padding:6px 10px;border-bottom:1px solid #161616">'
+        +   '<select class="modal-cat-sel" id="mop-cat-' + oi + '" onchange="onModalCatChange(' + oi + ')">' + catOpts + '</select>'
+        +   '<div class="modal-cat-saved" id="mop-saved-' + oi + '">✓ сохранено</div>'
+        + '</td>'
         + '<td style="color:#3db88a;padding:9px 14px;border-bottom:1px solid #161616;text-align:right;font-family:monospace;font-size:13px;font-weight:600">' + amt + '</td>'
         + '</tr>'
     }).join('')
@@ -886,6 +906,54 @@ document.addEventListener('keydown', e => { if (e.key==='Escape') hideModal() })
 
 
 
+
+const CAT_DISPLAY_LIST = [
+  'Лес','Перевозка леса','Смола','Плёнка','ГСМ','Расходники','Свет',
+  'Вывоз мусора','НДС','НДФЛ','Упаковка','Перевозчик',
+  'ЗП','Аренда','Адм.','Прочие нераспознанные'
+]
+
+let currentModalOps = []
+let currentModalMonth = ''
+
+async function onModalCatChange(oi) {
+  const sel = document.getElementById('mop-cat-' + oi)
+  const saved = document.getElementById('mop-saved-' + oi)
+  if (!sel) return
+  const newCat = sel.value
+  sel.classList.add('saving')
+  sel.disabled = true
+
+  const op = currentModalOps[oi]
+  const contractor = op ? op.contractor : ''
+
+  try {
+    const r = await fetch(API + '/api/reclassify', {
+      method: 'POST',
+      headers: { Authorization: AUTH, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        month: currentModalMonth,
+        contractor: contractor,
+        new_cat: newCat
+      })
+    })
+    if (r.ok) {
+      sel.classList.remove('saving')
+      sel.classList.add('changed')
+      if (saved) { saved.classList.add('show'); setTimeout(() => saved.classList.remove('show'), 2000) }
+      // Обновляем локальный кэш
+      if (op) op.cat = newCat
+      await fetchData()
+    } else {
+      showToast('Ошибка: ' + r.status, 'err')
+      sel.classList.remove('saving')
+    }
+  } catch(e) {
+    showToast('Нет соединения', 'err')
+    sel.classList.remove('saving')
+  }
+  sel.disabled = false
+}
 // ── init ──────────────────────────────────────────────────────────────────────
 renderTabs()
 document.getElementById('tbody').innerHTML = '<tr><td colspan="22" style="text-align:center;padding:60px 20px;color:#333;font-size:11px;letter-spacing:1px;text-transform:uppercase">Загрузка данных...</td></tr>'
@@ -909,6 +977,7 @@ fetchData()
             <th style="min-width:180px">Контрагент</th>
             <th style="min-width:200px">Назначение платежа</th>
             <th style="min-width:90px">Дата</th>
+            <th style="min-width:140px">Категория</th>
             <th style="min-width:120px;text-align:right">Сумма</th>
           </tr>
         </thead>
