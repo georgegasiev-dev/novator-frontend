@@ -403,7 +403,7 @@ const CAT2ID = {
   'прочие нераспознанные':'prochie',
   'прочие':'prochie',
 }
-const CATS = ['Лес','Перевозка леса','Смола','Плёнка','ГСМ','Расходники','Свет','Вывоз мусора','НДС','НДФЛ','Упаковка','Перевозчик','ЗП','Аренда','Адм.','Прочее']
+const CATS = ['Лес','Перевозка леса','Смола','Плёнка','ГСМ','Расходники','Свет','Вывоз мусора','НДС','НДФЛ','Упаковка','Перевозчик','ЗП','Аренда','Адм.','Прочие нераспознанные','Поступления от клиентов']
 
 const BEZNAL = ['les','dolg_les','perev_les','smola','plenka','gsm','rashod','svet','vuvozmys','nds','ndfl','upakovka','perevozch','zp_avans','zp_ofic','zp_bolnich','zp_shpon','zp_av_shpon','adm']
 
@@ -832,10 +832,7 @@ function showOpsModal(rowId, weekIdx) {
   if (rowId === '_fury' || rowId === 'proizvod') return
   const month = curMonth
   const allOps = serverOpsCache[month] || []
-  console.log('[Modal] month:', month, 'ops total:', allOps.length,
-    'debit:', allOps.filter(o=>o.is_debit).length,
-    'credit:', allOps.filter(o=>!o.is_debit).length,
-    'rowId:', rowId, 'weekIdx:', weekIdx)
+
   if (allOps.length > 0) {
     const cats = [...new Set(allOps.map(o=>o.cat))].slice(0,10)
     console.log('[Modal] sample cats:', cats)
@@ -851,12 +848,6 @@ function showOpsModal(rowId, weekIdx) {
   const catsFilter = ID2CATS[rowId]
 
   // Фильтруем операции
-  if (isCredit) {
-    const credOps = allOps.filter(op => !op.is_debit && (weekIdx < 0 || op.week === weekIdx))
-    console.log('[prikhod] allOps total:', allOps.length,
-      'credit ops:', credOps.length,
-      'sample is_debit values:', allOps.slice(0,5).map(o=>o.is_debit))
-  }
   let ops = allOps.filter(op => {
     if (weekIdx >= 0 && op.week !== weekIdx) return false
     if (isCredit) return !op.is_debit
@@ -926,7 +917,7 @@ document.addEventListener('keydown', e => { if (e.key==='Escape') hideModal() })
 const CAT_DISPLAY_LIST = [
   'Лес','Перевозка леса','Смола','Плёнка','ГСМ','Расходники','Свет',
   'Вывоз мусора','НДС','НДФЛ','Упаковка','Перевозчик',
-  'ЗП','Аренда','Адм.','Прочие нераспознанные'
+  'ЗП','Аренда','Адм.','Прочие нераспознанные','Поступления от клиентов'
 ]
 
 let currentModalOps = []
