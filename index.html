@@ -829,7 +829,10 @@ function showOpsModal(rowId, weekIdx) {
   if (rowId === '_fury' || rowId === 'proizvod') return
   const month = curMonth
   const allOps = serverOpsCache[month] || []
-  console.log('[Modal] month:', month, 'ops count:', allOps.length, 'rowId:', rowId, 'weekIdx:', weekIdx)
+  console.log('[Modal] month:', month, 'ops total:', allOps.length,
+    'debit:', allOps.filter(o=>o.is_debit).length,
+    'credit:', allOps.filter(o=>!o.is_debit).length,
+    'rowId:', rowId, 'weekIdx:', weekIdx)
   if (allOps.length > 0) {
     const cats = [...new Set(allOps.map(o=>o.cat))].slice(0,10)
     console.log('[Modal] sample cats:', cats)
@@ -845,6 +848,12 @@ function showOpsModal(rowId, weekIdx) {
   const catsFilter = ID2CATS[rowId]
 
   // Фильтруем операции
+  if (isCredit) {
+    const credOps = allOps.filter(op => !op.is_debit && (weekIdx < 0 || op.week === weekIdx))
+    console.log('[prikhod] allOps total:', allOps.length,
+      'credit ops:', credOps.length,
+      'sample is_debit values:', allOps.slice(0,5).map(o=>o.is_debit))
+  }
   let ops = allOps.filter(op => {
     if (weekIdx >= 0 && op.week !== weekIdx) return false
     if (isCredit) return !op.is_debit
