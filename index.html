@@ -717,6 +717,13 @@ async function fetchData() {
     for (const [m, v] of Object.entries(d)) {
       if (!v||!v.ops) continue
       serverOpsCache[m] = v.ops  // кэшируем все операции
+      // Берём время последней загрузки из БД
+      if (v.updated_at) {
+        try {
+          const dt = new Date(v.updated_at)
+          uploadTimes[m] = dt.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})
+        } catch(e) {}
+      }
       const fact = {}
       for (const id of Object.keys(STD)) fact[id] = Array(5).fill(null)
       for (const op of v.ops) {
@@ -749,9 +756,7 @@ async function fetchData() {
           const dtStr = dt.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})
           document.getElementById('last-upd').innerHTML =
             'Обновлено: <span>'+sd.month+' · '+dtStr+'</span>'
-          // Заполняем uploadTimes для всех месяцев у которых есть данные
-          if (!uploadTimes[sd.month]) uploadTimes[sd.month] = dtStr
-          monthsWithFact.forEach(m => { if (!uploadTimes[m]) uploadTimes[m] = dtStr })
+
         }
       }
     } catch(e) {}
