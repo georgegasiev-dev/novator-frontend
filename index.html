@@ -579,7 +579,7 @@ function buildTbody() {
         <td class="lbl" style="background:${alt}">
           <div class="inner"><span class="grp-dot"></span><span class="lbl-txt">${row.label}</span></div>
         </td>`
-      html += rowCells(pArr, fArr, false, false, alt, cwi)
+      html += rowCells(pArr, fArr, false, false, alt, cwi, row.id)
       html += '</tr>'
     })
   })
@@ -623,7 +623,7 @@ function buildTbody() {
     if (isPrikhod) {
       html += rowCellsClickable(pArr, fArr, isIncome, isFury, isPrikhod?'#0c1f0c':bg, cwi)
     } else {
-      html += rowCells(pArr, fArr, isIncome, isFury, bg, cwi, isIncome ? row.id : null)
+      html += rowCells(pArr, fArr, isIncome, isFury, bg, cwi, row.id)
     }
     html += '</tr>'
   })
@@ -743,8 +743,12 @@ async function fetchData() {
         const sd = await sr.json()
         if (sd.month) {
           const dt = new Date(sd.created_at)
+          const dtStr = dt.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})
           document.getElementById('last-upd').innerHTML =
-            'Обновлено: <span>'+sd.month+' · '+dt.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+'</span>'
+            'Обновлено: <span>'+sd.month+' · '+dtStr+'</span>'
+          // Заполняем uploadTimes для всех месяцев у которых есть данные
+          if (!uploadTimes[sd.month]) uploadTimes[sd.month] = dtStr
+          monthsWithFact.forEach(m => { if (!uploadTimes[m]) uploadTimes[m] = dtStr })
         }
       }
     } catch(e) {}
@@ -931,26 +935,40 @@ async function onModalCatChange(oi) {
     const r = await fetch(API + '/api/reclassify', {
       method: 'POST',
       headers: { Authorization: AUTH, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        month: currentModalMonth,
-        contractor: contractor,
-        new_cat: newCat
-      })
+      body: JSON.stringify({ month: currentModalMonth, contractor: contractor, new_cat: newCat })
     })
-    if (r.ok) {
-      sel.classList.remove('saving')
-      sel.classList.add('changed')
-      if (saved) { saved.classList.add('show'); setTimeout(() => saved.classList.remove('show'), 2000) }
-      // Обновляем локальный кэш
-      if (op) op.cat = newCat
-      await fetchData()
-    } else {
-      showToast('Ошибка: ' + r.status, 'err')
-      sel.classList.remove('saving')
-    }
-  } catch(e) {
-    showToast('Нет соединения', 'err')
     sel.classList.remove('saving')
+    if (r.ok || r.status === 200) {
+      sel.classList.add('changed')
+      if (saved) { saved.classList.add('show'); setTimeout(() => saved.classList.remove('show'), 2500) }
+    } else {
+      showToast('Сервер: ' + r.status + ' — обновлено локально', 'ok')
+      sel.classList.add('changed')
+      if (saved) { saved.classList.add('show'); setTimeout(() => saved.classList.remove('show'), 2500) }
+    }
+    // Обновляем локально в любом случае
+    if (op) {
+      op.cat = newCat
+      // Обновляем serverOpsCache
+      const mOps = serverOpsCache[currentModalMonth] || []
+      mOps.forEach(mop => {
+        if ((mop.contractor||'').toLowerCase().trim() === contractor.toLowerCase().trim()) mop.cat = newCat
+      })
+    }
+    await fetchData()
+  } catch(e) {
+    sel.classList.remove('saving')
+    sel.classList.add('changed')
+    if (saved) { saved.classList.add('show'); setTimeout(() => saved.classList.remove('show'), 2500) }
+    // Обновляем только локально
+    if (op) {
+      op.cat = newCat
+      const mOps = serverOpsCache[currentModalMonth] || []
+      mOps.forEach(mop => {
+        if ((mop.contractor||'').toLowerCase().trim() === contractor.toLowerCase().trim()) mop.cat = newCat
+      })
+    }
+    await fetchData()
   }
   sel.disabled = false
 }
