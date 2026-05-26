@@ -181,6 +181,65 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
 .modal-cat-sel.saving{border-color:#f0a500;color:#f0a500}
 .modal-cat-saved{font-size:10px;color:#3db88a;margin-top:2px;display:none}
 .modal-cat-saved.show{display:block}
+
+/* ── справочник контрагентов ──────────────────────────────── */
+.ref-wrap{flex:1;overflow:auto;display:none}
+.ref-wrap.show{display:flex;flex-direction:column}
+.ref-toolbar{padding:10px 16px;background:#111;border-bottom:1px solid #1e1e1e;display:flex;align-items:center;gap:12px;flex-shrink:0;flex-wrap:wrap}
+.ref-search{background:#161616;border:1px solid #2a2a2a;border-radius:6px;color:#e0e0e0;font-size:12px;padding:6px 12px;width:260px;outline:none;transition:border-color .15s}
+.ref-search:focus{border-color:#f0a500}
+.ref-count{font-size:11px;color:#444;margin-left:auto}
+.ref-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.ref-tbl thead tr{position:sticky;top:0;z-index:10}
+.ref-tbl th{padding:8px 12px;text-align:left;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#444;border-bottom:1px solid #222;background:#0d0d0d;white-space:nowrap}
+.ref-tbl th:nth-child(3){text-align:right}
+.ref-tbl td{padding:8px 12px;border-bottom:1px solid #161616;vertical-align:middle}
+.ref-tbl tr:hover td{background:#131313}
+.ref-cat-sel{background:#161616;border:1px solid #2a2a2a;border-radius:4px;color:#aaa;font-size:11px;padding:4px 7px;cursor:pointer;width:100%;min-width:130px;transition:all .15s}
+.ref-cat-sel:focus{outline:none;border-color:#f0a500}
+.ref-cat-sel.changed{border-color:#3db88a;color:#3db88a;background:#0d1a0d}
+.ref-comment{background:#161616;border:1px solid #2a2a2a;border-radius:4px;color:#aaa;font-size:11px;padding:4px 8px;width:100%;min-width:140px;outline:none;transition:border-color .15s;font-family:inherit}
+.ref-comment:focus{border-color:#f0a500;color:#e0e0e0}
+.ref-comment.saved{border-color:#3db88a}
+.ref-empty{text-align:center;padding:60px 20px;color:#333;font-size:11px;letter-spacing:1px;text-transform:uppercase}
+
+/* ── страница справочника ─────────────────────────── */
+.page{display:none}.page.active{display:block}
+.dir-toolbar{padding:10px 16px;background:#111;border-bottom:1px solid #1e1e1e;
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.dir-search{flex:1;min-width:160px;background:#161616;border:1px solid #2a2a2a;border-radius:6px;
+  color:#e0e0e0;font-size:12px;padding:7px 12px;outline:none;transition:border-color .15s}
+.dir-search:focus{border-color:#f0a500}
+.dir-search::placeholder{color:#3a3a3a}
+.dir-stat{font-size:11px;color:#333;white-space:nowrap}
+.dir-stat span{color:#555}
+.dir-wrap{overflow:auto;flex:1}
+.dir-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.dir-tbl thead tr{position:sticky;top:0;z-index:5}
+.dir-tbl th{padding:8px 12px;text-align:left;font-size:9px;letter-spacing:1.2px;
+  text-transform:uppercase;color:#444;border-bottom:1px solid #1e1e1e;background:#0d0d0d;
+  white-space:nowrap;cursor:pointer;user-select:none}
+.dir-tbl th:hover{color:#888}
+.dir-tbl th.sort-asc::after{content:' ↑';color:#f0a500}
+.dir-tbl th.sort-desc::after{content:' ↓';color:#f0a500}
+.dir-tbl th:nth-child(3){text-align:right}
+.dir-tbl td{padding:8px 12px;border-bottom:1px solid #161616;vertical-align:middle}
+.dir-tbl tr:hover td{background:#131313}
+.dir-tbl td:nth-child(3){text-align:right;font-family:monospace;color:#f0a500;font-weight:600;white-space:nowrap}
+.dir-date{color:#444;font-size:11px;white-space:nowrap}
+.dir-name{color:#e0e0e0;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dir-cat-sel{background:#161616;border:1px solid #2a2a2a;border-radius:4px;color:#aaa;
+  font-size:11px;padding:4px 7px;cursor:pointer;min-width:140px;transition:all .15s}
+.dir-cat-sel:focus{outline:none;border-color:#f0a500}
+.dir-cat-sel.changed{border-color:#3db88a;color:#3db88a;background:#0d1a0d}
+.dir-comment{background:#161616;border:1px solid #2a2a2a;border-radius:4px;color:#888;
+  font-size:11px;padding:4px 8px;width:100%;min-width:120px;transition:all .15s;resize:none;
+  font-family:inherit;height:28px}
+.dir-comment:focus{outline:none;border-color:#f0a500;color:#ccc;height:52px}
+.dir-comment::placeholder{color:#2a2a2a}
+.dir-empty{text-align:center;padding:60px 20px;color:#2a2a2a;font-size:11px;
+  letter-spacing:1px;text-transform:uppercase}
+.dir-loading{text-align:center;padding:40px;color:#333;font-size:11px;letter-spacing:1px}
 </style>
 </head>
 <body>
@@ -196,6 +255,21 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
   </div>
 </div>
 
+<!-- Навигация страниц -->
+<div id="page-nav" style="display:flex;background:#0d0d0d;border-bottom:1px solid #222;flex-shrink:0">
+  <button id="nav-calendar" onclick="showPage('calendar')"
+    style="padding:11px 22px;border:none;border-bottom:2px solid #f0a500;background:#111;color:#f0a500;
+           cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;letter-spacing:.3px">
+    📅 Платёжный календарь
+  </button>
+  <button id="nav-dir" onclick="showPage('dir')"
+    style="padding:11px 22px;border:none;border-bottom:2px solid transparent;background:transparent;
+           color:#555;cursor:pointer;font-size:12px;font-weight:400;white-space:nowrap;letter-spacing:.3px">
+    📋 Справочник контрагентов
+  </button>
+</div>
+
+<div id="page-calendar" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
 <div class="upload-panel" id="upload-panel">
   <div style="font-size:11px;color:#444">Месяц:</div>
   <div id="msel" style="display:flex;gap:4px;flex-wrap:wrap"></div>
@@ -203,11 +277,6 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
   <button class="fbtn" id="fbtn" onclick="document.getElementById('fi').click()">Выбрать файл</button>
   <div class="pw" id="pw"><div class="pb" id="pb"></div></div>
   <div class="hint">Файл уйдёт на сервер и дашборд обновится</div>
-</div>
-
-  <table class="unk-tbl"><tbody id="unk-tbody"></tbody></table>
-  
-  
 </div>
 
 <div class="mtabs" id="mtabs"></div>
@@ -221,6 +290,32 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
   <table id="tbl"><thead id="thead"></thead><tbody id="tbody"></tbody></table>
 </div>
 
+</div>
+
+<div id="page-dir" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+  <div class="dir-toolbar">
+    <input class="dir-search" id="dir-search" placeholder="Поиск по названию контрагента..."
+      oninput="renderDir()">
+    <select class="dir-cat-sel" id="dir-cat-filter" onchange="renderDir()" style="min-width:160px">
+      <option value="">Все категории</option>
+    </select>
+    <div class="dir-stat" id="dir-stat"></div>
+  </div>
+  <div class="dir-wrap">
+    <table class="dir-tbl">
+      <thead>
+        <tr>
+          <th onclick="sortDir('date')" id="th-date">Дата добавления</th>
+          <th onclick="sortDir('name')" id="th-name">Контрагент</th>
+          <th onclick="sortDir('total')" id="th-total">Сумма платежей</th>
+          <th>Категория</th>
+          <th>Комментарий</th>
+        </tr>
+      </thead>
+      <tbody id="dir-tbody"></tbody>
+    </table>
+  </div>
+</div>
 <div class="footer">
   <span>± = факт − план</span>
   <span><span style="color:#3db88a">+</span> переплатили</span>
@@ -704,8 +799,36 @@ function setUM(m) {
 function toggleGroup(gid) { grpState[gid]=!grpState[gid]; render() }
 function toggleWeek(wi) { wkCollapsed[wi]=!wkCollapsed[wi]; render() }
 function toggleUpload() {
+  if (document.getElementById('ref-wrap').classList.contains('show')) sv('table')
   const p=document.getElementById('upload-panel'), b=document.getElementById('ubtn')
   const s=!p.classList.contains('show'); p.classList.toggle('show',s); b.classList.toggle('active',s)
+}
+
+function sv(view) {
+  const tbl = document.querySelector('.tbl-wrap')
+  const ref = document.getElementById('ref-wrap')
+  const mbar = document.querySelector('.mbar')
+  const mtabs = document.getElementById('mtabs')
+  const footer = document.querySelector('.footer')
+  const refBtn = document.getElementById('ref-btn')
+  const uploadPanel = document.getElementById('upload-panel')
+
+  if (view === 'ref') {
+    tbl.style.display = 'none'
+    if(mbar) mbar.style.display = 'none'
+    if(mtabs) mtabs.style.display = 'none'
+    ref.classList.add('show')
+    refBtn.classList.add('active')
+    uploadPanel.classList.remove('show')
+    document.getElementById('ubtn').classList.remove('active')
+    renderRef()
+  } else {
+    tbl.style.display = ''
+    if(mbar) mbar.style.display = ''
+    if(mtabs) mtabs.style.display = ''
+    ref.classList.remove('show')
+    refBtn.classList.remove('active')
+  }
 }
 
 // ── API ───────────────────────────────────────────────────────────────────────
@@ -980,11 +1103,298 @@ async function onModalCatChange(oi) {
   }
   sel.disabled = false
 }
+
+// ── справочник контрагентов ───────────────────────────────────────────────────
+// Данные: строим из всех ops во всех месяцах + MANUAL_MAP
+const STATIC_CONTRACTORS = {"ип параев максим владимирович": "Лес", "ип нестеров алексей валерьевич": "Лес", "ип шашков александр владимирович": "Лес", "ооо углелеспром-нн": "Лес", "ип асатрян давит ханикович": "Лес", "ип киров сергей владимирович": "Лес", "ип афонин павел николаевич": "Лес", "ип белоглазов сергей николаевич": "Лес", "ооо волга-лес": "Лес", "ип абакумов александр кузьмич": "Лес", "ип сироткин сергей сергеевич": "Лес", "ип слепышев сергей васильевич": "Лес", "ип грачёв павел иванович": "Перевозка леса", "ооо экспохим": "Смола", "ооо стандарт-старвуд": "Плёнка", "ооо горький транзит": "Перевозчик", "ооо автолайн": "Перевозчик", "ип смирнов сергей александрович": "Перевозчик", "ип северский юрий николаевич": "Перевозчик", "ип тихонов вячеслав валерьевич": "Перевозчик", "ооо симпл пак": "Упаковка", "ооо иракол": "Упаковка", "ооо картонснаб": "Упаковка", "ооо федеральная упаковочная компания": "Упаковка", "ао ситиматик нижний новгород": "Вывоз мусора", "ип семёнов евгений викторович": "Адм.", "индивидуальный предприниматель яшин сергей сергеевич": "Адм.", "ао райффайзенбанк г москва": "Адм.", "ооо хэдхантер": "Адм.", "ано редакция св": "Адм.", "ао пф скб контур": "Адм.", "ао уфанет": "Адм.", "ооо манго телеком": "Адм.", "ооо информ-плюс": "Адм.", "ооо тк руста-брокер": "Адм.", "ооо семенов-прогресс": "Аренда", "ип будаев сергей владимирович": "Аренда", "казначейство россии фнс": "НДФЛ", "ооо новатор": "ЗП", "ооо компания метро": "Расходники", "ооо химэкспо-нн": "Расходники", "ооо запасопт": "Расходники", "ооо гринстрой": "Расходники", "ооо всеинструменты ру": "Расходники", "ооо пента юниор": "Расходники", "зао кузьминки": "Расходники", "ооо отп": "Расходники", "ооо элком": "Расходники", "ооо компания ст": "Расходники", "ооо компания финко": "Расходники", "оао литейно-механический завод": "Расходники", "ип кирсанов л г": "Расходники", "ип куприянов м в": "Расходники", "ип куприянов максим валерьевич": "Расходники", "ип масленников с а": "Расходники", "ооо агреман": "Расходники", "ооо сму-152": "Расходники", "ооо агрозапчасть": "Расходники", "ооо промлайн": "Расходники", "ооо комус": "Расходники", "ип щербаков иван иванович": "Расходники", "пао тнс энерго нн": "Свет", "ооо газпромнефть региональные продажи": "ГСМ", "ооо исток": "Прочие нераспознанные"}
+
+// Комментарии хранятся локально
+let refComments = {}
+try { const s = localStorage.getItem('ref-comments'); if(s) refComments = JSON.parse(s) } catch(e) {}
+
+function saveRefComments() {
+  try { localStorage.setItem('ref-comments', JSON.stringify(refComments)) } catch(e) {}
+}
+
+function buildRefData() {
+  // Собираем суммы из всех ops всех месяцев
+  const totals = {}   // contractor → {sum, cat, firstDate}
+  const dbCats = {}   // contractor → cat из serverOpsCache (пользовательские)
+
+  // Сначала статичный справочник
+  for (const [name, cat] of Object.entries(STATIC_CONTRACTORS)) {
+    if (!totals[name]) totals[name] = { sum: 0, cat, firstDate: '2026-01-01' }
+  }
+
+  // Потом из реальных операций
+  for (const [month, ops] of Object.entries(serverOpsCache)) {
+    for (const op of ops) {
+      if (!op.is_debit) continue
+      const key = (op.contractor || '').toLowerCase().trim()
+      if (!key) continue
+      if (!totals[key]) totals[key] = { sum: 0, cat: op.cat || 'Прочие нераспознанные', firstDate: op.date || '2026-05-01' }
+      totals[key].sum += (op.amount || 0)
+      if (op.cat) totals[key].cat = op.cat  // обновляем категорию из последней операции
+      // Берём самую раннюю дату
+      if (op.date && op.date < totals[key].firstDate) totals[key].firstDate = op.date
+    }
+  }
+
+  return Object.entries(totals)
+    .map(([name, d]) => ({ name, ...d }))
+    .sort((a, b) => b.sum - a.sum)
+}
+
+function renderRef() {
+  const q = (document.getElementById('ref-search')?.value || '').toLowerCase()
+  const rows = buildRefData().filter(r => !q || r.name.includes(q))
+  document.getElementById('ref-count').textContent = rows.length + ' контрагентов'
+  const tbody = document.getElementById('ref-tbody')
+  if (!tbody) return
+
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="5"><div class="ref-empty">Ничего не найдено</div></td></tr>'
+    return
+  }
+
+  tbody.innerHTML = rows.map((r, i) => {
+    const amt = r.sum > 0 ? new Intl.NumberFormat('ru-RU').format(Math.round(r.sum)) + ' ₽' : '—'
+    const opts = CAT_DISPLAY_LIST.map(c =>
+      '<option value="' + c + '"' + (c === r.cat ? ' selected' : '') + '>' + c + '</option>'
+    ).join('')
+    const comment = esc(refComments[r.name] || '')
+    const dt = r.firstDate ? r.firstDate.slice(0,10).split('-').reverse().join('.') : '—'
+    return '<tr>'
+      + '<td style="color:#444;white-space:nowrap">' + dt + '</td>'
+      + '<td style="color:#ccc;max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + esc(r.name) + '">' + esc(r.name) + '</td>'
+      + '<td style="text-align:right;font-family:monospace;color:#f0a500;white-space:nowrap">' + amt + '</td>'
+      + '<td><select class="ref-cat-sel" data-key="' + esc(r.name) + '" onchange="onRefCatChange(this)">' + opts + '</select></td>'
+      + '<td><input class="ref-comment" type="text" placeholder="Добавить комментарий..." value="' + comment + '" data-key="' + esc(r.name) + '" onchange="onRefComment(this)" oninput="onRefComment(this,true)"></td>'
+      + '</tr>'
+  }).join('')
+}
+
+async function onRefCatChange(sel) {
+  const key = sel.getAttribute('data-key')
+  const newCat = sel.value
+  sel.classList.add('changed')
+
+  // Отправляем на сервер — меняем для всех месяцев
+  try {
+    for (const month of MONTHS) {
+      if (!serverOpsCache[month]) continue
+      await fetch(API + '/api/reclassify', {
+        method: 'POST',
+        headers: { Authorization: AUTH, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ month, contractor: key, new_cat: newCat })
+      })
+    }
+    showToast('✓ Категория обновлена для «' + key.slice(0,30) + '»', 'ok')
+    await fetchData()
+    renderRef()
+  } catch(e) {
+    showToast('Нет соединения — изменено локально', 'ok')
+  }
+}
+
+let commentTimers = {}
+function onRefComment(inp, isInput) {
+  const key = inp.getAttribute('data-key')
+  inp.classList.remove('saved')
+  if (isInput) {
+    clearTimeout(commentTimers[key])
+    commentTimers[key] = setTimeout(() => saveComment(inp, key), 1000)
+  } else {
+    saveComment(inp, key)
+  }
+}
+function saveComment(inp, key) {
+  refComments[key] = inp.value
+  saveRefComments()
+  inp.classList.add('saved')
+  setTimeout(() => inp.classList.remove('saved'), 1500)
+}
+
+// ── Справочник контрагентов ───────────────────────────────────────────────────
+let dirData = []
+let dirSort = { col: 'total', asc: false }
+let dirSaving = {}
+
+const CAT_ALL = ['Лес','Перевозка леса','Смола','Плёнка','ГСМ','Расходники','Свет',
+  'Вывоз мусора','НДС','НДФЛ','Упаковка','Перевозчик','ЗП','Аренда','Адм.',
+  'Прочие нераспознанные','Поступления от клиентов']
+
+async function loadDir() {
+  document.getElementById('dir-tbody').innerHTML =
+    '<tr><td colspan="5" class="dir-loading">Загрузка...</td></tr>'
+  try {
+    const r = await fetch(API + '/api/contractors')
+    if (r.ok) {
+      dirData = await r.json()
+      // Заполняем фильтр категорий
+      const cats = [...new Set(dirData.map(c => c.cat))].sort()
+      const sel = document.getElementById('dir-cat-filter')
+      sel.innerHTML = '<option value="">Все категории</option>' +
+        cats.map(c => '<option value="' + c + '">' + c + '</option>').join('')
+    } else {
+      dirData = buildDirFromCache()
+    }
+  } catch(e) {
+    dirData = buildDirFromCache()
+  }
+  renderDir()
+}
+
+// Fallback: строим справочник из serverOpsCache
+function buildDirFromCache() {
+  const map = {}
+  for (const [month, ops] of Object.entries(serverOpsCache)) {
+    for (const op of ops) {
+      if (!op.is_debit) continue
+      const cl = (op.contractor || '').toLowerCase().trim()
+      if (!cl) continue
+      if (!map[cl]) map[cl] = {name: op.contractor, total: 0, first_seen: op.date || '', cat: op.cat || '', comment: ''}
+      map[cl].total += op.amount || 0
+      if (op.date && op.date < map[cl].first_seen) map[cl].first_seen = op.date
+    }
+  }
+  return Object.values(map).sort((a,b) => b.total - a.total)
+}
+
+function sortDir(col) {
+  if (dirSort.col === col) dirSort.asc = !dirSort.asc
+  else { dirSort.col = col; dirSort.asc = false }
+  // Обновляем иконки
+  ['date','name','total'].forEach(c => {
+    const th = document.getElementById('th-' + c)
+    if (!th) return
+    th.className = dirSort.col === c ? (dirSort.asc ? 'sort-asc' : 'sort-desc') : ''
+  })
+  renderDir()
+}
+
+function renderDir() {
+  const q = (document.getElementById('dir-search')?.value || '').toLowerCase()
+  const catF = document.getElementById('dir-cat-filter')?.value || ''
+  let rows = dirData.filter(c => {
+    if (q && !(c.name || '').toLowerCase().includes(q)) return false
+    if (catF && c.cat !== catF) return false
+    return true
+  })
+  // Сортировка
+  rows = rows.sort((a, b) => {
+    let va = a[dirSort.col] || '', vb = b[dirSort.col] || ''
+    if (dirSort.col === 'total') { va = a.total; vb = b.total }
+    const cmp = typeof va === 'number' ? va - vb : String(va).localeCompare(String(vb), 'ru')
+    return dirSort.asc ? cmp : -cmp
+  })
+  document.getElementById('dir-stat').innerHTML =
+    'Показано: <span>' + rows.length + '</span> из <span>' + dirData.length + '</span>'
+
+  const tbody = document.getElementById('dir-tbody')
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="dir-empty">Нет контрагентов</td></tr>'
+    return
+  }
+  const N = n => n == null ? '—' : new Intl.NumberFormat('ru-RU').format(Math.round(n)) + ' ₽'
+  tbody.innerHTML = rows.map((c, i) => {
+    const idx = dirData.indexOf(c)
+    const catOpts = CAT_ALL.map(cat =>
+      '<option value="' + cat + '"' + (cat === c.cat ? ' selected' : '') + '>' + cat + '</option>'
+    ).join('')
+    const dateStr = c.first_seen ? c.first_seen.slice(0, 10) : '—'
+    return '<tr>' +
+      '<td class="dir-date">' + dateStr + '</td>' +
+      '<td class="dir-name" title="' + esc(c.name || '') + '">' + esc((c.name || '').slice(0, 55)) + '</td>' +
+      '<td>' + N(c.total) + '</td>' +
+      '<td><select class="dir-cat-sel" id="dcat-' + idx + '" onchange="onDirCatChange(' + idx + ')">' + catOpts + '</select></td>' +
+      '<td><textarea class="dir-comment" id="dcmt-' + idx + '" placeholder="Добавить комментарий..." ' +
+        'onblur="onDirCommentBlur(' + idx + ')">' + esc(c.comment || '') + '</textarea></td>' +
+      '</tr>'
+  }).join('')
+}
+
+async function onDirCatChange(idx) {
+  const c = dirData[idx]; if (!c) return
+  const sel = document.getElementById('dcat-' + idx); if (!sel) return
+  const newCat = sel.value
+  c.cat = newCat
+  sel.classList.add('changed')
+  try {
+    const r = await fetch(API + '/api/contractors/update', {
+      method: 'POST',
+      headers: { Authorization: AUTH, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contractor: c.name, cat: newCat })
+    })
+    if (!r.ok) showToast('Ошибка: ' + r.status, 'err')
+    else showToast('✓ Категория обновлена', 'ok')
+  } catch(e) {
+    // локально уже обновили
+  }
+}
+
+async function onDirCommentBlur(idx) {
+  const c = dirData[idx]; if (!c) return
+  const ta = document.getElementById('dcmt-' + idx); if (!ta) return
+  const comment = ta.value
+  if (comment === (c.comment || '')) return  // не изменился
+  c.comment = comment
+  try {
+    await fetch(API + '/api/contractors/update', {
+      method: 'POST',
+      headers: { Authorization: AUTH, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contractor: c.name, comment })
+    })
+  } catch(e) {}
+}
+
+// ── Переключение страниц ──────────────────────────────────────────────────────
+function showPage(page) {
+  const isCal = page === 'calendar'
+  const pCal = document.getElementById('page-calendar')
+  const pDir = document.getElementById('page-dir')
+  if (pCal) pCal.style.display = isCal ? 'flex' : 'none'
+  if (pDir) pDir.style.display = isCal ? 'none' : 'flex'
+  const nc = document.getElementById('nav-calendar')
+  const nd = document.getElementById('nav-dir')
+  if (nc) nc.style.cssText = 'padding:11px 22px;border:none;cursor:pointer;font-size:12px;white-space:nowrap;letter-spacing:.3px;flex-shrink:0;' +
+    (isCal ? 'border-bottom:2px solid #f0a500;background:#111;color:#f0a500;font-weight:700'
+           : 'border-bottom:2px solid transparent;background:transparent;color:#555;font-weight:400')
+  if (nd) nd.style.cssText = 'padding:11px 22px;border:none;cursor:pointer;font-size:12px;white-space:nowrap;letter-spacing:.3px;flex-shrink:0;' +
+    (!isCal ? 'border-bottom:2px solid #f0a500;background:#111;color:#f0a500;font-weight:700'
+            : 'border-bottom:2px solid transparent;background:transparent;color:#555;font-weight:400')
+  if (!isCal && !dirData.length) loadDir()
+}
+
 // ── init ──────────────────────────────────────────────────────────────────────
+showPage('calendar')
 renderTabs()
 document.getElementById('tbody').innerHTML = '<tr><td colspan="22" style="text-align:center;padding:60px 20px;color:#333;font-size:11px;letter-spacing:1px;text-transform:uppercase">Загрузка данных...</td></tr>'
 fetchData()
 </script>
+
+
+<!-- Справочник контрагентов -->
+<div class="ref-wrap" id="ref-wrap">
+  <div class="ref-toolbar">
+    <input class="ref-search" id="ref-search" type="text" placeholder="Поиск по контрагенту..." oninput="renderRef()">
+    <div class="ref-count" id="ref-count"></div>
+  </div>
+  <div style="overflow:auto;flex:1">
+    <table class="ref-tbl">
+      <thead>
+        <tr>
+          <th style="min-width:110px">Дата добавления</th>
+          <th style="min-width:220px">Контрагент</th>
+          <th style="min-width:120px;text-align:right">Сумма платежей</th>
+          <th style="min-width:150px">Категория</th>
+          <th style="min-width:180px">Комментарий</th>
+        </tr>
+      </thead>
+      <tbody id="ref-tbody"></tbody>
+    </table>
+  </div>
+</div>
 
 <!-- Модальное окно операций -->
 <div class="modal-overlay" id="income-modal" onclick="closeModal(event)">
