@@ -461,7 +461,7 @@ const ROWS = [
 ]
 
 const STD = {
-  les:[5250000,5250000,5250000,5250000,5250000],dolg_les:[0,0,0,0,0],
+  les:[5000000,5000000,5000000,5000000,5000000],dolg_les:[0,0,0,0,0],
   perev_les:[250000,250000,250000,250000,250000],smola:[1000000,2400000,1200000,1200000,1200000],
   plenka:[0,2500000,0,0,3500000],gsm:[250000,250000,250000,250000,250000],
   rashod:[200000,200000,200000,200000,200000],svet:[350000,350000,350000,500000,350000],
@@ -843,8 +843,8 @@ async function fetchData() {
       // Берём время последней загрузки из БД
       if (v.updated_at) {
         try {
-          const dt = new Date(v.updated_at)
-          uploadTimes[m] = dt.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})
+          const dt = new Date(v.updated_at + 'Z')
+          uploadTimes[m] = dt.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Moscow'})
         } catch(e) {}
       }
       const fact = {}
@@ -875,8 +875,8 @@ async function fetchData() {
       if (sr.ok) {
         const sd = await sr.json()
         if (sd.month) {
-          const dt = new Date(sd.created_at)
-          const dtStr = dt.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})
+          const dt = new Date(sd.created_at + 'Z')
+          const dtStr = dt.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Moscow'})
           document.getElementById('last-upd').innerHTML =
             'Обновлено: <span>'+sd.month+' · '+dtStr+'</span>'
 
