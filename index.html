@@ -240,9 +240,53 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
 .dir-empty{text-align:center;padding:60px 20px;color:#2a2a2a;font-size:11px;
   letter-spacing:1px;text-transform:uppercase}
 .dir-loading{text-align:center;padding:40px;color:#333;font-size:11px;letter-spacing:1px}
+
+/* ── login screen ─────────────────────────────────────────────────────────── */
+#login-screen{position:fixed;inset:0;background:#0b0b0b;z-index:9999;
+  display:flex;align-items:center;justify-content:center}
+#login-screen.hidden{display:none}
+.login-box{width:340px;background:#111;border:1px solid #222;border-radius:12px;padding:36px 32px}
+.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:28px}
+.login-logo .mark{width:38px;height:38px;background:#1a3a6b;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700}
+.login-title{font-size:18px;font-weight:800}.login-title span{color:#f0a500}
+.login-sub{font-size:10px;color:#444;letter-spacing:2px;text-transform:uppercase;margin-top:2px}
+.login-field{margin-bottom:14px}
+.login-field label{display:block;font-size:10px;color:#555;letter-spacing:1px;
+  text-transform:uppercase;margin-bottom:6px}
+.login-field input{width:100%;background:#161616;border:1px solid #2a2a2a;border-radius:6px;
+  color:#e0e0e0;font-size:13px;padding:10px 12px;outline:none;transition:border-color .15s}
+.login-field input:focus{border-color:#f0a500}
+.login-submit{width:100%;padding:11px;border:none;border-radius:6px;background:#f0a500;
+  color:#000;font-size:13px;font-weight:700;cursor:pointer;margin-top:6px;transition:opacity .15s}
+.login-submit:hover{opacity:.9}
+.login-submit:disabled{opacity:.5;cursor:default}
+.login-err{font-size:11px;color:#d95f5f;margin-top:10px;text-align:center;min-height:16px}
 </style>
 </head>
 <body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="mark">НВТ</div>
+      <div>
+        <div class="login-sub">Новатор · Производство</div>
+        <div class="login-title">Платёжный <span>календарь</span></div>
+      </div>
+    </div>
+    <div class="login-field">
+      <label>Логин</label>
+      <input type="text" id="l-user" autocomplete="username" placeholder="admin">
+    </div>
+    <div class="login-field">
+      <label>Пароль</label>
+      <input type="password" id="l-pass" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="login-submit" id="l-btn" onclick="doLogin()">Войти</button>
+    <div class="login-err" id="l-err"></div>
+  </div>
+</div>
 <div class="hdr">
   <div class="brand">
     <div class="mark">НВТ</div>
@@ -252,6 +296,7 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
     <div class="last-upd" id="last-upd"></div>
     <div class="sdot-wrap"><div class="dot loading" id="sdot"></div><span id="stxt">подключение...</span></div>
     <button class="ubtn" id="ubtn" onclick="toggleUpload()">↑ Загрузить выписку</button>
+    <button class="ubtn" onclick="doLogout()" style="border-color:#d95f5f;color:#d95f5f" title="Выйти">⎋ Выйти</button>
   </div>
 </div>
 
@@ -326,7 +371,38 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
 
 <script>
 const API  = 'https://zavod-production.up.railway.app'
-const AUTH = 'Basic ' + btoa('admin:novator2026')
+// ── авторизация ──────────────────────────────────────────────────────────────
+function getAuth(){ return sessionStorage.getItem('nvt_auth') || '' }
+function getAuthHeader(){ return { Authorization: getAuth() } }
+
+async function doLogin(){
+  const user = document.getElementById('l-user').value.trim()
+  const pass = document.getElementById('l-pass').value
+  const btn  = document.getElementById('l-btn')
+  const err  = document.getElementById('l-err')
+  if(!user||!pass){err.textContent='Введите логин и пароль';return}
+  btn.disabled=true; btn.textContent='Проверяем...'
+  try{
+    const auth = 'Basic ' + btoa(user+':'+pass)
+    const r = await fetch(API+'/api/sync/status',{headers:{Authorization:auth}})
+    if(r.status===200||r.status===404){
+      sessionStorage.setItem('nvt_auth', auth)
+      document.getElementById('login-screen').classList.add('hidden')
+      err.textContent=''
+      initApp()
+    } else {
+      err.textContent = 'Неверный логин или пароль'
+    }
+  } catch(e){
+    err.textContent = 'Ошибка подключения к серверу'
+  }
+  btn.disabled=false; btn.textContent='Войти'
+}
+
+function doLogout(){
+  sessionStorage.removeItem('nvt_auth')
+  location.reload()
+}
 
 const MONTHS = ['Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь']
 const WM = {
@@ -898,7 +974,7 @@ async function handleFile(e) {
   const form = new FormData(); form.append('file',file); form.append('month',uploadMonth)
   pb.style.width='50%'
   try {
-    const r = await fetch(API+'/api/upload', {method:'POST', headers:{Authorization:AUTH}, body:form})
+    const r = await fetch(API+'/api/upload', {method:'POST', headers:{Authorization:getAuth()}, body:form})
     pb.style.width='90%'
     if (r.ok) {
       const res = await r.json()
@@ -1065,7 +1141,7 @@ async function onModalCatChange(oi) {
   try {
     const r = await fetch(API + '/api/reclassify', {
       method: 'POST',
-      headers: { Authorization: AUTH, 'Content-Type': 'application/json' },
+      headers: { Authorization: getAuth(), 'Content-Type': 'application/json' },
       body: JSON.stringify({ month: currentModalMonth, contractor: contractor, new_cat: newCat })
     })
     sel.classList.remove('saving')
@@ -1185,7 +1261,7 @@ async function onRefCatChange(sel) {
       if (!serverOpsCache[month]) continue
       await fetch(API + '/api/reclassify', {
         method: 'POST',
-        headers: { Authorization: AUTH, 'Content-Type': 'application/json' },
+        headers: { Authorization: getAuth(), 'Content-Type': 'application/json' },
         body: JSON.stringify({ month, contractor: key, new_cat: newCat })
       })
     }
@@ -1323,7 +1399,7 @@ async function onDirCatChange(idx) {
   try {
     const r = await fetch(API + '/api/contractors/update', {
       method: 'POST',
-      headers: { Authorization: AUTH, 'Content-Type': 'application/json' },
+      headers: { Authorization: getAuth(), 'Content-Type': 'application/json' },
       body: JSON.stringify({ contractor: c.name, cat: newCat })
     })
     if (!r.ok) showToast('Ошибка: ' + r.status, 'err')
@@ -1342,7 +1418,7 @@ async function onDirCommentBlur(idx) {
   try {
     await fetch(API + '/api/contractors/update', {
       method: 'POST',
-      headers: { Authorization: AUTH, 'Content-Type': 'application/json' },
+      headers: { Authorization: getAuth(), 'Content-Type': 'application/json' },
       body: JSON.stringify({ contractor: c.name, comment })
     })
   } catch(e) {}
@@ -1367,10 +1443,18 @@ function showPage(page) {
 }
 
 // ── init ──────────────────────────────────────────────────────────────────────
-showPage('calendar')
-renderTabs()
-document.getElementById('tbody').innerHTML = '<tr><td colspan="22" style="text-align:center;padding:60px 20px;color:#333;font-size:11px;letter-spacing:1px;text-transform:uppercase">Загрузка данных...</td></tr>'
-fetchData()
+function initApp(){
+  showPage('calendar')
+  renderTabs()
+  document.getElementById('tbody').innerHTML = '<tr><td colspan="22" style="text-align:center;padding:60px 20px;color:#333;font-size:11px;letter-spacing:1px;text-transform:uppercase">Загрузка данных...</td></tr>'
+  fetchData()
+}
+
+// При загрузке — показываем логин если нет сессии
+if(sessionStorage.getItem('nvt_auth')){
+  document.getElementById('login-screen').classList.add('hidden')
+  initApp()
+}
 </script>
 
 
