@@ -271,6 +271,49 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
 .login-submit:hover{opacity:.9}
 .login-submit:disabled{opacity:.5;cursor:default}
 .login-err{font-size:11px;color:#d95f5f;margin-top:10px;text-align:center;min-height:16px}
+
+/* ── страница продаж ─────────────────────────────────────────────── */
+.sales-wrap{flex:1;overflow:auto;padding:20px}
+.sales-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.sales-toolbar input,.sales-toolbar select{
+  background:#111;border:1px solid #222;border-radius:6px;color:#ccc;
+  font-size:12px;padding:7px 10px;outline:none}
+.sales-toolbar input:focus,.sales-toolbar select:focus{border-color:#f0a500}
+.sales-month-sel{min-width:130px}
+.sales-add-btn{padding:7px 16px;border:none;border-radius:6px;background:#f0a500;
+  color:#000;font-size:11px;font-weight:700;cursor:pointer}
+.sales-add-btn:hover{opacity:.88}
+.sales-stat{margin-left:auto;font-size:11px;color:#444;display:flex;gap:18px}
+.sales-stat span{color:#888}
+.sales-table{width:100%;border-collapse:collapse;font-size:12px}
+.sales-table th{padding:9px 12px;text-align:left;font-size:10px;color:#f0a500;
+  font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+  border-bottom:1px solid #222;background:#0d0d0d;white-space:nowrap}
+.sales-table td{padding:8px 12px;border-bottom:1px solid #161616;
+  vertical-align:middle;color:#ccc}
+.sales-table tr:hover td{background:rgba(255,255,255,.02)}
+.sales-table tr.auto-row td{border-left:2px solid #1a3a6b}
+.sales-table tr.manual-row td{border-left:2px solid #2a5a2a}
+.deal-company{font-weight:600;color:#e0e0e0}
+.deal-date{color:#555;font-size:11px}
+.deal-amount{color:#3db88a;font-weight:700;text-align:right}
+.deal-edit{background:#0d0d0d;border:1px solid #222;border-radius:4px;
+  color:#ccc;font-size:12px;padding:4px 8px;width:90px;text-align:right;outline:none}
+.deal-edit:focus{border-color:#f0a500;background:#111}
+.deal-comment{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:4px;
+  color:#888;font-size:11px;padding:4px 8px;width:180px;outline:none}
+.deal-comment:focus{border-color:#333;background:#111;color:#ccc}
+.deal-del{background:none;border:none;color:#333;cursor:pointer;font-size:14px;
+  padding:2px 6px;border-radius:3px}
+.deal-del:hover{color:#d95f5f;background:rgba(217,95,95,.1)}
+.deal-source{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:600}
+.deal-source.auto{background:rgba(26,58,107,.3);color:#5588cc}
+.deal-source.manual{background:rgba(42,90,42,.3);color:#5cb85c}
+.sales-empty{text-align:center;padding:60px 20px;color:#333;
+  font-size:11px;letter-spacing:1px;text-transform:uppercase}
+.sales-section-hdr{padding:10px 0 6px;font-size:10px;color:#333;
+  letter-spacing:2px;text-transform:uppercase;border-bottom:1px solid #161616;
+  margin-bottom:4px}
 </style>
 </head>
 <body>
@@ -315,6 +358,11 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
     style="padding:11px 22px;border:none;border-bottom:2px solid #f0a500;background:#111;color:#f0a500;
            cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;letter-spacing:.3px">
     📅 Платёжный календарь
+  </button>
+  <button id="nav-sales" onclick="showPage('sales')"
+    style="padding:11px 22px;border:none;border-bottom:2px solid transparent;background:transparent;
+           color:#555;cursor:pointer;font-size:12px;font-weight:400;white-space:nowrap;letter-spacing:.3px">
+    💰 Продажи
   </button>
   <button id="nav-dir" onclick="showPage('dir')"
     style="padding:11px 22px;border:none;border-bottom:2px solid transparent;background:transparent;
@@ -925,6 +973,8 @@ async function fetchData() {
     for (const [m, v] of Object.entries(d)) {
       if (!v||!v.ops) continue
       serverOpsCache[m] = v.ops  // кэшируем все операции
+      if (!window.serverMonthCache) window.serverMonthCache = {}
+      window.serverMonthCache[m] = v
       // Берём время последней загрузки из БД
       if (v.updated_at) {
         try {
@@ -1435,24 +1485,209 @@ async function onDirCommentBlur(idx) {
 
 // ── Переключение страниц ──────────────────────────────────────────────────────
 function showPage(page) {
-  const isCal = page === 'calendar'
-  const pCal = document.getElementById('page-calendar')
-  const pDir = document.getElementById('page-dir')
-  if (pCal) pCal.style.display = isCal ? 'flex' : 'none'
-  if (pDir) pDir.style.display = isCal ? 'none' : 'flex'
-  const nc = document.getElementById('nav-calendar')
-  const nd = document.getElementById('nav-dir')
-  if (nc) nc.style.cssText = 'padding:11px 22px;border:none;cursor:pointer;font-size:12px;white-space:nowrap;letter-spacing:.3px;flex-shrink:0;' +
-    (isCal ? 'border-bottom:2px solid #f0a500;background:#111;color:#f0a500;font-weight:700'
-           : 'border-bottom:2px solid transparent;background:transparent;color:#555;font-weight:400')
-  if (nd) nd.style.cssText = 'padding:11px 22px;border:none;cursor:pointer;font-size:12px;white-space:nowrap;letter-spacing:.3px;flex-shrink:0;' +
-    (!isCal ? 'border-bottom:2px solid #f0a500;background:#111;color:#f0a500;font-weight:700'
+  const pages = ['calendar','sales','dir']
+  const pCal   = document.getElementById('page-calendar')
+  const pSales = document.getElementById('page-sales')
+  const pDir   = document.getElementById('page-dir')
+  if (pCal)   pCal.style.display   = page==='calendar' ? 'flex' : 'none'
+  if (pSales) pSales.style.display = page==='sales'    ? 'flex' : 'none'
+  if (pDir)   pDir.style.display   = page==='dir'      ? 'flex' : 'none'
+
+  const btnStyle = (active) =>
+    'padding:11px 22px;border:none;cursor:pointer;font-size:12px;white-space:nowrap;letter-spacing:.3px;flex-shrink:0;' +
+    (active ? 'border-bottom:2px solid #f0a500;background:#111;color:#f0a500;font-weight:700'
             : 'border-bottom:2px solid transparent;background:transparent;color:#555;font-weight:400')
-  if (!isCal && !dirData.length) loadDir()
+
+  const nc = document.getElementById('nav-calendar')
+  const ns = document.getElementById('nav-sales')
+  const nd = document.getElementById('nav-dir')
+  if (nc) nc.style.cssText = btnStyle(page==='calendar')
+  if (ns) ns.style.cssText = btnStyle(page==='sales')
+  if (nd) nd.style.cssText = btnStyle(page==='dir')
+
+  const mtabs = document.getElementById('mtabs')
+  if (mtabs) mtabs.style.display = page==='calendar' ? '' : 'none'
+
+  if (page==='dir' && !dirData.length) loadDir()
+  if (page==='sales') { salesSyncFromServer(); renderSales() }
+}
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ПРОДАЖИ
+// ══════════════════════════════════════════════════════════════════════════════
+
+const SHEETS_PER_TRUCK = 550   // листов в фуре
+let salesDeals = []            // все сделки {id, company, date, payment, sheets, pricePerSheet, comment, source, month}
+let salesNextId = 1
+
+// Загружаем сохранённые сделки из localStorage
+function salesLoad() {
+  try {
+    const saved = localStorage.getItem('nvt_sales')
+    if (saved) {
+      const d = JSON.parse(saved)
+      salesDeals = d.deals || []
+      salesNextId = d.nextId || (salesDeals.length + 1)
+    }
+  } catch(e) {}
+}
+
+function salesSave() {
+  try {
+    localStorage.setItem('nvt_sales', JSON.stringify({deals: salesDeals, nextId: salesNextId}))
+  } catch(e) {}
+}
+
+// Разбивает один платёж на сделки кратно SHEETS_PER_TRUCK
+function salesSplitPayment(company, date, totalAmount, month, existingIds = []) {
+  const deals = []
+  if (totalAmount <= 0) return deals
+  
+  // Определяем сколько фур (округляем до ближайшего целого)
+  const pricePerSheet = 2150  // дефолтная цена
+  const totalSheets = Math.round(totalAmount / pricePerSheet)
+  const trucks = Math.max(1, Math.round(totalSheets / SHEETS_PER_TRUCK))
+  const amtPerTruck = Math.round(totalAmount / trucks)
+  
+  for (let i = 0; i < trucks; i++) {
+    const amt = (i === trucks - 1) ? totalAmount - amtPerTruck * (trucks - 1) : amtPerTruck
+    const sheets = SHEETS_PER_TRUCK
+    const ppl = Math.round(amt / sheets)
+    deals.push({
+      id: salesNextId++,
+      company,
+      date,
+      payment: amt,
+      sheets,
+      pricePerSheet: ppl,
+      comment: '',
+      source: 'auto',
+      month,
+      autoGroupId: existingIds[i] || null,
+    })
+  }
+  return deals
+}
+
+// Синхронизирует автосделки из серверных данных
+function salesSyncFromServer() {
+  if (!window.serverOpsCache || !Object.keys(window.serverOpsCache).length) return
+  
+  // Собираем все кредитные операции (поступления)
+  const incoming = []
+  for (const [month, ops] of Object.entries(window.serverOpsCache)) {
+    for (const op of (Array.isArray(ops) ? ops : (ops.ops || []))) {
+      if (op.is_debit) continue
+      if (!op.amount || op.amount <= 0) continue
+      incoming.push({
+        key: month + '|' + op.date + '|' + op.contractor + '|' + op.amount,
+        company: op.contractor || 'Неизвестно',
+        date: op.date,
+        amount: op.amount,
+        month,
+      })
+    }
+  }
+
+  // Удаляем старые автосделки которых больше нет в данных
+  const keys = new Set(incoming.map(x => x.key))
+  salesDeals = salesDeals.filter(d => d.source !== 'auto' || keys.has(d._serverKey))
+
+  // Добавляем новые автосделки
+  const existingKeys = new Set(salesDeals.filter(d => d.source === 'auto').map(d => d._serverKey))
+  for (const inc of incoming) {
+    if (existingKeys.has(inc.key)) continue
+    const newDeals = salesSplitPayment(inc.company, inc.date, inc.amount, inc.month)
+    for (const d of newDeals) { d._serverKey = inc.key }
+    salesDeals.push(...newDeals)
+  }
+
+  salesSave()
+}
+
+function renderSales() {
+  const monthFilter = document.getElementById('sales-month-sel')?.value || ''
+  const searchFilter = (document.getElementById('sales-search')?.value || '').toLowerCase()
+
+  let deals = salesDeals.filter(d => {
+    if (monthFilter && d.month !== monthFilter) return false
+    if (searchFilter && !(d.company||'').toLowerCase().includes(searchFilter)) return false
+    return true
+  })
+
+  // Сортировка: дата убывание
+  deals = deals.slice().sort((a,b) => (b.date||'').localeCompare(a.date||''))
+
+  const tbody = document.getElementById('sales-tbody')
+  if (!tbody) return
+
+  if (!deals.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="sales-empty">Нет данных — загрузите выписку или добавьте сделку вручную</td></tr>'
+  } else {
+    tbody.innerHTML = deals.map(d => {
+      const rowClass = d.source === 'auto' ? 'auto-row' : 'manual-row'
+      const srcBadge = d.source === 'auto'
+        ? '<span class="deal-source auto">из выписки</span>'
+        : '<span class="deal-source manual">вручную</span>'
+      return `<tr class="${rowClass}" data-id="${d.id}">
+        <td class="deal-company">${d.company || '—'}</td>
+        <td class="deal-date">${d.date || '—'}</td>
+        <td class="deal-amount">${(d.payment||0).toLocaleString('ru-RU')} ₽</td>
+        <td><input class="deal-edit" type="number" value="${d.sheets||550}" min="1"
+          onchange="salesUpdateField(${d.id},'sheets',+this.value)" title="Кол-во листов"></td>
+        <td><input class="deal-edit" type="number" value="${d.pricePerSheet||2150}" min="1"
+          onchange="salesUpdateField(${d.id},'pricePerSheet',+this.value)" title="Цена за лист"></td>
+        <td><input class="deal-comment" type="text" value="${(d.comment||'').replace(/"/g,'&quot;')}"
+          placeholder="Комментарий..."
+          onchange="salesUpdateField(${d.id},'comment',this.value)"></td>
+        <td>${srcBadge}</td>
+        <td><button class="deal-del" onclick="salesDelete(${d.id})" title="Удалить">✕</button></td>
+      </tr>`
+    }).join('')
+  }
+
+  // Статистика
+  const total = deals.reduce((s,d) => s + (d.payment||0), 0)
+  const totalSheets = deals.reduce((s,d) => s + (d.sheets||0), 0)
+  const statEl = document.getElementById('sales-stat')
+  if (statEl) statEl.innerHTML = deals.length
+    ? `<span>${deals.length} сделок</span>&nbsp;&nbsp;<span>${total.toLocaleString('ru-RU')} ₽</span>&nbsp;&nbsp;<span>${totalSheets.toLocaleString('ru-RU')} листов</span>`
+    : ''
+}
+
+function salesUpdateField(id, field, value) {
+  const deal = salesDeals.find(d => d.id === id)
+  if (deal) { deal[field] = value; salesSave(); renderSales() }
+}
+
+function salesDelete(id) {
+  salesDeals = salesDeals.filter(d => d.id !== id)
+  salesSave()
+  renderSales()
+}
+
+function salesAddManual() {
+  const month = document.getElementById('sales-month-sel')?.value || 'Май'
+  const today = new Date().toLocaleDateString('ru-RU', {day:'2-digit',month:'2-digit',year:'numeric'}).split('.').reverse().join('-').slice(0,10)
+  salesDeals.unshift({
+    id: salesNextId++,
+    company: 'Новая компания',
+    date: today,
+    payment: 1182500,
+    sheets: 550,
+    pricePerSheet: 2150,
+    comment: '',
+    source: 'manual',
+    month,
+  })
+  salesSave()
+  renderSales()
 }
 
 // ── init ──────────────────────────────────────────────────────────────────────
 function initApp(){
+  salesLoad()
   showPage('calendar')
   renderTabs()
   document.getElementById('tbody').innerHTML = '<tr><td colspan="22" style="text-align:center;padding:60px 20px;color:#333;font-size:11px;letter-spacing:1px;text-transform:uppercase">Загрузка данных...</td></tr>'
@@ -1466,6 +1701,43 @@ if(sessionStorage.getItem('nvt_auth')){
 }
 </script>
 
+
+
+<div id="page-sales" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+  <div class="sales-wrap">
+    <div class="sales-toolbar">
+      <select class="sales-month-sel" id="sales-month-sel" onchange="renderSales()">
+        <option value="">Все месяцы</option>
+        <option value="Май">Май</option>
+        <option value="Июнь">Июнь</option>
+        <option value="Июль">Июль</option>
+        <option value="Август">Август</option>
+        <option value="Сентябрь">Сентябрь</option>
+        <option value="Октябрь">Октябрь</option>
+        <option value="Ноябрь">Ноябрь</option>
+        <option value="Декабрь">Декабрь</option>
+      </select>
+      <input type="text" id="sales-search" placeholder="Поиск по компании..." oninput="renderSales()" style="width:200px">
+      <button class="sales-add-btn" onclick="salesAddManual()">+ Добавить сделку</button>
+      <div class="sales-stat" id="sales-stat"></div>
+    </div>
+    <table class="sales-table">
+      <thead>
+        <tr>
+          <th>Компания</th>
+          <th>Дата</th>
+          <th>Сумма платежа</th>
+          <th>Листов</th>
+          <th>Цена за лист</th>
+          <th>Комментарий</th>
+          <th>Источник</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="sales-tbody"></tbody>
+    </table>
+  </div>
+</div>
 
 <!-- Справочник контрагентов -->
 <div class="ref-wrap" id="ref-wrap">
