@@ -1541,21 +1541,47 @@ function salesSave() {
   } catch(e) {}
 }
 
-// Создаёт одну сделку из платежа: листы = сумма / 2150 (округление до целого)
+// Разбивает платёж на сделки: до 550 листов — одна, больше — на фуры по 550 + остаток
 function salesSplitPayment(company, date, totalAmount, month) {
   if (totalAmount <= 0) return []
-  const sheets = Math.round(totalAmount / DEFAULT_PRICE)
-  return [{
-    id: salesNextId++,
-    company,
-    date,
-    payment: totalAmount,
-    sheets,
-    pricePerSheet: DEFAULT_PRICE,
-    comment: '',
-    source: 'auto',
-    month,
-  }]
+  const totalSheets = Math.round(totalAmount / DEFAULT_PRICE)
+
+  // До 550 листов включительно — одна сделка
+  if (totalSheets <= 550) {
+    return [{
+      id: salesNextId++,
+      company, date, payment: totalAmount,
+      sheets: totalSheets, pricePerSheet: DEFAULT_PRICE,
+      comment: '', source: 'auto', month,
+    }]
+  }
+
+  // Больше 550 — разбиваем на полные фуры + остаток
+  const fullTrucks = Math.floor(totalSheets / 550)
+  const remainderSheets = totalSheets - fullTrucks * 550
+  const truckPayment = 550 * DEFAULT_PRICE   // 1 182 500 ₽
+  const deals = []
+
+  for (let i = 0; i < fullTrucks; i++) {
+    deals.push({
+      id: salesNextId++,
+      company, date, payment: truckPayment,
+      sheets: 550, pricePerSheet: DEFAULT_PRICE,
+      comment: '', source: 'auto', month,
+    })
+  }
+
+  if (remainderSheets > 0) {
+    const remainderPayment = totalAmount - fullTrucks * truckPayment
+    deals.push({
+      id: salesNextId++,
+      company, date, payment: remainderPayment,
+      sheets: remainderSheets,
+      pricePerSheet: Math.round(remainderPayment / remainderSheets),
+      comment: '', source: 'auto', month,
+    })
+  }
+  return deals
 }
 
 // Синхронизирует автосделки из серверных данных
