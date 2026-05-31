@@ -1517,19 +1517,13 @@ function showPage(page) {
 
 
 // ══════════════════════════════════════════════════════════════════════════════
-// ПРОДАЖИ — гибрид: поступления + сделки
+// ПРОДАЖИ — одна сделка на каждый платёж, двусторонняя связь листов и цены
 // ══════════════════════════════════════════════════════════════════════════════
 
 const DEFAULT_PRICE = 2150
-const SALES_FORMULA_VERSION = 10   // bump → автосделки пересоздадутся (ручные привязки сохранятся если payment IDs совпадают)
-
-// Структура данных:
-// payments[]  — все входящие платежи (id, date, company, amount, month, _serverKey, dealId|null)
-// deals[]     — сделки (id, paymentIds[], sheets, pricePerSheet, comment, source: 'auto'|'manual', dateOverride?, companyOverride?)
-let salesPayments = []
+const SALES_FORMULA_VERSION = 11   // bump → автосделки пересоздадутся
 let salesDeals = []
 let salesNextId = 1
-let salesSelectedPayments = new Set()   // выбранные ID платежей для объединения
 
 function salesLoad() {
   try {
@@ -1537,35 +1531,28 @@ function salesLoad() {
     if (!saved) return
     const d = JSON.parse(saved)
     if ((d.formulaVersion || 0) !== SALES_FORMULA_VERSION) {
-      // Версия устарела — сохраняем только ручные сделки
       salesDeals = (d.deals || []).filter(x => x.source === 'manual')
-      salesPayments = []
       salesNextId = d.nextId || (salesDeals.length + 100)
       salesSave()
     } else {
-      salesPayments = d.payments || []
       salesDeals = d.deals || []
       salesNextId = d.nextId || 1
     }
-  } catch(e) { console.error('salesLoad error', e) }
+  } catch(e) {}
 }
 
 function salesSave() {
   try {
     localStorage.setItem('nvt_sales', JSON.stringify({
-      payments: salesPayments,
-      deals: salesDeals,
-      nextId: salesNextId,
-      formulaVersion: SALES_FORMULA_VERSION,
+      deals: salesDeals, nextId: salesNextId, formulaVersion: SALES_FORMULA_VERSION,
     }))
   } catch(e) {}
 }
 
-// Синхронизация платежей с сервера + автогруппировка
+// Синхронизация: каждый входящий платёж → одна автосделка
 function salesSyncFromServer() {
   if (typeof serverOpsCache === 'undefined' || !Object.keys(serverOpsCache).length) return
 
-  // 1. Собираем все входящие платежи из сервера
   const incoming = []
   for (const [month, ops] of Object.entries(serverOpsCache)) {
     const opsList = Array.isArray(ops) ? ops : (ops.ops || [])
@@ -1577,240 +1564,137 @@ function salesSyncFromServer() {
         _serverKey: key,
         date: op.date || '',
         company: op.contractor || 'Неизвестно',
-        amount: op.amount,
+        payment: op.amount,
         month,
       })
     }
   }
 
-  // 2. Обновляем salesPayments: сохраняем существующие (с dealId), добавляем новые, удаляем исчезнувшие
+  // Существующие автосделки по ключу (сохраняем пользовательские правки sheets/price/comment)
   const existingByKey = {}
-  for (const p of salesPayments) {
-    if (p._serverKey) existingByKey[p._serverKey] = p
-  }
-  const newKeys = new Set(incoming.map(x => x._serverKey))
-
-  const updatedPayments = []
-  for (const inc of incoming) {
-    const existing = existingByKey[inc._serverKey]
-    if (existing) {
-      updatedPayments.push({ ...existing, ...inc, dealId: existing.dealId || null })
-    } else {
-      updatedPayments.push({
-        id: salesNextId++,
-        ...inc,
-        dealId: null,
-      })
-    }
-  }
-  // Удаляем привязки к удалённым платежам
-  salesPayments = updatedPayments
-  const validPaymentIds = new Set(salesPayments.map(p => p.id))
-
-  // 3. Чистим сделки: удаляем платежи которых больше нет
   for (const d of salesDeals) {
-    if (d.paymentIds) {
-      d.paymentIds = d.paymentIds.filter(pid => validPaymentIds.has(pid))
-    }
-  }
-  // Удаляем авто-сделки с пустыми paymentIds (их платежи исчезли)
-  salesDeals = salesDeals.filter(d => d.source === 'manual' || (d.paymentIds && d.paymentIds.length > 0))
-
-  // 4. Автогруппировка: непривязанные платежи группируем по (контрагент, месяц)
-  const attachedPids = new Set()
-  for (const d of salesDeals) (d.paymentIds || []).forEach(pid => attachedPids.add(pid))
-
-  const groups = {}
-  for (const p of salesPayments) {
-    if (attachedPids.has(p.id)) continue
-    const k = (p.company||'').toLowerCase().trim() + '||' + p.month
-    if (!groups[k]) groups[k] = { company: p.company, month: p.month, payments: [] }
-    groups[k].payments.push(p)
+    if (d.source === 'auto' && d._serverKey) existingByKey[d._serverKey] = d
   }
 
-  // 5. Для каждой группы создаём авто-сделку (одну на группу)
-  for (const g of Object.values(groups)) {
-    const total = g.payments.reduce((s,p) => s + p.amount, 0)
-    if (total <= 0) continue
-    // По умолчанию: листы = round(total / 2150), цена = total / листы
-    const sheets = Math.max(1, Math.round(total / DEFAULT_PRICE))
-    salesDeals.push({
+  // Удаляем автосделки которых больше нет в выписке
+  const newKeys = new Set(incoming.map(x => x._serverKey))
+  const manual = salesDeals.filter(d => d.source === 'manual')
+  const survivingAuto = salesDeals.filter(d => d.source === 'auto' && d._serverKey && newKeys.has(d._serverKey))
+
+  // Добавляем новые автосделки которых ещё не было
+  const surKeys = new Set(survivingAuto.map(d => d._serverKey))
+  const newAuto = []
+  for (const inc of incoming) {
+    if (surKeys.has(inc._serverKey)) continue
+    const sheets = Math.max(1, Math.round(inc.payment / DEFAULT_PRICE))
+    newAuto.push({
       id: salesNextId++,
-      paymentIds: g.payments.map(p => p.id),
-      sheets,
-      pricePerSheet: Math.round(total / sheets),
-      comment: '',
+      _serverKey: inc._serverKey,
       source: 'auto',
+      company: inc.company,
+      date: inc.date,
+      payment: inc.payment,
+      month: inc.month,
+      sheets,
+      pricePerSheet: Math.round(inc.payment / sheets),
+      comment: '',
     })
   }
 
-  salesSave()
-}
+  // У выживших автосделок обновляем company/date если они изменились на сервере
+  for (const d of survivingAuto) {
+    const inc = incoming.find(i => i._serverKey === d._serverKey)
+    if (inc) {
+      d.company = inc.company
+      d.date = inc.date
+      d.payment = inc.payment   // сумма из выписки — авторитетная
+      d.month = inc.month
+    }
+  }
 
-// Привязка платежей к сделке: вычисляем актуальные данные
-function _dealView(d) {
-  const paymentIds = new Set(d.paymentIds || [])
-  const linkedPayments = salesPayments.filter(p => paymentIds.has(p.id))
-  const amount = linkedPayments.reduce((s,p) => s + p.amount, 0)
-  // Компания/дата: если в сделке указан override — используем его, иначе берём из первого платежа
-  const firstP = linkedPayments[0] || {}
-  const company = d.companyOverride || firstP.company || 'Без компании'
-  const date = d.dateOverride || (linkedPayments.length ? linkedPayments.map(p => p.date).sort()[0] : '')
-  const month = firstP.month || ''
-  return { ...d, _payments: linkedPayments, amount, company, date, month }
+  salesDeals = [...manual, ...survivingAuto, ...newAuto]
+  salesSave()
 }
 
 function renderSales() {
   const monthFilter = document.getElementById('sales-month-sel')?.value || ''
   const searchFilter = (document.getElementById('sales-search')?.value || '').toLowerCase()
 
-  // ── Платежи ──
-  const filteredPayments = salesPayments.filter(p => {
-    if (monthFilter && p.month !== monthFilter) return false
-    if (searchFilter && !(p.company||'').toLowerCase().includes(searchFilter)) return false
-    return true
-  }).slice().sort((a,b) => (b.date||'').localeCompare(a.date||''))
-
-  const payTbody = document.getElementById('sales-payments-tbody')
-  if (payTbody) {
-    if (!filteredPayments.length) {
-      payTbody.innerHTML = '<tr><td colspan="5" class="sales-empty">Поступлений нет — загрузите выписку</td></tr>'
-    } else {
-      payTbody.innerHTML = filteredPayments.map(p => {
-        const inDeal = p.dealId || salesDeals.find(d => (d.paymentIds||[]).includes(p.id))
-        const dealObj = salesDeals.find(d => (d.paymentIds||[]).includes(p.id))
-        const isChecked = salesSelectedPayments.has(p.id)
-        const statusHtml = dealObj
-          ? `<span class="deal-source ${dealObj.source}">→ сделка #${dealObj.id}</span>`
-          : '<span style="color:#555;font-size:11px">не привязан</span>'
-        return `<tr data-pid="${p.id}" style="${isChecked?'background:rgba(240,165,0,.05)':''}">
-          <td><input type="checkbox" ${isChecked?'checked':''} onchange="salesTogglePayment(${p.id}, this.checked)"></td>
-          <td class="deal-date">${p.date || '—'}</td>
-          <td class="deal-company">${p.company || '—'}</td>
-          <td class="deal-amount">${(p.amount||0).toLocaleString('ru-RU')} ₽</td>
-          <td>${statusHtml}</td>
-        </tr>`
-      }).join('')
-    }
-  }
-  const payCnt = document.getElementById('sales-payments-count')
-  if (payCnt) {
-    const tt = filteredPayments.reduce((s,p) => s + p.amount, 0)
-    payCnt.textContent = `· ${filteredPayments.length} шт. · ${tt.toLocaleString('ru-RU')} ₽`
-  }
-  const mergeBtn = document.getElementById('sales-merge-btn')
-  if (mergeBtn) mergeBtn.style.display = salesSelectedPayments.size >= 1 ? '' : 'none'
-
-  // ── Сделки ──
-  const dealViews = salesDeals.map(_dealView).filter(d => {
+  const deals = salesDeals.filter(d => {
     if (monthFilter && d.month !== monthFilter) return false
     if (searchFilter && !(d.company||'').toLowerCase().includes(searchFilter)) return false
     return true
-  }).sort((a,b) => (b.date||'').localeCompare(a.date||''))
+  }).slice().sort((a,b) => (b.date||'').localeCompare(a.date||''))
 
   const tbody = document.getElementById('sales-tbody')
   if (tbody) {
-    if (!dealViews.length) {
-      tbody.innerHTML = '<tr><td colspan="9" class="sales-empty">Нет сделок</td></tr>'
+    if (!deals.length) {
+      tbody.innerHTML = '<tr><td colspan="8" class="sales-empty">Нет данных — загрузите выписку или добавьте сделку вручную</td></tr>'
     } else {
-      tbody.innerHTML = dealViews.map(d => {
+      tbody.innerHTML = deals.map(d => {
         const rowClass = d.source === 'auto' ? 'auto-row' : 'manual-row'
         const srcBadge = d.source === 'auto'
-          ? '<span class="deal-source auto">авто</span>'
-          : '<span class="deal-source manual">ручная</span>'
+          ? '<span class="deal-source auto">из выписки</span>'
+          : '<span class="deal-source manual">вручную</span>'
         return `<tr class="${rowClass}" data-id="${d.id}">
           <td class="deal-company">${d.company || '—'}</td>
           <td class="deal-date">${d.date || '—'}</td>
-          <td class="deal-amount">${(d.amount||0).toLocaleString('ru-RU')} ₽</td>
-          <td><input class="deal-edit" type="number" value="${d.sheets||0}" min="1"
-            onchange="salesUpdateField(${d.id},'sheets',+this.value)" title="Листов"></td>
-          <td><input class="deal-edit" type="number" value="${d.pricePerSheet||0}" min="1"
-            onchange="salesUpdateField(${d.id},'pricePerSheet',+this.value)" title="Цена/лист"></td>
-          <td style="text-align:center;color:#666;font-size:11px">${(d.paymentIds||[]).length}</td>
+          <td class="deal-amount">${(d.payment||0).toLocaleString('ru-RU')} ₽</td>
+          <td><input class="deal-edit" type="number" value="${d.sheets||0}" min="1" step="1"
+            onchange="salesUpdateSheets(${d.id}, +this.value)" title="Листов (цена пересчитается)"></td>
+          <td><input class="deal-edit" type="number" value="${d.pricePerSheet||0}" min="1" step="1"
+            onchange="salesUpdatePrice(${d.id}, +this.value)" title="Цена за лист (листы пересчитаются)"></td>
           <td><input class="deal-comment" type="text" value="${(d.comment||'').replace(/"/g,'&quot;')}"
             placeholder="Комментарий..."
             onchange="salesUpdateField(${d.id},'comment',this.value)"></td>
           <td>${srcBadge}</td>
-          <td><button class="deal-del" onclick="salesDelete(${d.id})" title="Расформировать">✕</button></td>
+          <td><button class="deal-del" onclick="salesDelete(${d.id})" title="Удалить">✕</button></td>
         </tr>`
       }).join('')
     }
   }
-  const dealCnt = document.getElementById('sales-deals-count')
-  if (dealCnt) dealCnt.textContent = `· ${dealViews.length} шт.`
 
-  // ── Общая статистика (по сделкам) ──
-  const total = dealViews.reduce((s,d) => s + (d.amount||0), 0)
-  const totalSheets = dealViews.reduce((s,d) => s + (d.sheets||0), 0)
+  // Статистика
+  const total = deals.reduce((s,d) => s + (d.payment||0), 0)
+  const totalSheets = deals.reduce((s,d) => s + (d.sheets||0), 0)
   const avgPrice = totalSheets > 0 ? Math.round(total / totalSheets) : 0
   const statEl = document.getElementById('sales-stat')
-  if (statEl) statEl.innerHTML = dealViews.length
-    ? `<div class="sales-stat-item"><div class="sales-stat-val">${total.toLocaleString('ru-RU')} ₽</div><div class="sales-stat-lbl">Сумма сделок</div></div>
+  if (statEl) statEl.innerHTML = deals.length
+    ? `<div class="sales-stat-item"><div class="sales-stat-val">${total.toLocaleString('ru-RU')} ₽</div><div class="sales-stat-lbl">Общая сумма</div></div>
        <div class="sales-stat-item"><div class="sales-stat-val">${totalSheets.toLocaleString('ru-RU')}</div><div class="sales-stat-lbl">Всего листов</div></div>
-       <div class="sales-stat-item"><div class="sales-stat-val">${avgPrice.toLocaleString('ru-RU')} ₽</div><div class="sales-stat-lbl">Средняя цена/лист</div></div>`
+       <div class="sales-stat-item"><div class="sales-stat-val">${avgPrice.toLocaleString('ru-RU')} ₽</div><div class="sales-stat-lbl">Средняя цена за лист</div></div>`
     : ''
 }
 
-function salesTogglePayment(pid, checked) {
-  if (checked) salesSelectedPayments.add(pid)
-  else salesSelectedPayments.delete(pid)
+// Меняем количество листов → цена пересчитывается от суммы платежа
+function salesUpdateSheets(id, sheets) {
+  const d = salesDeals.find(x => x.id === id)
+  if (!d || sheets <= 0) return
+  d.sheets = sheets
+  d.pricePerSheet = Math.round((d.payment || 0) / sheets)
+  salesSave()
   renderSales()
 }
 
-function salesToggleAllPayments(checked) {
-  const monthFilter = document.getElementById('sales-month-sel')?.value || ''
-  const searchFilter = (document.getElementById('sales-search')?.value || '').toLowerCase()
-  const visible = salesPayments.filter(p => {
-    if (monthFilter && p.month !== monthFilter) return false
-    if (searchFilter && !(p.company||'').toLowerCase().includes(searchFilter)) return false
-    return true
-  })
-  if (checked) visible.forEach(p => salesSelectedPayments.add(p.id))
-  else visible.forEach(p => salesSelectedPayments.delete(p.id))
-  renderSales()
-}
-
-// Объединить выбранные платежи в одну сделку (отвязав от старых сделок)
-function salesMergeSelected() {
-  if (!salesSelectedPayments.size) return
-  const pids = Array.from(salesSelectedPayments)
-
-  // Отвязываем эти платежи от старых сделок
-  for (const d of salesDeals) {
-    if (d.paymentIds) d.paymentIds = d.paymentIds.filter(pid => !pids.includes(pid))
-  }
-  // Удаляем сделки которые остались без платежей (если не ручные)
-  salesDeals = salesDeals.filter(d => d.source === 'manual' || (d.paymentIds && d.paymentIds.length > 0))
-
-  // Создаём новую сделку
-  const linkedPayments = salesPayments.filter(p => pids.includes(p.id))
-  const total = linkedPayments.reduce((s,p) => s + p.amount, 0)
-  const sheets = Math.max(1, Math.round(total / DEFAULT_PRICE))
-
-  salesDeals.unshift({
-    id: salesNextId++,
-    paymentIds: pids,
-    sheets,
-    pricePerSheet: Math.round(total / sheets),
-    comment: '',
-    source: 'manual',
-  })
-
-  salesSelectedPayments.clear()
+// Меняем цену листа → количество пересчитывается от суммы платежа
+function salesUpdatePrice(id, price) {
+  const d = salesDeals.find(x => x.id === id)
+  if (!d || price <= 0) return
+  d.pricePerSheet = price
+  d.sheets = Math.max(1, Math.round((d.payment || 0) / price))
   salesSave()
   renderSales()
 }
 
 function salesUpdateField(id, field, value) {
-  const deal = salesDeals.find(d => d.id === id)
-  if (!deal) return
-  deal[field] = value
+  const d = salesDeals.find(x => x.id === id)
+  if (!d) return
+  d[field] = value
   salesSave()
   renderSales()
 }
 
 function salesDelete(id) {
-  // Расформировать сделку: платежи отвязываются и снова доступны
   salesDeals = salesDeals.filter(d => d.id !== id)
   salesSave()
   renderSales()
@@ -1819,16 +1703,18 @@ function salesDelete(id) {
 function salesAddManual() {
   const month = document.getElementById('sales-month-sel')?.value || 'Май'
   const today = new Date().toISOString().slice(0,10)
-  // Ручная сделка без привязанных платежей — пользователь редактирует руками
+  const payment = 1182500
+  const sheets = Math.round(payment / DEFAULT_PRICE)
   salesDeals.unshift({
     id: salesNextId++,
-    paymentIds: [],
-    sheets: 550,
+    source: 'manual',
+    company: 'Новая компания',
+    date: today,
+    payment,
+    month,
+    sheets,
     pricePerSheet: DEFAULT_PRICE,
     comment: '',
-    source: 'manual',
-    companyOverride: 'Новая компания',
-    dateOverride: today,
   })
   salesSave()
   renderSales()
@@ -1854,7 +1740,6 @@ if(sessionStorage.getItem('nvt_auth')){
 
 <div id="page-sales" style="display:none;flex-direction:column;flex:1;overflow:hidden">
   <div class="sales-wrap">
-    <!-- Toolbar -->
     <div class="sales-toolbar">
       <select class="sales-month-sel" id="sales-month-sel" onchange="renderSales()">
         <option value="">Все месяцы</option>
@@ -1867,38 +1752,18 @@ if(sessionStorage.getItem('nvt_auth')){
         <option value="Ноябрь">Ноябрь</option>
         <option value="Декабрь">Декабрь</option>
       </select>
-      <input type="text" id="sales-search" placeholder="Поиск..." oninput="renderSales()" style="width:200px">
-      <button class="sales-add-btn" onclick="salesAddManual()">+ Сделка вручную</button>
-      <button class="sales-add-btn" id="sales-merge-btn" onclick="salesMergeSelected()" style="background:#1a3a6b;color:#fff;display:none">Объединить выбранные в сделку</button>
+      <input type="text" id="sales-search" placeholder="Поиск по компании..." oninput="renderSales()" style="width:200px">
+      <button class="sales-add-btn" onclick="salesAddManual()">+ Добавить сделку</button>
       <div class="sales-stat" id="sales-stat"></div>
     </div>
-
-    <!-- ПОСТУПЛЕНИЯ -->
-    <div class="sales-section-hdr">Поступления (входящие платежи) <span id="sales-payments-count" style="color:#666;margin-left:8px"></span></div>
-    <table class="sales-table" style="margin-bottom:24px">
-      <thead>
-        <tr>
-          <th style="width:36px"><input type="checkbox" id="sales-pay-all" onchange="salesToggleAllPayments(this.checked)"></th>
-          <th>Дата</th>
-          <th>Компания</th>
-          <th style="text-align:right">Сумма</th>
-          <th>Статус</th>
-        </tr>
-      </thead>
-      <tbody id="sales-payments-tbody"></tbody>
-    </table>
-
-    <!-- СДЕЛКИ -->
-    <div class="sales-section-hdr">Сделки <span id="sales-deals-count" style="color:#666;margin-left:8px"></span></div>
     <table class="sales-table">
       <thead>
         <tr>
           <th>Компания</th>
           <th>Дата</th>
-          <th style="text-align:right">Сумма</th>
+          <th style="text-align:right">Сумма платежа</th>
           <th>Листов</th>
           <th>Цена за лист</th>
-          <th>Платежей</th>
           <th>Комментарий</th>
           <th>Источник</th>
           <th></th>
