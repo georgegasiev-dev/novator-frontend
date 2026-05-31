@@ -1520,7 +1520,8 @@ function showPage(page) {
 // ══════════════════════════════════════════════════════════════════════════════
 
 const DEFAULT_PRICE = 2150     // дефолтная цена 1 листа фанеры
-let salesDeals = []            // все сделки {id, company, date, payment, sheets, pricePerSheet, comment, source, month}
+const SALES_FORMULA_VERSION = 3 // bump при изменении формулы разбивки — автосделки пересоздадутся
+let salesDeals = []
 let salesNextId = 1
 
 // Загружаем сохранённые сделки из localStorage
@@ -1529,15 +1530,24 @@ function salesLoad() {
     const saved = localStorage.getItem('nvt_sales')
     if (saved) {
       const d = JSON.parse(saved)
-      salesDeals = d.deals || []
-      salesNextId = d.nextId || (salesDeals.length + 1)
+      // Если версия формулы устарела — выкидываем все автосделки, оставляем только ручные
+      if ((d.formulaVersion || 0) !== SALES_FORMULA_VERSION) {
+        salesDeals = (d.deals || []).filter(x => x.source === 'manual')
+        salesNextId = d.nextId || (salesDeals.length + 1)
+        salesSave()  // сохраняем с новой версией
+      } else {
+        salesDeals = d.deals || []
+        salesNextId = d.nextId || (salesDeals.length + 1)
+      }
     }
   } catch(e) {}
 }
 
 function salesSave() {
   try {
-    localStorage.setItem('nvt_sales', JSON.stringify({deals: salesDeals, nextId: salesNextId}))
+    localStorage.setItem('nvt_sales', JSON.stringify({
+      deals: salesDeals, nextId: salesNextId, formulaVersion: SALES_FORMULA_VERSION,
+    }))
   } catch(e) {}
 }
 
