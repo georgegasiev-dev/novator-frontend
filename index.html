@@ -1520,7 +1520,7 @@ function showPage(page) {
 // ══════════════════════════════════════════════════════════════════════════════
 
 const DEFAULT_PRICE = 2150     // дефолтная цена 1 листа фанеры
-const SALES_FORMULA_VERSION = 5 // bump при изменении формулы разбивки — автосделки пересоздадутся
+const SALES_FORMULA_VERSION = 6 // bump при изменении формулы разбивки — автосделки пересоздадутся
 let salesDeals = []
 let salesNextId = 1
 
@@ -1551,88 +1551,131 @@ function salesSave() {
   } catch(e) {}
 }
 
-// Разбивает платёж на сделки.
-// Правило: если платёж > 2 млн ₽ — делим на полные фуры по 550 листов + остаток.
-//           Иначе — одна сделка с 550 листами и пересчитанной ценой за лист.
-const SPLIT_THRESHOLD = 2000000
-const MIN_DEAL_AMOUNT = 1100000  // ниже — это хвосты, в продажи не идут
-function salesSplitPayment(company, date, totalAmount, month) {
-  if (totalAmount <= 0) return []
-  if (totalAmount < MIN_DEAL_AMOUNT) return []   // отсекаем хвосты
+// Пороги
+const SPLIT_THRESHOLD = 2000000   // > 2 млн — режем группу на фуры по 550 листов
+const FULL_TRUCK_MIN  = 1100000   // ≥ 1.1 млн — полноценная фура с пересчётом цены
+// (если меньше — считаем как «хвост»: сколько листов получилось, по факту цены)
 
-  // ≤ 2 млн — одна сделка, 550 листов, цена за лист = сумма / 550
-  if (totalAmount <= SPLIT_THRESHOLD) {
-    return [{
-      id: salesNextId++,
-      company, date, payment: totalAmount,
-      sheets: 550,
-      pricePerSheet: Math.round(totalAmount / 550),
-      comment: '', source: 'auto', month,
-    }]
-  }
+// Генерация авто-сделок из группы платежей одного контрагента за месяц
+function _specsFromGroup(group) {
+  const specs = []
+  const total = group.total
+  const firstDate = group.firstDate
 
-  // > 2 млн — разбиваем на полные фуры по 550 листов + остаток
-  const totalSheets = Math.round(totalAmount / DEFAULT_PRICE)
-  const fullTrucks = Math.floor(totalSheets / 550)
-  const remainderSheets = totalSheets - fullTrucks * 550
-  const truckPayment = 550 * DEFAULT_PRICE   // 1 182 500 ₽
-  const deals = []
-
-  for (let i = 0; i < fullTrucks; i++) {
-    deals.push({
-      id: salesNextId++,
-      company, date, payment: truckPayment,
-      sheets: 550, pricePerSheet: DEFAULT_PRICE,
-      comment: '', source: 'auto', month,
+  if (total > SPLIT_THRESHOLD) {
+    // > 2 млн: полные фуры по 550 листов + остаток
+    const totalSheets = Math.round(total / DEFAULT_PRICE)
+    const fullTrucks  = Math.floor(totalSheets / 550)
+    const remainderSheets = totalSheets - fullTrucks * 550
+    const truckPayment    = 550 * DEFAULT_PRICE
+    for (let i = 0; i < fullTrucks; i++) {
+      specs.push({
+        subKey: 'truck' + i,
+        company: group.contractor, date: firstDate, payment: truckPayment,
+        sheets: 550, pricePerSheet: DEFAULT_PRICE,
+      })
+    }
+    if (remainderSheets > 0) {
+      const remainderPayment = total - fullTrucks * truckPayment
+      specs.push({
+        subKey: 'remainder',
+        company: group.contractor, date: firstDate, payment: remainderPayment,
+        sheets: remainderSheets,
+        pricePerSheet: Math.round(remainderPayment / remainderSheets),
+      })
+    }
+  } else if (total >= FULL_TRUCK_MIN) {
+    // 1.1–2 млн: одна фура 550 листов, цена = total / 550
+    specs.push({
+      subKey: 'single',
+      company: group.contractor, date: firstDate, payment: total,
+      sheets: 550, pricePerSheet: Math.round(total / 550),
+    })
+  } else {
+    // < 1.1 млн (хвост): сколько фактически листов = total / 2150
+    const sheets = Math.max(1, Math.round(total / DEFAULT_PRICE))
+    specs.push({
+      subKey: 'tail',
+      company: group.contractor, date: firstDate, payment: total,
+      sheets,
+      pricePerSheet: Math.round(total / sheets),
     })
   }
-
-  if (remainderSheets > 0) {
-    const remainderPayment = totalAmount - fullTrucks * truckPayment
-    deals.push({
-      id: salesNextId++,
-      company, date, payment: remainderPayment,
-      sheets: remainderSheets,
-      pricePerSheet: Math.round(remainderPayment / remainderSheets),
-      comment: '', source: 'auto', month,
-    })
-  }
-  return deals
+  return specs
 }
 
 // Синхронизирует автосделки из серверных данных
 function salesSyncFromServer() {
   if (typeof serverOpsCache === 'undefined' || !Object.keys(serverOpsCache).length) return
-  
-  // Собираем все кредитные операции (поступления)
-  const incoming = []
+
+  // 1. Группируем все входящие платежи по (контрагент + месяц)
+  const groups = {}   // key: "norm||month" → {key, contractor, month, payments[], total, firstDate}
   for (const [month, ops] of Object.entries(serverOpsCache)) {
-    for (const op of (Array.isArray(ops) ? ops : (ops.ops || []))) {
+    const opsList = Array.isArray(ops) ? ops : (ops.ops || [])
+    for (const op of opsList) {
       if (op.is_debit) continue
       if (!op.amount || op.amount <= 0) continue
-      incoming.push({
-        key: month + '|' + op.date + '|' + op.contractor + '|' + op.amount,
-        company: op.contractor || 'Неизвестно',
-        date: op.date,
-        amount: op.amount,
+      const norm = (op.contractor || '').toLowerCase().trim()
+      const groupKey = norm + '||' + month
+      if (!groups[groupKey]) groups[groupKey] = {
+        key: groupKey,
+        contractor: op.contractor || 'Неизвестно',
         month,
+        payments: [],
+        total: 0,
+        firstDate: op.date || '',
+      }
+      groups[groupKey].payments.push(op)
+      groups[groupKey].total += op.amount
+      if (op.date && (!groups[groupKey].firstDate || op.date < groups[groupKey].firstDate)) {
+        groups[groupKey].firstDate = op.date
+      }
+    }
+  }
+
+  // 2. Для каждой группы генерируем спецификации сделок
+  const newAutoByKey = {}   // _serverKey → spec
+  for (const g of Object.values(groups)) {
+    if (g.total <= 0) continue
+    const specs = _specsFromGroup(g)
+    for (const spec of specs) {
+      const fullKey = g.key + '||' + spec.subKey
+      newAutoByKey[fullKey] = { ...spec, _serverKey: fullKey, month: g.month, source: 'auto' }
+    }
+  }
+
+  // 3. Сохраняем ручные сделки
+  const manualDeals = salesDeals.filter(d => d.source === 'manual')
+
+  // 4. Существующие авто-сделки: сохраняем правки если ключ ещё актуален
+  const existingAuto = {}
+  for (const d of salesDeals.filter(d => d.source === 'auto')) {
+    if (d._serverKey) existingAuto[d._serverKey] = d
+  }
+
+  // 5. Собираем итоговый список авто-сделок
+  const newAutoDeals = []
+  for (const [key, spec] of Object.entries(newAutoByKey)) {
+    const existing = existingAuto[key]
+    if (existing) {
+      // Сохраняем пользовательские правки: sheets / pricePerSheet / comment
+      newAutoDeals.push({
+        ...existing,
+        company: spec.company,
+        date: spec.date,
+        payment: spec.payment,
+        month: spec.month,
+      })
+    } else {
+      newAutoDeals.push({
+        id: salesNextId++,
+        ...spec,
+        comment: '',
       })
     }
   }
 
-  // Удаляем старые автосделки которых больше нет в данных
-  const keys = new Set(incoming.map(x => x.key))
-  salesDeals = salesDeals.filter(d => d.source !== 'auto' || keys.has(d._serverKey))
-
-  // Добавляем новые автосделки
-  const existingKeys = new Set(salesDeals.filter(d => d.source === 'auto').map(d => d._serverKey))
-  for (const inc of incoming) {
-    if (existingKeys.has(inc.key)) continue
-    const newDeals = salesSplitPayment(inc.company, inc.date, inc.amount, inc.month)
-    for (const d of newDeals) { d._serverKey = inc.key }
-    salesDeals.push(...newDeals)
-  }
-
+  salesDeals = [...manualDeals, ...newAutoDeals]
   salesSave()
 }
 
