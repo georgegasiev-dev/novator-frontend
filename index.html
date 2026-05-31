@@ -1572,11 +1572,11 @@ function salesSplitPayment(company, date, totalAmount, month, existingIds = []) 
 
 // Синхронизирует автосделки из серверных данных
 function salesSyncFromServer() {
-  if (!window.serverOpsCache || !Object.keys(window.serverOpsCache).length) return
+  if (typeof serverOpsCache === 'undefined' || !Object.keys(serverOpsCache).length) return
   
   // Собираем все кредитные операции (поступления)
   const incoming = []
-  for (const [month, ops] of Object.entries(window.serverOpsCache)) {
+  for (const [month, ops] of Object.entries(serverOpsCache)) {
     for (const op of (Array.isArray(ops) ? ops : (ops.ops || []))) {
       if (op.is_debit) continue
       if (!op.amount || op.amount <= 0) continue
