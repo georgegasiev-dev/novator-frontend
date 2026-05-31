@@ -283,8 +283,10 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
 .sales-add-btn{padding:7px 16px;border:none;border-radius:6px;background:#f0a500;
   color:#000;font-size:11px;font-weight:700;cursor:pointer}
 .sales-add-btn:hover{opacity:.88}
-.sales-stat{margin-left:auto;font-size:11px;color:#444;display:flex;gap:18px}
-.sales-stat span{color:#888}
+.sales-stat{margin-left:30px;display:flex;gap:42px;align-items:center}
+.sales-stat-item{display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+.sales-stat-val{font-size:24px;font-weight:800;color:#f0a500;letter-spacing:.3px;line-height:1}
+.sales-stat-lbl{font-size:9px;color:#444;letter-spacing:2px;text-transform:uppercase}
 .sales-table{width:100%;border-collapse:collapse;font-size:12px}
 .sales-table th{padding:9px 12px;text-align:left;font-size:10px;color:#f0a500;
   font-weight:700;letter-spacing:.5px;text-transform:uppercase;
@@ -1650,9 +1652,12 @@ function renderSales() {
   // Статистика
   const total = deals.reduce((s,d) => s + (d.payment||0), 0)
   const totalSheets = deals.reduce((s,d) => s + (d.sheets||0), 0)
+  const avgPrice = totalSheets > 0 ? Math.round(total / totalSheets) : 0
   const statEl = document.getElementById('sales-stat')
   if (statEl) statEl.innerHTML = deals.length
-    ? `<span>${deals.length} сделок</span>&nbsp;&nbsp;<span>${total.toLocaleString('ru-RU')} ₽</span>&nbsp;&nbsp;<span>${totalSheets.toLocaleString('ru-RU')} листов</span>`
+    ? `<div class="sales-stat-item"><div class="sales-stat-val">${total.toLocaleString('ru-RU')} ₽</div><div class="sales-stat-lbl">Общая сумма</div></div>
+       <div class="sales-stat-item"><div class="sales-stat-val">${totalSheets.toLocaleString('ru-RU')}</div><div class="sales-stat-lbl">Всего листов</div></div>
+       <div class="sales-stat-item"><div class="sales-stat-val">${avgPrice.toLocaleString('ru-RU')} ₽</div><div class="sales-stat-lbl">Средняя цена за лист</div></div>`
     : ''
 }
 
