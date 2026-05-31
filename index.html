@@ -1520,7 +1520,7 @@ function showPage(page) {
 // ══════════════════════════════════════════════════════════════════════════════
 
 const DEFAULT_PRICE = 2150     // дефолтная цена 1 листа фанеры
-const SALES_FORMULA_VERSION = 4 // bump при изменении формулы разбивки — автосделки пересоздадутся
+const SALES_FORMULA_VERSION = 5 // bump при изменении формулы разбивки — автосделки пересоздадутся
 let salesDeals = []
 let salesNextId = 1
 
@@ -1555,8 +1555,10 @@ function salesSave() {
 // Правило: если платёж > 2 млн ₽ — делим на полные фуры по 550 листов + остаток.
 //           Иначе — одна сделка с 550 листами и пересчитанной ценой за лист.
 const SPLIT_THRESHOLD = 2000000
+const MIN_DEAL_AMOUNT = 1100000  // ниже — это хвосты, в продажи не идут
 function salesSplitPayment(company, date, totalAmount, month) {
   if (totalAmount <= 0) return []
+  if (totalAmount < MIN_DEAL_AMOUNT) return []   // отсекаем хвосты
 
   // ≤ 2 млн — одна сделка, 550 листов, цена за лист = сумма / 550
   if (totalAmount <= SPLIT_THRESHOLD) {
