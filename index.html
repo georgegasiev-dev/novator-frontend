@@ -1520,7 +1520,7 @@ function showPage(page) {
 // ══════════════════════════════════════════════════════════════════════════════
 
 const DEFAULT_PRICE = 2150     // дефолтная цена 1 листа фанеры
-const SALES_FORMULA_VERSION = 3 // bump при изменении формулы разбивки — автосделки пересоздадутся
+const SALES_FORMULA_VERSION = 4 // bump при изменении формулы разбивки — автосделки пересоздадутся
 let salesDeals = []
 let salesNextId = 1
 
@@ -1551,22 +1551,26 @@ function salesSave() {
   } catch(e) {}
 }
 
-// Разбивает платёж на сделки: до 550 листов — одна, больше — на фуры по 550 + остаток
+// Разбивает платёж на сделки.
+// Правило: если платёж > 2 млн ₽ — делим на полные фуры по 550 листов + остаток.
+//           Иначе — одна сделка с 550 листами и пересчитанной ценой за лист.
+const SPLIT_THRESHOLD = 2000000
 function salesSplitPayment(company, date, totalAmount, month) {
   if (totalAmount <= 0) return []
-  const totalSheets = Math.round(totalAmount / DEFAULT_PRICE)
 
-  // До 550 листов включительно — одна сделка
-  if (totalSheets <= 550) {
+  // ≤ 2 млн — одна сделка, 550 листов, цена за лист = сумма / 550
+  if (totalAmount <= SPLIT_THRESHOLD) {
     return [{
       id: salesNextId++,
       company, date, payment: totalAmount,
-      sheets: totalSheets, pricePerSheet: DEFAULT_PRICE,
+      sheets: 550,
+      pricePerSheet: Math.round(totalAmount / 550),
       comment: '', source: 'auto', month,
     }]
   }
 
-  // Больше 550 — разбиваем на полные фуры + остаток
+  // > 2 млн — разбиваем на полные фуры по 550 листов + остаток
+  const totalSheets = Math.round(totalAmount / DEFAULT_PRICE)
   const fullTrucks = Math.floor(totalSheets / 550)
   const remainderSheets = totalSheets - fullTrucks * 550
   const truckPayment = 550 * DEFAULT_PRICE   // 1 182 500 ₽
