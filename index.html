@@ -1519,7 +1519,7 @@ function showPage(page) {
 // ПРОДАЖИ
 // ══════════════════════════════════════════════════════════════════════════════
 
-const SHEETS_PER_TRUCK = 550   // листов в фуре
+const DEFAULT_PRICE = 2150     // дефолтная цена 1 листа фанеры
 let salesDeals = []            // все сделки {id, company, date, payment, sheets, pricePerSheet, comment, source, month}
 let salesNextId = 1
 
@@ -1541,35 +1541,21 @@ function salesSave() {
   } catch(e) {}
 }
 
-// Разбивает один платёж на сделки кратно SHEETS_PER_TRUCK
-function salesSplitPayment(company, date, totalAmount, month, existingIds = []) {
-  const deals = []
-  if (totalAmount <= 0) return deals
-  
-  // Определяем сколько фур (округляем до ближайшего целого)
-  const pricePerSheet = 2150  // дефолтная цена
-  const totalSheets = Math.round(totalAmount / pricePerSheet)
-  const trucks = Math.max(1, Math.round(totalSheets / SHEETS_PER_TRUCK))
-  const amtPerTruck = Math.round(totalAmount / trucks)
-  
-  for (let i = 0; i < trucks; i++) {
-    const amt = (i === trucks - 1) ? totalAmount - amtPerTruck * (trucks - 1) : amtPerTruck
-    const sheets = SHEETS_PER_TRUCK
-    const ppl = Math.round(amt / sheets)
-    deals.push({
-      id: salesNextId++,
-      company,
-      date,
-      payment: amt,
-      sheets,
-      pricePerSheet: ppl,
-      comment: '',
-      source: 'auto',
-      month,
-      autoGroupId: existingIds[i] || null,
-    })
-  }
-  return deals
+// Создаёт одну сделку из платежа: листы = сумма / 2150 (округление до целого)
+function salesSplitPayment(company, date, totalAmount, month) {
+  if (totalAmount <= 0) return []
+  const sheets = Math.round(totalAmount / DEFAULT_PRICE)
+  return [{
+    id: salesNextId++,
+    company,
+    date,
+    payment: totalAmount,
+    sheets,
+    pricePerSheet: DEFAULT_PRICE,
+    comment: '',
+    source: 'auto',
+    month,
+  }]
 }
 
 // Синхронизирует автосделки из серверных данных
@@ -1674,14 +1660,15 @@ function salesDelete(id) {
 
 function salesAddManual() {
   const month = document.getElementById('sales-month-sel')?.value || 'Май'
-  const today = new Date().toLocaleDateString('ru-RU', {day:'2-digit',month:'2-digit',year:'numeric'}).split('.').reverse().join('-').slice(0,10)
+  const today = new Date().toISOString().slice(0,10)
+  const payment = 1182500
   salesDeals.unshift({
     id: salesNextId++,
     company: 'Новая компания',
     date: today,
-    payment: 1182500,
-    sheets: 550,
-    pricePerSheet: 2150,
+    payment,
+    sheets: Math.round(payment / DEFAULT_PRICE),
+    pricePerSheet: DEFAULT_PRICE,
     comment: '',
     source: 'manual',
     month,
