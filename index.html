@@ -555,6 +555,15 @@ function getCurWeekIdx(month) {
   return -1
 }
 
+// Определяет текущий месяц для дашборда: ищем по сегодняшней дате,
+// если попадает — возвращаем; если месяц не в списке — оставляем 'Май'
+function getCurrentMonthName() {
+  const today = new Date()
+  const m = today.getMonth() + 1  // 1..12
+  const mMap = {5:'Май',6:'Июнь',7:'Июль',8:'Август',9:'Сентябрь',10:'Октябрь',11:'Ноябрь',12:'Декабрь'}
+  return mMap[m] || 'Май'
+}
+
 const GROUPS = [
   {id:'g_les',   label:'Лес'},
   {id:'g_smola', label:'Смола'},
@@ -677,14 +686,14 @@ function dClass(d, isIncome) {
 }
 
 // состояние
-let curMonth = 'Май'
+let curMonth = 'Май'   // переопределится в initApp() через getCurrentMonthName()
 let uploadTimes = {}
-let uploadMonth = 'Май'
+let uploadMonth = 'Май'  // переопределится в initApp()
 let serverFacts = {}
 let monthsWithFact = new Set(['Май'])
 const grpState = {}
 GROUPS.forEach(g => grpState[g.id] = true)  // по умолчанию свёрнуты
-const wkCollapsed = {0:false,1:false,2:false,3:false,4:false}
+let wkCollapsed = {0:true,1:true,2:true,3:true,4:true}  // по умолчанию все свёрнуты, текущая откроется в initApp
 
 // ── строка с 5 неделями + итого ──────────────────────────────────────────────
 function rowCells(planArr, factArr, isIncome, isFury, bg, cwi, rowId) {
@@ -927,7 +936,15 @@ function renderTabs() {
   ).join('')
 }
 
-function switchMonth(m) { curMonth=m; renderTabs(); render() }
+function switchMonth(m) {
+  curMonth = m
+  const cwi = getCurWeekIdx(curMonth)
+  wkCollapsed = {0:true,1:true,2:true,3:true,4:true}
+  // В текущем месяце разворачиваем текущую неделю, в остальных — первую
+  if (cwi >= 0) wkCollapsed[cwi] = false
+  else wkCollapsed[0] = false
+  renderTabs(); render()
+}
 function setUM(m) {
   uploadMonth = m
   document.querySelectorAll('.mbtn').forEach(b => b.classList.toggle('sel', b.textContent.trim()===m))
@@ -1722,6 +1739,14 @@ function salesAddManual() {
 
 // ── init ──────────────────────────────────────────────────────────────────────
 function initApp(){
+  // Устанавливаем текущий месяц
+  curMonth = getCurrentMonthName()
+  uploadMonth = curMonth
+  // Разворачиваем только текущую неделю в этом месяце
+  const cwi = getCurWeekIdx(curMonth)
+  wkCollapsed = {0:true,1:true,2:true,3:true,4:true}
+  if (cwi >= 0) wkCollapsed[cwi] = false
+
   salesLoad()
   showPage('calendar')
   renderTabs()
