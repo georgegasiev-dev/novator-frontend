@@ -1604,7 +1604,7 @@ function showPage(page) {
 // ══════════════════════════════════════════════════════════════════════════════
 
 const DEFAULT_PRICE = 2150
-const SALES_FORMULA_VERSION = 12   // bump → автосделки пересоздадутся
+const SALES_FORMULA_VERSION = 13   // bump → автосделки пересоздадутся
 let salesDeals = []
 let salesNextId = 1
 let salesCurMonth = "Май"  // переопределится при инициализации
@@ -1666,13 +1666,14 @@ function salesSave() {
 function salesSyncFromServer() {
   if (typeof serverOpsCache === 'undefined' || !Object.keys(serverOpsCache).length) return
 
+  // Ключ платежа без месяца — чтобы при переносе платежа между месяцами не было дубля
   const incoming = []
   for (const [month, ops] of Object.entries(serverOpsCache)) {
     const opsList = Array.isArray(ops) ? ops : (ops.ops || [])
     for (const op of opsList) {
       if (op.is_debit) continue
       if (!op.amount || op.amount <= 0) continue
-      const key = month + '|' + op.date + '|' + (op.contractor||'') + '|' + op.amount
+      const key = (op.date||'') + '|' + (op.contractor||'') + '|' + op.amount
       incoming.push({
         _serverKey: key,
         date: op.date || '',
@@ -1682,25 +1683,34 @@ function salesSyncFromServer() {
       })
     }
   }
-
-  // Существующие автосделки по ключу (сохраняем пользовательские правки sheets/price/comment)
-  const existingByKey = {}
-  for (const d of salesDeals) {
-    if (d.source === 'auto' && d._serverKey) existingByKey[d._serverKey] = d
+  // Дедупликация incoming по _serverKey (на случай если один и тот же платёж окажется в нескольких месяцах БД)
+  const seen = new Set()
+  const uniqueIncoming = []
+  for (const inc of incoming) {
+    if (seen.has(inc._serverKey)) continue
+    seen.add(inc._serverKey)
+    uniqueIncoming.push(inc)
   }
 
-  // Удаляем автосделки которых больше нет в выписке
-  const newKeys = new Set(incoming.map(x => x._serverKey))
-  const manual = salesDeals.filter(d => d.source === 'manual')
-  const survivingAuto = salesDeals.filter(d => d.source === 'auto' && d._serverKey && newKeys.has(d._serverKey))
+  // Сохраняем правки пользователя по существующим автосделкам (sheets, pricePerSheet, comment)
+  const userOverrides = {}
+  for (const d of salesDeals) {
+    if (d.source === 'auto' && d._serverKey) {
+      userOverrides[d._serverKey] = {
+        sheets: d.sheets,
+        pricePerSheet: d.pricePerSheet,
+        comment: d.comment,
+      }
+    }
+  }
 
-  // Добавляем новые автосделки которых ещё не было
-  const surKeys = new Set(survivingAuto.map(d => d._serverKey))
-  const newAuto = []
-  for (const inc of incoming) {
-    if (surKeys.has(inc._serverKey)) continue
-    const sheets = Math.max(1, Math.round(inc.payment / DEFAULT_PRICE))
-    newAuto.push({
+  // Полностью пересоздаём авто-сделки из текущих данных сервера
+  const manual = salesDeals.filter(d => d.source === 'manual')
+  const newAuto = uniqueIncoming.map(inc => {
+    const override = userOverrides[inc._serverKey] || {}
+    const sheets = override.sheets || Math.max(1, Math.round(inc.payment / DEFAULT_PRICE))
+    const pricePerSheet = override.pricePerSheet || Math.round(inc.payment / sheets)
+    return {
       id: salesNextId++,
       _serverKey: inc._serverKey,
       source: 'auto',
@@ -1709,23 +1719,12 @@ function salesSyncFromServer() {
       payment: inc.payment,
       month: inc.month,
       sheets,
-      pricePerSheet: Math.round(inc.payment / sheets),
-      comment: '',
-    })
-  }
-
-  // У выживших автосделок обновляем company/date если они изменились на сервере
-  for (const d of survivingAuto) {
-    const inc = incoming.find(i => i._serverKey === d._serverKey)
-    if (inc) {
-      d.company = inc.company
-      d.date = inc.date
-      d.payment = inc.payment   // сумма из выписки — авторитетная
-      d.month = inc.month
+      pricePerSheet,
+      comment: override.comment || '',
     }
-  }
+  })
 
-  salesDeals = [...manual, ...survivingAuto, ...newAuto]
+  salesDeals = [...manual, ...newAuto]
   salesSave()
 }
 
