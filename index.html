@@ -429,6 +429,33 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
 </div>
 <div class="toast" id="toast"></div>
 
+<!-- Модалка карточки контрагента -->
+<div class="modal" id="contractor-card-modal" onclick="if(event.target===this)hideContractorCard()">
+  <div class="modal-box" style="max-width:1000px">
+    <div class="modal-hdr">
+      <div>
+        <div class="modal-title" id="contractor-card-name">—</div>
+        <div class="modal-sub" id="contractor-card-stat"></div>
+      </div>
+      <button class="modal-close" onclick="hideContractorCard()">✕</button>
+    </div>
+    <div style="overflow:auto;max-height:70vh">
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead style="position:sticky;top:0;background:#0d0d0d;z-index:1">
+          <tr>
+            <th style="text-align:left;padding:10px 14px;color:#f0a500;font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #222;font-weight:700">Дата</th>
+            <th style="text-align:left;padding:10px 14px;color:#f0a500;font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #222;font-weight:700">Месяц</th>
+            <th style="text-align:left;padding:10px 14px;color:#f0a500;font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #222;font-weight:700">Назначение платежа</th>
+            <th style="text-align:left;padding:10px 14px;color:#f0a500;font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #222;font-weight:700">Категория</th>
+            <th style="text-align:right;padding:10px 14px;color:#f0a500;font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #222;font-weight:700">Сумма</th>
+          </tr>
+        </thead>
+        <tbody id="contractor-card-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <script>
 const API  = 'https://zavod-production.up.railway.app'
 // ── авторизация ──────────────────────────────────────────────────────────────
@@ -1113,6 +1140,60 @@ function esc(s) {
     .replace(/'/g,'&#39;')
 }
 
+
+// Карточка контрагента — все его платежи во всех месяцах
+function showContractorCard(contractorName) {
+  const name = contractorName || ''
+  if (!name) return
+  const nameLower = name.toLowerCase().trim()
+
+  // Собираем все операции этого контрагента изо всех месяцев
+  const all = []
+  for (const [month, ops] of Object.entries(serverOpsCache || {})) {
+    const opsList = Array.isArray(ops) ? ops : (ops.ops || [])
+    for (const op of opsList) {
+      const c = (op.contractor || '').toLowerCase().trim()
+      if (c === nameLower) all.push({ ...op, _month: month })
+    }
+  }
+
+  if (!all.length) return
+  all.sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+
+  const totalIn  = all.filter(o => !o.is_debit).reduce((s, o) => s + (o.amount || 0), 0)
+  const totalOut = all.filter(o =>  o.is_debit).reduce((s, o) => s + (o.amount || 0), 0)
+
+  document.getElementById('contractor-card-name').textContent = name
+  document.getElementById('contractor-card-stat').innerHTML =
+    `${all.length} операций  ·  поступления <span style="color:#3db88a">${new Intl.NumberFormat('ru-RU').format(Math.round(totalIn))} ₽</span>  ·  расходы <span style="color:#d95f5f">${new Intl.NumberFormat('ru-RU').format(Math.round(totalOut))} ₽</span>`
+
+  const tbody = document.getElementById('contractor-card-tbody')
+  tbody.innerHTML = all.map(op => {
+    const dt = esc(op.date)
+    const m  = esc(op._month)
+    const desc = esc(op.desc).slice(0, 120)
+    const cat = esc(op.cat || '')
+    const amt = new Intl.NumberFormat('ru-RU').format(Math.round(op.amount || 0)) + ' ₽'
+    const color = op.is_debit ? '#d95f5f' : '#3db88a'
+    const sign = op.is_debit ? '−' : '+'
+    return `<tr>
+      <td style="color:#666;padding:9px 14px;border-bottom:1px solid #161616;white-space:nowrap">${dt}</td>
+      <td style="color:#888;padding:9px 14px;border-bottom:1px solid #161616;font-size:11px">${m}</td>
+      <td title="${esc(op.desc)}" style="color:#aaa;padding:9px 14px;border-bottom:1px solid #161616;max-width:380px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${desc}</td>
+      <td style="color:#888;padding:9px 14px;border-bottom:1px solid #161616;font-size:11px">${cat}</td>
+      <td style="color:${color};padding:9px 14px;border-bottom:1px solid #161616;text-align:right;font-family:monospace;font-size:13px;font-weight:600;white-space:nowrap">${sign} ${amt}</td>
+    </tr>`
+  }).join('')
+
+  document.getElementById('contractor-card-modal').classList.add('show')
+  document.body.style.overflow = 'hidden'
+}
+
+function hideContractorCard() {
+  document.getElementById('contractor-card-modal').classList.remove('show')
+  document.body.style.overflow = ''
+}
+
 function showOpsModal(rowId, weekIdx) {
   if (rowId === '_fury' || rowId === 'proizvod') return
   const month = curMonth
@@ -1170,8 +1251,8 @@ function showOpsModal(rowId, weekIdx) {
         '<option value="' + cat + '"' + (cat === op.cat ? ' selected' : '') + '>' + cat + '</option>'
       ).join('')
       return '<tr id="mop-row-' + oi + '">'
-        + '<td style="color:#e0e0e0;padding:9px 14px;border-bottom:1px solid #161616;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + c + '</td>'
-        + '<td style="color:#555;padding:9px 14px;border-bottom:1px solid #161616;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + d + '</td>'
+        + '<td title="' + esc(op.contractor) + '" onclick="showContractorCard(\'' + esc(op.contractor).replace(/'/g,'&#39;') + '\')" style="color:#e0e0e0;padding:9px 14px;border-bottom:1px solid #161616;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;transition:color .15s" onmouseover="this.style.color=\'#f0a500\'" onmouseout="this.style.color=\'#e0e0e0\'">' + c + '</td>'
+        + '<td title="' + esc(op.desc) + '" style="color:#555;padding:9px 14px;border-bottom:1px solid #161616;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + d + '</td>'
         + '<td style="color:#666;padding:9px 14px;border-bottom:1px solid #161616;white-space:nowrap">' + dt + '</td>'
         + '<td style="padding:6px 10px;border-bottom:1px solid #161616">'
         +   '<select class="modal-cat-sel" id="mop-cat-' + oi + '" onchange="onModalCatChange(' + oi + ')">' + catOpts + '</select>'
