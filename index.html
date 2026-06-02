@@ -927,8 +927,10 @@ function render() {
 }
 
 function renderTabs() {
+  const cur = getCurrentMonthName()
   document.getElementById('mtabs').innerHTML = MONTHS.map(m => {
-    const hf = monthsWithFact.has(m)
+    // Зелёная точка только у текущего календарного месяца
+    const hf = (m === cur)
     return `<button class="mtab${m===curMonth?' active':''}" onclick="switchMonth('${m}')">${m}${hf?'<span class="fdot"></span>':''}</button>`
   }).join('')
   document.getElementById('msel').innerHTML = MONTHS.map(m =>
