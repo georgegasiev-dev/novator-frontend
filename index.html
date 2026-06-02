@@ -1604,7 +1604,7 @@ function showPage(page) {
 // ══════════════════════════════════════════════════════════════════════════════
 
 const DEFAULT_PRICE = 2150
-const SALES_FORMULA_VERSION = 14   // bump → автосделки пересоздадутся
+const SALES_FORMULA_VERSION = 15   // bump → автосделки пересоздадутся
 let salesDeals = []
 let salesNextId = 1
 let salesCurMonth = "Май"  // переопределится при инициализации
@@ -1666,18 +1666,19 @@ function salesSave() {
 function salesSyncFromServer() {
   if (typeof serverOpsCache === 'undefined' || !Object.keys(serverOpsCache).length) return
 
-  // Собираем все входящие платежи с уникальным ключом (включая назначение и индекс)
+  // Собираем входящие платежи. Счётчик дубликатов работает В РАМКАХ ОДНОГО МЕСЯЦА БД,
+  // чтобы один и тот же платёж, попавший в несколько месяцев (из-за merge), получал
+  // ОДИНАКОВЫЙ ключ и потом дедуплицировался.
   const incoming = []
-  // Группируем по (date+contractor+amount) чтобы добавить индекс для одинаковых платежей в один день
-  const dupCounter = {}
   for (const [month, ops] of Object.entries(serverOpsCache)) {
     const opsList = Array.isArray(ops) ? ops : (ops.ops || [])
+    const dupCounter = {}  // счётчик внутри месяца
     for (const op of opsList) {
       if (op.is_debit) continue
       if (!op.amount || op.amount <= 0) continue
       const baseKey = (op.date||'') + '|' + (op.contractor||'') + '|' + op.amount
       const idx = (dupCounter[baseKey] = (dupCounter[baseKey] || 0) + 1)
-      // Ключ включает индекс — два одинаковых платежа в один день получат разные ключи
+      // Ключ: дата + контрагент + сумма + назначение + порядковый номер внутри месяца
       const key = baseKey + '|' + (op.desc||'').slice(0,40) + '|#' + idx
       incoming.push({
         _serverKey: key,
