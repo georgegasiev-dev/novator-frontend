@@ -429,33 +429,6 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
 </div>
 <div class="toast" id="toast"></div>
 
-<!-- Модалка карточки контрагента -->
-<div class="modal" id="contractor-card-modal" onclick="if(event.target===this)hideContractorCard()">
-  <div class="modal-box" style="max-width:1000px">
-    <div class="modal-hdr">
-      <div>
-        <div class="modal-title" id="contractor-card-name">—</div>
-        <div class="modal-sub" id="contractor-card-stat"></div>
-      </div>
-      <button class="modal-close" onclick="hideContractorCard()">✕</button>
-    </div>
-    <div style="overflow:auto;max-height:70vh">
-      <table style="width:100%;border-collapse:collapse;font-size:12px">
-        <thead style="position:sticky;top:0;background:#0d0d0d;z-index:1">
-          <tr>
-            <th style="text-align:left;padding:10px 14px;color:#f0a500;font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #222;font-weight:700">Дата</th>
-            <th style="text-align:left;padding:10px 14px;color:#f0a500;font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #222;font-weight:700">Месяц</th>
-            <th style="text-align:left;padding:10px 14px;color:#f0a500;font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #222;font-weight:700">Назначение платежа</th>
-            <th style="text-align:left;padding:10px 14px;color:#f0a500;font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #222;font-weight:700">Категория</th>
-            <th style="text-align:right;padding:10px 14px;color:#f0a500;font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #222;font-weight:700">Сумма</th>
-          </tr>
-        </thead>
-        <tbody id="contractor-card-tbody"></tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
 <script>
 const API  = 'https://zavod-production.up.railway.app'
 // ── авторизация ──────────────────────────────────────────────────────────────
@@ -1143,6 +1116,10 @@ function esc(s) {
 
 // Карточка контрагента — все его платежи во всех месяцах
 function showContractorCard(contractorName) {
+  // Закрываем текущую модалку операций (если открыта)
+  const incomeModal = document.getElementById('income-modal')
+  if (incomeModal) incomeModal.classList.remove('show')
+
   const name = contractorName || ''
   if (!name) return
   const nameLower = name.toLowerCase().trim()
@@ -1177,11 +1154,11 @@ function showContractorCard(contractorName) {
     const color = op.is_debit ? '#d95f5f' : '#3db88a'
     const sign = op.is_debit ? '−' : '+'
     return `<tr>
-      <td style="color:#666;padding:9px 14px;border-bottom:1px solid #161616;white-space:nowrap">${dt}</td>
-      <td style="color:#888;padding:9px 14px;border-bottom:1px solid #161616;font-size:11px">${m}</td>
-      <td title="${esc(op.desc)}" style="color:#aaa;padding:9px 14px;border-bottom:1px solid #161616;max-width:380px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${desc}</td>
-      <td style="color:#888;padding:9px 14px;border-bottom:1px solid #161616;font-size:11px">${cat}</td>
-      <td style="color:${color};padding:9px 14px;border-bottom:1px solid #161616;text-align:right;font-family:monospace;font-size:13px;font-weight:600;white-space:nowrap">${sign} ${amt}</td>
+      <td style="color:#666;white-space:nowrap">${dt}</td>
+      <td style="color:#888;font-size:11px">${m}</td>
+      <td title="${esc(op.desc)}" style="color:#aaa;max-width:380px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${desc}</td>
+      <td style="color:#888;font-size:11px">${cat}</td>
+      <td style="color:${color};text-align:right;font-family:monospace;font-size:13px;font-weight:600;white-space:nowrap">${sign} ${amt}</td>
     </tr>`
   }).join('')
 
@@ -1961,5 +1938,32 @@ if(sessionStorage.getItem('nvt_auth')){
     </div>
   </div>
 </div>
+<!-- Модалка карточки контрагента -->
+<div class="modal-overlay" id="contractor-card-modal" onclick="if(event.target===this)hideContractorCard()">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div>
+        <div class="modal-title" id="contractor-card-name">—</div>
+        <div class="modal-sub" id="contractor-card-stat"></div>
+      </div>
+      <button class="modal-close" onclick="hideContractorCard()">✕</button>
+    </div>
+    <div class="modal-body">
+      <table class="modal-tbl">
+        <thead>
+          <tr>
+            <th style="min-width:90px">Дата</th>
+            <th style="min-width:70px">Месяц</th>
+            <th style="min-width:280px">Назначение платежа</th>
+            <th style="min-width:140px">Категория</th>
+            <th style="min-width:120px;text-align:right">Сумма</th>
+          </tr>
+        </thead>
+        <tbody id="contractor-card-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
