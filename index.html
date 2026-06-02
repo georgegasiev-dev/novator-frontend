@@ -297,7 +297,8 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
 .sales-table tr:hover td{background:rgba(255,255,255,.02)}
 .sales-table tr.auto-row td{border-left:2px solid #1a3a6b}
 .sales-table tr.manual-row td{border-left:2px solid #2a5a2a}
-.deal-company{font-weight:600;color:#e0e0e0}
+.deal-company{font-weight:600;color:#e0e0e0;transition:color .15s}
+.deal-company[onclick]:hover{color:#f0a500}
 .deal-date{color:#555;font-size:11px}
 .deal-amount{color:#3db88a;font-weight:700;text-align:right}
 .deal-edit{background:#0d0d0d;border:1px solid #222;border-radius:4px;
@@ -1750,7 +1751,7 @@ function renderSales() {
           ? '<span class="deal-source auto">из выписки</span>'
           : '<span class="deal-source manual">вручную</span>'
         return `<tr class="${rowClass}" data-id="${d.id}">
-          <td class="deal-company">${d.company || '—'}</td>
+          <td class="deal-company" data-company="${(d.company||'').replace(/"/g,'&quot;')}" onclick="showContractorCard(this.dataset.company)" title="${(d.company||'').replace(/"/g,'&quot;')}" style="cursor:pointer">${d.company || '—'}</td>
           <td class="deal-date">${d.date || '—'}</td>
           <td class="deal-amount">${(d.payment||0).toLocaleString('ru-RU')} ₽</td>
           <td><input class="deal-edit" type="number" value="${d.sheets||0}" min="1" step="1"
