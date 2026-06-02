@@ -1604,7 +1604,7 @@ function showPage(page) {
 // ══════════════════════════════════════════════════════════════════════════════
 
 const DEFAULT_PRICE = 2150
-const SALES_FORMULA_VERSION = 13   // bump → автосделки пересоздадутся
+const SALES_FORMULA_VERSION = 14   // bump → автосделки пересоздадутся
 let salesDeals = []
 let salesNextId = 1
 let salesCurMonth = "Май"  // переопределится при инициализации
@@ -1666,14 +1666,19 @@ function salesSave() {
 function salesSyncFromServer() {
   if (typeof serverOpsCache === 'undefined' || !Object.keys(serverOpsCache).length) return
 
-  // Ключ платежа без месяца — чтобы при переносе платежа между месяцами не было дубля
+  // Собираем все входящие платежи с уникальным ключом (включая назначение и индекс)
   const incoming = []
+  // Группируем по (date+contractor+amount) чтобы добавить индекс для одинаковых платежей в один день
+  const dupCounter = {}
   for (const [month, ops] of Object.entries(serverOpsCache)) {
     const opsList = Array.isArray(ops) ? ops : (ops.ops || [])
     for (const op of opsList) {
       if (op.is_debit) continue
       if (!op.amount || op.amount <= 0) continue
-      const key = (op.date||'') + '|' + (op.contractor||'') + '|' + op.amount
+      const baseKey = (op.date||'') + '|' + (op.contractor||'') + '|' + op.amount
+      const idx = (dupCounter[baseKey] = (dupCounter[baseKey] || 0) + 1)
+      // Ключ включает индекс — два одинаковых платежа в один день получат разные ключи
+      const key = baseKey + '|' + (op.desc||'').slice(0,40) + '|#' + idx
       incoming.push({
         _serverKey: key,
         date: op.date || '',
@@ -1683,7 +1688,7 @@ function salesSyncFromServer() {
       })
     }
   }
-  // Дедупликация incoming по _serverKey (на случай если один и тот же платёж окажется в нескольких месяцах БД)
+  // Дедупликация только между разными месяцами (если один платёж в БД дважды)
   const seen = new Set()
   const uniqueIncoming = []
   for (const inc of incoming) {
