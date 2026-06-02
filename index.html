@@ -1540,9 +1540,22 @@ function showPage(page) {
 // ══════════════════════════════════════════════════════════════════════════════
 
 const DEFAULT_PRICE = 2150
-const SALES_FORMULA_VERSION = 11   // bump → автосделки пересоздадутся
+const SALES_FORMULA_VERSION = 12   // bump → автосделки пересоздадутся
 let salesDeals = []
 let salesNextId = 1
+
+function _monthFromDate(dateStr) {
+  // dateStr формата 'YYYY-MM-DD' или 'DD.MM.YYYY'
+  if (!dateStr) return ''
+  let m
+  if (dateStr.includes('-')) {
+    m = parseInt(dateStr.slice(5,7), 10)
+  } else if (dateStr.includes('.')) {
+    m = parseInt(dateStr.split('.')[1], 10)
+  } else return ''
+  const map = {5:'Май',6:'Июнь',7:'Июль',8:'Август',9:'Сентябрь',10:'Октябрь',11:'Ноябрь',12:'Декабрь'}
+  return map[m] || ''
+}
 
 function salesLoad() {
   try {
@@ -1640,7 +1653,8 @@ function renderSales() {
   const searchFilter = (document.getElementById('sales-search')?.value || '').toLowerCase()
 
   const deals = salesDeals.filter(d => {
-    if (monthFilter && d.month !== monthFilter) return false
+    const dealMonth = _monthFromDate(d.date) || d.month
+    if (monthFilter && dealMonth !== monthFilter) return false
     if (searchFilter && !(d.company||'').toLowerCase().includes(searchFilter)) return false
     return true
   }).slice().sort((a,b) => (b.date||'').localeCompare(a.date||''))
