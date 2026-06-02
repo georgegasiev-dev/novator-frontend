@@ -1531,7 +1531,12 @@ function showPage(page) {
   if (mtabs) mtabs.style.display = page==='calendar' ? '' : 'none'
 
   if (page==='dir' && !dirData.length) loadDir()
-  if (page==='sales') { salesSyncFromServer(); renderSales() }
+  if (page==='sales') {
+    if (!salesCurMonth || salesCurMonth === 'Май') salesCurMonth = getCurrentMonthName()
+    salesSyncFromServer()
+    renderSalesTabs()
+    renderSales()
+  }
 }
 
 
@@ -1543,6 +1548,7 @@ const DEFAULT_PRICE = 2150
 const SALES_FORMULA_VERSION = 12   // bump → автосделки пересоздадутся
 let salesDeals = []
 let salesNextId = 1
+let salesCurMonth = "Май"  // переопределится при инициализации
 
 function _monthFromDate(dateStr) {
   // dateStr формата 'YYYY-MM-DD' или 'DD.MM.YYYY'
@@ -1555,6 +1561,22 @@ function _monthFromDate(dateStr) {
   } else return ''
   const map = {5:'Май',6:'Июнь',7:'Июль',8:'Август',9:'Сентябрь',10:'Октябрь',11:'Ноябрь',12:'Декабрь'}
   return map[m] || ''
+}
+
+function renderSalesTabs() {
+  const el = document.getElementById('sales-mtabs')
+  if (!el) return
+  const cur = getCurrentMonthName()
+  el.innerHTML = MONTHS.map(m => {
+    const dot = (m === cur) ? '<span class="fdot"></span>' : ''
+    return `<button class="mtab${m===salesCurMonth?' active':''}" onclick="switchSalesMonth('${m}')">${m}${dot}</button>`
+  }).join('')
+}
+
+function switchSalesMonth(m) {
+  salesCurMonth = m
+  renderSalesTabs()
+  renderSales()
 }
 
 function salesLoad() {
@@ -1649,7 +1671,7 @@ function salesSyncFromServer() {
 }
 
 function renderSales() {
-  const monthFilter = document.getElementById('sales-month-sel')?.value || ''
+  const monthFilter = salesCurMonth || ''
   const searchFilter = (document.getElementById('sales-search')?.value || '').toLowerCase()
 
   const deals = salesDeals.filter(d => {
@@ -1734,7 +1756,7 @@ function salesDelete(id) {
 }
 
 function salesAddManual() {
-  const month = document.getElementById('sales-month-sel')?.value || 'Май'
+  const month = salesCurMonth || 'Май'
   const today = new Date().toISOString().slice(0,10)
   const payment = 1182500
   const sheets = Math.round(payment / DEFAULT_PRICE)
@@ -1758,6 +1780,7 @@ function initApp(){
   // Устанавливаем текущий месяц
   curMonth = getCurrentMonthName()
   uploadMonth = curMonth
+  salesCurMonth = curMonth
   // Разворачиваем только текущую неделю в этом месяце
   const cwi = getCurWeekIdx(curMonth)
   wkCollapsed = {0:true,1:true,2:true,3:true,4:true}
@@ -1780,19 +1803,9 @@ if(sessionStorage.getItem('nvt_auth')){
 
 
 <div id="page-sales" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+  <div class="mtabs" id="sales-mtabs"></div>
   <div class="sales-wrap">
     <div class="sales-toolbar">
-      <select class="sales-month-sel" id="sales-month-sel" onchange="renderSales()">
-        <option value="">Все месяцы</option>
-        <option value="Май">Май</option>
-        <option value="Июнь">Июнь</option>
-        <option value="Июль">Июль</option>
-        <option value="Август">Август</option>
-        <option value="Сентябрь">Сентябрь</option>
-        <option value="Октябрь">Октябрь</option>
-        <option value="Ноябрь">Ноябрь</option>
-        <option value="Декабрь">Декабрь</option>
-      </select>
       <input type="text" id="sales-search" placeholder="Поиск по компании..." oninput="renderSales()" style="width:200px">
       <button class="sales-add-btn" onclick="salesAddManual()">+ Добавить сделку</button>
       <div class="sales-stat" id="sales-stat"></div>
