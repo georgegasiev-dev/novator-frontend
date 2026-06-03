@@ -351,6 +351,7 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
   <div class="hdr-right">
     <div class="last-upd" id="last-upd"></div>
     <div class="sdot-wrap"><div class="dot loading" id="sdot"></div><span id="stxt">подключение...</span></div>
+    <button class="ubtn" id="sync-btn" onclick="manualSync()" title="Проверить почту на новые выписки">⟳ Обновить</button>
     <button class="ubtn" id="ubtn" onclick="toggleUpload()">↑ Загрузить выписку</button>
     <button class="ubtn" onclick="doLogout()" style="border-color:#d95f5f;color:#d95f5f" title="Выйти">⎋ Выйти</button>
   </div>
@@ -1837,6 +1838,65 @@ function salesAddManual() {
   })
   salesSave()
   renderSales()
+}
+
+async function manualSync() {
+  const btn = document.getElementById('sync-btn')
+  if (!btn) return
+  const origText = btn.textContent
+  btn.disabled = true
+  btn.textContent = '⟳ Обновляем...'
+  btn.style.opacity = '0.7'
+  showToast('Запрашиваю выписки из почты...')
+
+  try {
+    const r = await fetch(API + '/api/sync', {
+      method: 'POST',
+      headers: { Authorization: getAuth(), 'Content-Type': 'application/json' },
+    })
+    if (!r.ok) {
+      const txt = await r.text().catch(() => '')
+      throw new Error(r.status + ' ' + txt.slice(0, 200))
+    }
+    const data = await r.json()
+    const processed = data.processed || 0
+    const skipped = data.skipped || 0
+    const errors = (data.errors || []).length
+
+    if (processed > 0) {
+      const details = (data.details || []).map(d =>
+        `${d.file} → ${(d.months || [d.month]).join(', ')} (${d.ops} оп.)`
+      ).join('; ')
+      showToast(`✓ Обработано выписок: ${processed}. ${details}`)
+      // Подгружаем свежие данные
+      await fetchData()
+      // Если открыта страница продаж — пересинхронизируем
+      const salesPage = document.getElementById('page-sales')
+      if (salesPage && salesPage.style.display !== 'none') {
+        salesSyncFromServer()
+        renderSales()
+      }
+    } else if (errors > 0) {
+      showToast('Ошибка при опросе почты: ' + (data.errors || []).join('; '))
+    } else {
+      showToast('Новых выписок в почте нет (пропущено: ' + skipped + ')')
+    }
+  } catch(e) {
+    showToast('Ошибка обновления: ' + e.message)
+  } finally {
+    btn.disabled = false
+    btn.textContent = origText
+    btn.style.opacity = ''
+  }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast')
+  if (!t) return
+  t.textContent = msg
+  t.classList.add('show')
+  clearTimeout(window._toastTimer)
+  window._toastTimer = setTimeout(() => t.classList.remove('show'), 6000)
 }
 
 // ── init ──────────────────────────────────────────────────────────────────────
