@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Новатор — Платёжный календарь 2026</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#0b0b0b;color:#e0e0e0;font-family:system-ui,-apple-system,sans-serif;min-height:100vh;display:flex;flex-direction:column}
@@ -318,6 +319,77 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
 .sales-section-hdr{padding:14px 0 8px;font-size:10px;color:#888;font-weight:700;
   letter-spacing:2px;text-transform:uppercase;border-bottom:1px solid #1f1f1f;
   margin-bottom:6px;display:flex;align-items:center}
+
+/* ── страница аналитики поступлений ──────────────────────────────────────── */
+.an-wrap{flex:1;overflow:auto;padding:20px 24px}
+.an-kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.an-kpi{background:#141414;border:1px solid #222;padding:16px 18px;position:relative;overflow:hidden;transition:border-color .2s}
+.an-kpi:hover{border-color:#f0a500}
+.an-kpi.accent{border-top:2px solid #f0a500}
+.an-kpi-label{font-size:9px;letter-spacing:2px;color:#666;text-transform:uppercase;margin-bottom:10px}
+.an-kpi-value{font-size:28px;font-weight:800;color:#e0e0e0;letter-spacing:.5px;line-height:1}
+.an-kpi-sub{font-size:10px;color:#666;margin-top:6px}
+.an-kpi-sub.hl{color:#f0a500}
+.an-sec-label{font-size:9px;letter-spacing:3px;color:#f0a500;text-transform:uppercase;
+  border-left:2px solid #f0a500;padding-left:8px;margin-bottom:14px;font-weight:700}
+.an-g2{display:grid;grid-template-columns:1fr 320px;gap:16px;margin-bottom:20px}
+.an-card{background:#141414;border:1px solid #1f1f1f;padding:20px}
+.an-full{margin-bottom:20px}
+.an-month-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.an-mtab{background:#181818;color:#666;border:1px solid #2a2a2a;
+  padding:6px 14px;font-size:10px;letter-spacing:1px;text-transform:uppercase;
+  transition:all .15s;cursor:pointer;border-radius:3px}
+.an-mtab:hover{border-color:#f0a500;color:#e0e0e0}
+.an-mtab.active{background:#f0a500;color:#000;border-color:#f0a500;font-weight:700}
+.an-week-table{width:100%;border-collapse:collapse;font-size:11px}
+.an-week-table th{font-size:9px;letter-spacing:2px;color:#666;font-weight:400;
+  text-align:left;padding:9px 12px;border-bottom:1px solid #f0a500;text-transform:uppercase}
+.an-week-table th.r{text-align:right}
+.an-week-table td{padding:9px 12px;border-bottom:1px solid #1a1a1a;color:#bbb;vertical-align:middle}
+.an-week-table td.r{text-align:right}
+.an-week-table tr.week-row:hover td{background:rgba(240,165,0,.06)}
+.an-week-label{display:inline-block;background:#2a2a2a;color:#f0a500;
+  font-size:10px;letter-spacing:1px;padding:2px 8px;border-radius:2px}
+.an-dates-chip{font-size:10px;color:#666}
+.an-bar-wrap{display:flex;align-items:center;gap:8px}
+.an-bar-bg{flex:1;height:4px;background:#2a2a2a;border-radius:2px;max-width:140px}
+.an-bar-fill{height:100%;background:#f0a500;border-radius:2px;transition:width .4s}
+.an-sum-val{font-size:12px;color:#e0e0e0;white-space:nowrap}
+.an-sum-val.big{color:#f0a500;font-size:13px;font-weight:700}
+.an-cnt-chip{font-size:10px;color:#666}
+.an-pct-val{font-size:10px;color:#555}
+.an-month-total-row td{background:#1a1a1a !important;border-top:1px solid #2a2a2a;
+  border-bottom:2px solid #f0a500}
+.an-month-total-row .an-sum-val{color:#f0a500;font-size:14px;font-weight:700}
+.an-month-total-row .an-week-label{background:rgba(240,165,0,.18);color:#f0a500;letter-spacing:2px}
+.an-client-bars{display:flex;flex-direction:column;gap:8px}
+.an-client-bar-row{display:flex;align-items:center;gap:10px;cursor:pointer}
+.an-client-name{font-size:11px;color:#999;width:200px;flex-shrink:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.an-client-bar-row:hover .an-client-name{color:#f0a500}
+.an-client-bar-outer{flex:1;height:22px;background:#1a1a1a;position:relative;border-radius:2px}
+.an-client-bar-inner{height:100%;transition:width .6s cubic-bezier(.16,1,.3,1);border-radius:2px}
+.an-client-bar-label{position:absolute;right:8px;top:50%;transform:translateY(-50%);
+  font-size:10px;color:#e0e0e0;white-space:nowrap;font-weight:600}
+.an-client-total{font-size:11px;color:#666;width:80px;text-align:right;flex-shrink:0}
+.an-donut-legend{margin-top:14px;display:flex;flex-direction:column;gap:6px}
+.an-dl-item{display:flex;align-items:center;gap:8px;font-size:10px}
+.an-dl-sq{width:10px;height:10px;flex-shrink:0;border-radius:2px}
+.an-dl-name{flex:1;color:#888;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.an-dl-pct{color:#e0e0e0;font-size:10px;white-space:nowrap}
+.an-tx-table{width:100%;border-collapse:collapse;font-size:11px}
+.an-tx-table th{font-size:9px;letter-spacing:2px;color:#666;font-weight:400;
+  text-align:left;padding:9px 12px;border-bottom:1px solid #f0a500;text-transform:uppercase;white-space:nowrap}
+.an-tx-table th.r{text-align:right}
+.an-tx-table td{padding:8px 12px;border-bottom:1px solid #1a1a1a;color:#bbb}
+.an-tx-table td.r{text-align:right}
+.an-tx-table tr:hover td{background:rgba(240,165,0,.05)}
+.an-tx-table tr.alt td{background:rgba(255,255,255,.014)}
+.an-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:7px;vertical-align:middle}
+.an-amount-cell{white-space:nowrap}
+.an-amount-cell.big{color:#f0a500;font-weight:600}
+@media (max-width: 1100px){.an-g2{grid-template-columns:1fr}}
+@media (max-width: 700px){.an-kpi-row{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
@@ -369,6 +441,11 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
            color:#555;cursor:pointer;font-size:12px;font-weight:400;white-space:nowrap;letter-spacing:.3px">
     💰 Продажи
   </button>
+  <button id="nav-analytics" onclick="showPage('analytics')"
+    style="padding:11px 22px;border:none;border-bottom:2px solid transparent;background:transparent;
+           color:#555;cursor:pointer;font-size:12px;font-weight:400;white-space:nowrap;letter-spacing:.3px">
+    📊 Аналитика
+  </button>
   <button id="nav-dir" onclick="showPage('dir')"
     style="padding:11px 22px;border:none;border-bottom:2px solid transparent;background:transparent;
            color:#555;cursor:pointer;font-size:12px;font-weight:400;white-space:nowrap;letter-spacing:.3px">
@@ -397,6 +474,98 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
   <table id="tbl"><thead id="thead"></thead><tbody id="tbody"></tbody></table>
 </div>
 
+</div>
+
+<div id="page-analytics" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+  <div class="an-wrap">
+    <!-- KPI -->
+    <div class="an-kpi-row">
+      <div class="an-kpi accent">
+        <div class="an-kpi-label">Всего поступило</div>
+        <div class="an-kpi-value" id="an-kpi-total">—</div>
+        <div class="an-kpi-sub hl">₽ с начала года</div>
+      </div>
+      <div class="an-kpi">
+        <div class="an-kpi-label">Лучший месяц</div>
+        <div class="an-kpi-value" id="an-kpi-best">—</div>
+        <div class="an-kpi-sub" id="an-kpi-best-month">—</div>
+      </div>
+      <div class="an-kpi">
+        <div class="an-kpi-label">Транзакций</div>
+        <div class="an-kpi-value" id="an-kpi-cnt">—</div>
+        <div class="an-kpi-sub">платежей</div>
+      </div>
+      <div class="an-kpi">
+        <div class="an-kpi-label">Топ клиент</div>
+        <div class="an-kpi-value" id="an-kpi-top" style="font-size:18px;line-height:1.2;color:#f0a500">—</div>
+        <div class="an-kpi-sub" id="an-kpi-top-pct">—</div>
+      </div>
+    </div>
+
+    <!-- ГРАФИКИ -->
+    <div class="an-g2">
+      <div class="an-card">
+        <div class="an-sec-label">Динамика по месяцам</div>
+        <div style="position:relative;height:240px">
+          <canvas id="an-barChart"></canvas>
+        </div>
+      </div>
+      <div class="an-card">
+        <div class="an-sec-label">Доли клиентов</div>
+        <div style="position:relative;height:180px">
+          <canvas id="an-donutChart"></canvas>
+        </div>
+        <div class="an-donut-legend" id="an-donutLegend"></div>
+      </div>
+    </div>
+
+    <!-- КЛИЕНТЫ -->
+    <div class="an-card an-full">
+      <div class="an-sec-label">Топ клиентов — объём поступлений</div>
+      <div class="an-client-bars" id="an-clientBars"></div>
+    </div>
+
+    <!-- НЕДЕЛИ -->
+    <div class="an-full">
+      <div class="an-sec-label" style="margin-bottom:12px">Разбивка по неделям</div>
+      <div class="an-month-tabs" id="an-monthTabs"></div>
+      <div class="an-card" style="padding:0;overflow:hidden">
+        <table class="an-week-table">
+          <thead>
+            <tr>
+              <th style="width:110px">Период</th>
+              <th style="width:130px">Недели</th>
+              <th>Поступления</th>
+              <th class="r" style="width:70px">Плат.</th>
+              <th class="r" style="width:80px">Доля</th>
+            </tr>
+          </thead>
+          <tbody id="an-weekBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ДЕТАЛИЗАЦИЯ -->
+    <div class="an-card an-full" style="padding:0;overflow:hidden">
+      <div style="padding:16px 20px 12px;border-bottom:1px solid #222;display:flex;align-items:center;justify-content:space-between">
+        <div class="an-sec-label" style="margin-bottom:0">Детализация платежей</div>
+        <div id="an-txMeta" style="font-size:10px;color:#666"></div>
+      </div>
+      <div style="overflow-x:auto;max-height:600px;overflow-y:auto">
+        <table class="an-tx-table">
+          <thead>
+            <tr>
+              <th style="width:80px">Дата</th>
+              <th>Клиент</th>
+              <th class="r" style="width:160px">Сумма, ₽</th>
+              <th class="r" style="width:80px">Доля</th>
+            </tr>
+          </thead>
+          <tbody id="an-txBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div id="page-dir" style="display:none;flex-direction:column;flex:1;overflow:hidden">
@@ -1564,13 +1733,14 @@ async function onDirCommentBlur(idx) {
 
 // ── Переключение страниц ──────────────────────────────────────────────────────
 function showPage(page) {
-  const pages = ['calendar','sales','dir']
   const pCal   = document.getElementById('page-calendar')
   const pSales = document.getElementById('page-sales')
+  const pAn    = document.getElementById('page-analytics')
   const pDir   = document.getElementById('page-dir')
-  if (pCal)   pCal.style.display   = page==='calendar' ? 'flex' : 'none'
-  if (pSales) pSales.style.display = page==='sales'    ? 'flex' : 'none'
-  if (pDir)   pDir.style.display   = page==='dir'      ? 'flex' : 'none'
+  if (pCal)   pCal.style.display   = page==='calendar'  ? 'flex' : 'none'
+  if (pSales) pSales.style.display = page==='sales'     ? 'flex' : 'none'
+  if (pAn)    pAn.style.display    = page==='analytics' ? 'flex' : 'none'
+  if (pDir)   pDir.style.display   = page==='dir'       ? 'flex' : 'none'
 
   const btnStyle = (active) =>
     'padding:11px 22px;border:none;cursor:pointer;font-size:12px;white-space:nowrap;letter-spacing:.3px;flex-shrink:0;' +
@@ -1579,9 +1749,11 @@ function showPage(page) {
 
   const nc = document.getElementById('nav-calendar')
   const ns = document.getElementById('nav-sales')
+  const na = document.getElementById('nav-analytics')
   const nd = document.getElementById('nav-dir')
   if (nc) nc.style.cssText = btnStyle(page==='calendar')
   if (ns) ns.style.cssText = btnStyle(page==='sales')
+  if (na) na.style.cssText = btnStyle(page==='analytics')
   if (nd) nd.style.cssText = btnStyle(page==='dir')
 
   const mtabs = document.getElementById('mtabs')
@@ -1593,6 +1765,9 @@ function showPage(page) {
     salesSyncFromServer()
     renderSalesTabs()
     renderSales()
+  }
+  if (page==='analytics') {
+    renderAnalytics()
   }
 }
 
@@ -1895,6 +2070,331 @@ function showToast(msg) {
   clearTimeout(window._toastTimer)
   window._toastTimer = setTimeout(() => t.classList.remove('show'), 6000)
 }
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// АНАЛИТИКА ПОСТУПЛЕНИЙ
+// ══════════════════════════════════════════════════════════════════════════════
+
+let anSelMonth = null   // фильтр месяца на аналитике
+let anBarChart = null, anDonutChart = null
+
+const MONTH_LBL_FULL = {1:'Январь',2:'Февраль',3:'Март',4:'Апрель',5:'Май',6:'Июнь',
+  7:'Июль',8:'Август',9:'Сентябрь',10:'Октябрь',11:'Ноябрь',12:'Декабрь'}
+const MONTH_LBL_SHORT = {1:'Янв',2:'Фев',3:'Мар',4:'Апр',5:'Май',6:'Июн',
+  7:'Июл',8:'Авг',9:'Сен',10:'Окт',11:'Ноя',12:'Дек'}
+
+// Группируем разные варианты названий клиента в одну "группу"
+function _anClientGroup(name) {
+  if (!name) return 'Прочее'
+  const n = name.toLowerCase()
+  if (n.includes('промышленник'))           return 'Промышленник (группа)'
+  if (n.includes('стимлайн'))               return 'ТД СтимЛайн'
+  if (n.includes('волгастройкомплект'))     return 'ВОЛГАСТРОЙКОМПЛЕКТАЦИЯ'
+  if (n.includes('мерани'))                 return 'МЕРАНИ'
+  if (n.includes('будаев'))                 return 'Будаев С.В.'
+  if (n.includes('промстройконтракт'))      return 'ПРОМСТРОЙКОНТРАКТ-НН'
+  if (n.includes('фанерный завод'))         return 'ФАНЕРНЫЙ ЗАВОД'
+  if (n.includes('1ок') || n === 'ооо "1ок"' || n.includes('"1ок"')) return 'ООО 1ОК'
+  if (n.includes('сбс групп'))              return 'СБС ГРУПП (Кыргызстан)'
+  if (n.includes('строй-снаб'))             return 'ГРУППА СТРОЙ-СНАБ'
+  if (n.includes('гарант'))                 return 'ГАРАНТ ПОСТАВКА'
+  if (n.includes('бизнес-альянс'))          return 'БИЗНЕС-АЛЬЯНС'
+  if (n.includes('стройми'))                return 'СтройМир-НН'
+  if (n.includes('ли-строй'))               return 'ЛИ-СТРОЙ'
+  if (n.includes('маштул'))                 return 'МАШТУЛ-НН'
+  if (n.includes('грузи'))                  return 'Клиент Грузия'
+  // Если сумма < 500 000 — относим к "прочее"
+  return name.length > 35 ? name.slice(0,33)+'…' : name
+}
+
+const AN_CLIENT_COLORS = {
+  'Промышленник (группа)':'#f0a500',
+  'ТД СтимЛайн':'#F5A040',
+  'ВОЛГАСТРОЙКОМПЛЕКТАЦИЯ':'#D4A020',
+  'МЕРАНИ':'#9B70D0',
+  'Будаев С.В.':'#C04040',
+  'ПРОМСТРОЙКОНТРАКТ-НН':'#40A8C0',
+  'ФАНЕРНЫЙ ЗАВОД':'#70B860',
+  'ООО 1ОК':'#E87060',
+  'Клиент Грузия':'#5BB86B',
+  'СБС ГРУПП (Кыргызстан)':'#7090D0',
+  'ГРУППА СТРОЙ-СНАБ':'#D07030',
+  'ГАРАНТ ПОСТАВКА':'#C0A030',
+  'БИЗНЕС-АЛЬЯНС':'#A07030',
+  'СтройМир-НН':'#A09060',
+  'ЛИ-СТРОЙ':'#80A050',
+  'МАШТУЛ-НН':'#A06080',
+}
+function _anClientColor(name) {
+  return AN_CLIENT_COLORS[name] || '#5A5A5A'
+}
+
+const _fmtAn = v => v >= 1e6 ? (v/1e6).toFixed(1)+'M' : v >= 1e3 ? Math.round(v/1e3)+'K' : String(Math.round(v))
+const _fmtAn2 = v => new Intl.NumberFormat('ru-RU').format(Math.round(v))
+const _pctAn = (a,b) => b ? (a/b*100).toFixed(1)+'%' : '—'
+
+// Парсит дату "DD.MM.YYYY" → {year, month, day, weekKey, monthKey}
+function _anParseDate(s) {
+  if (!s) return null
+  const p = s.split('.')
+  if (p.length !== 3) return null
+  const day = parseInt(p[0],10), month = parseInt(p[1],10), year = parseInt(p[2],10)
+  if (!day || !month || !year) return null
+  // ISO неделя месяца — округление до недели начиная с 1-го числа
+  const d = new Date(year, month-1, day)
+  const firstDow = new Date(year, month-1, 1).getDay() || 7  // 1=Пн
+  const weekOfMonth = Math.ceil((day + firstDow - 1) / 7)
+  return {
+    year, month, day,
+    monthKey: `${year}-${String(month).padStart(2,'0')}`,
+    weekOfMonth,
+  }
+}
+
+// Собирает агрегаты из serverOpsCache
+function _anAggregate() {
+  const MONTHLY = {}    // monthKey → {sum, cnt}
+  const WEEKLY  = {}    // monthKey → weekNum → {sum, cnt, d_min, d_max}
+  const CLIENTS = {}    // groupName → {total, months: monthKey→sum}
+  const TXS     = {}    // monthKey → [{d, c, a}]
+
+  if (typeof serverOpsCache === 'undefined') return {MONTHLY, WEEKLY, CLIENTS, TXS, total:0, cnt:0}
+
+  for (const ops of Object.values(serverOpsCache)) {
+    const opsList = Array.isArray(ops) ? ops : (ops.ops || [])
+    for (const op of opsList) {
+      if (op.is_debit) continue
+      if (!op.amount || op.amount <= 0) continue
+      const parsed = _anParseDate(op.date)
+      if (!parsed) continue
+      const mk = parsed.monthKey
+      const grp = _anClientGroup(op.contractor || '')
+
+      MONTHLY[mk] = MONTHLY[mk] || {sum:0,cnt:0}
+      MONTHLY[mk].sum += op.amount
+      MONTHLY[mk].cnt += 1
+
+      WEEKLY[mk] = WEEKLY[mk] || {}
+      const w = parsed.weekOfMonth
+      WEEKLY[mk][w] = WEEKLY[mk][w] || {sum:0,cnt:0,d_min:parsed.day,d_max:parsed.day}
+      WEEKLY[mk][w].sum += op.amount
+      WEEKLY[mk][w].cnt += 1
+      WEEKLY[mk][w].d_min = Math.min(WEEKLY[mk][w].d_min, parsed.day)
+      WEEKLY[mk][w].d_max = Math.max(WEEKLY[mk][w].d_max, parsed.day)
+
+      CLIENTS[grp] = CLIENTS[grp] || {name:grp,total:0,months:{}}
+      CLIENTS[grp].total += op.amount
+      CLIENTS[grp].months[mk] = (CLIENTS[grp].months[mk]||0) + op.amount
+
+      TXS[mk] = TXS[mk] || []
+      TXS[mk].push({d: `${String(parsed.day).padStart(2,'0')}.${String(parsed.month).padStart(2,'0')}`,
+                     c: grp, a: op.amount})
+    }
+  }
+
+  let total = 0, cnt = 0
+  for (const m of Object.values(MONTHLY)) { total += m.sum; cnt += m.cnt }
+
+  return {MONTHLY, WEEKLY, CLIENTS, TXS, total, cnt}
+}
+
+function renderAnalytics() {
+  const data = _anAggregate()
+  const monthKeys = Object.keys(data.MONTHLY).sort()
+  if (!monthKeys.length) {
+    document.getElementById('an-kpi-total').textContent = '—'
+    document.getElementById('an-kpi-best').textContent = '—'
+    document.getElementById('an-kpi-cnt').textContent = '—'
+    document.getElementById('an-kpi-top').textContent = '—'
+    return
+  }
+  const TOTAL = data.total
+  const totalCnt = data.cnt
+
+  // KPI
+  let bestMk = monthKeys[0], bestSum = 0
+  for (const mk of monthKeys) {
+    if (data.MONTHLY[mk].sum > bestSum) { bestSum = data.MONTHLY[mk].sum; bestMk = mk }
+  }
+  const bestMonthNum = parseInt(bestMk.split('-')[1],10)
+
+  document.getElementById('an-kpi-total').textContent = _fmtAn(TOTAL) + ' ₽'
+  document.getElementById('an-kpi-best').textContent = _fmtAn(bestSum) + ' ₽'
+  document.getElementById('an-kpi-best-month').textContent = (MONTH_LBL_FULL[bestMonthNum]||'') + ' ' + bestMk.split('-')[0]
+  document.getElementById('an-kpi-cnt').textContent = totalCnt
+
+  const clientsList = Object.values(data.CLIENTS).sort((a,b)=>b.total-a.total)
+  if (clientsList.length) {
+    document.getElementById('an-kpi-top').innerHTML = clientsList[0].name.replace(/ \(.+/,'<br>(группа)').replace(/ /g,' ').slice(0,40)
+    document.getElementById('an-kpi-top-pct').textContent = ((clientsList[0].total/TOTAL)*100).toFixed(1) + '% от оборота'
+  }
+
+  // BAR chart
+  Chart.defaults.font.family = 'system-ui, -apple-system, sans-serif'
+  Chart.defaults.color = '#666'
+  if (anBarChart) anBarChart.destroy()
+  anBarChart = new Chart(document.getElementById('an-barChart'), {
+    type: 'bar',
+    data: {
+      labels: monthKeys.map(k => MONTH_LBL_SHORT[parseInt(k.split('-')[1],10)]),
+      datasets: [{
+        data: monthKeys.map(k => data.MONTHLY[k].sum),
+        backgroundColor: monthKeys.map(k => anSelMonth === k ? '#f0a500' :
+          (k === bestMk ? '#f0a500' : 'rgba(240,165,0,0.35)')),
+        borderColor: '#f0a500', borderWidth: 1, borderRadius: 3,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#181816', borderColor: '#f0a500', borderWidth: 1,
+          titleColor: '#e0e0e0', bodyColor: '#e0e0e0', padding: 10,
+          callbacks: { label: ctx => ' ' + _fmtAn2(ctx.raw) + ' ₽' }
+        }
+      },
+      onClick(e, els) {
+        if (!els.length) return
+        const k = monthKeys[els[0].index]
+        anSelMonth = (anSelMonth === k) ? null : k
+        renderAnalytics()
+      },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { font: { size: 11 } } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { font: { size: 10 }, callback: v => _fmtAn(v) } }
+      }
+    }
+  })
+
+  // DONUT
+  const donutData = clientsList.slice(0, 6).map(c => ({name: c.name, val: c.total, color: _anClientColor(c.name)}))
+  const otherSum = TOTAL - donutData.reduce((s,x)=>s+x.val,0)
+  if (otherSum > 0) donutData.push({name:'Остальные',val:otherSum,color:'#3A3835'})
+
+  if (anDonutChart) anDonutChart.destroy()
+  anDonutChart = new Chart(document.getElementById('an-donutChart'), {
+    type: 'doughnut',
+    data: {
+      labels: donutData.map(c => c.name),
+      datasets: [{
+        data: donutData.map(c => c.val),
+        backgroundColor: donutData.map(c => c.color),
+        borderColor: '#111', borderWidth: 2, hoverOffset: 5
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '64%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#181816', borderColor: '#f0a500', borderWidth: 1,
+          titleColor: '#e0e0e0', bodyColor: '#888',
+          callbacks: { label: ctx => ' ' + ((ctx.raw/TOTAL)*100).toFixed(1) + '% · ' + _fmtAn(ctx.raw) + ' ₽' }
+        }
+      }
+    }
+  })
+
+  document.getElementById('an-donutLegend').innerHTML = donutData.map(c => `
+    <div class="an-dl-item">
+      <span class="an-dl-sq" style="background:${c.color}"></span>
+      <span class="an-dl-name">${c.name.length > 24 ? c.name.slice(0,22)+'…' : c.name}</span>
+      <span class="an-dl-pct">${((c.val/TOTAL)*100).toFixed(0)}%</span>
+    </div>`).join('')
+
+  // Client bars
+  const maxClient = clientsList[0].total
+  document.getElementById('an-clientBars').innerHTML = clientsList.map(c => {
+    const pct = (c.total/maxClient*100).toFixed(1)
+    const color = _anClientColor(c.name)
+    return `<div class="an-client-bar-row" onclick="showContractorCard('${c.name.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">
+      <div class="an-client-name" title="${c.name}">${c.name}</div>
+      <div class="an-client-bar-outer" title="${_fmtAn2(c.total)} ₽">
+        <div class="an-client-bar-inner" style="width:0%;background:${color}44;border-right:2px solid ${color}" data-w="${pct}"></div>
+        <span class="an-client-bar-label" style="color:${color}">${_fmtAn(c.total)}</span>
+      </div>
+      <div class="an-client-total">${((c.total/TOTAL)*100).toFixed(1)}%</div>
+    </div>`
+  }).join('')
+  setTimeout(()=>{
+    document.querySelectorAll('#an-clientBars .an-client-bar-inner').forEach(el => {
+      el.style.width = el.dataset.w + '%'
+    })
+  }, 80)
+
+  // Month tabs
+  document.getElementById('an-monthTabs').innerHTML = [
+    `<button class="an-mtab${anSelMonth===null?' active':''}" onclick="anSelMonth=null;renderAnalytics()">Все месяцы · ${totalCnt}</button>`,
+    ...monthKeys.map(k => {
+      const mNum = parseInt(k.split('-')[1],10)
+      return `<button class="an-mtab${anSelMonth===k?' active':''}" onclick="anSelMonth='${k}';renderAnalytics()">${MONTH_LBL_SHORT[mNum]} · ${data.MONTHLY[k].cnt}</button>`
+    })
+  ].join('')
+
+  // Weekly table
+  const showMonths = anSelMonth ? [anSelMonth] : monthKeys
+  const allWeekSums = []
+  for (const m of Object.values(data.WEEKLY)) for (const w of Object.values(m)) allWeekSums.push(w.sum)
+  const maxWeekSum = Math.max(...allWeekSums, 1)
+  let weekHtml = ''
+  for (const mk of showMonths) {
+    const mw = data.WEEKLY[mk] || {}
+    const mTotal = data.MONTHLY[mk].sum
+    const mCnt = data.MONTHLY[mk].cnt
+    const mNum = parseInt(mk.split('-')[1],10)
+    const mLabel = MONTH_LBL_FULL[mNum]
+    const weeks = Object.keys(mw).sort((a,b)=>+a-+b)
+    for (const w of weeks) {
+      const wd = mw[w]
+      const barW = (wd.sum/maxWeekSum*100).toFixed(1)
+      const mn = String(mNum).padStart(2,'0')
+      weekHtml += `<tr class="week-row">
+        <td><span class="an-dates-chip">${String(wd.d_min).padStart(2,'0')}–${String(wd.d_max).padStart(2,'0')}.${mn}</span></td>
+        <td><span class="an-week-label">Нед. ${w}</span> <span style="font-size:10px;color:#666">${mLabel}</span></td>
+        <td>
+          <div class="an-bar-wrap">
+            <div class="an-bar-bg"><div class="an-bar-fill" style="width:${barW}%"></div></div>
+            <span class="an-sum-val">${_fmtAn2(wd.sum)} ₽</span>
+          </div>
+        </td>
+        <td class="r"><span class="an-cnt-chip">${wd.cnt}</span></td>
+        <td class="r"><span class="an-pct-val">${_pctAn(wd.sum,mTotal)}</span></td>
+      </tr>`
+    }
+    weekHtml += `<tr class="an-month-total-row">
+      <td style="font-size:10px;color:#f0a500;letter-spacing:2px;text-transform:uppercase">${mLabel}</td>
+      <td><span class="an-week-label">ИТОГО</span></td>
+      <td><div class="an-bar-wrap"><span class="an-sum-val big">${_fmtAn2(mTotal)} ₽</span></div></td>
+      <td class="r" style="font-size:12px;color:#e0e0e0">${mCnt}</td>
+      <td class="r" style="font-size:11px;color:#f0a500">${((mTotal/TOTAL)*100).toFixed(1)}%</td>
+    </tr><tr><td colspan="5" style="height:8px;background:transparent;border:none"></td></tr>`
+  }
+  document.getElementById('an-weekBody').innerHTML = weekHtml
+
+  // TX table
+  const txMonths = anSelMonth ? [anSelMonth] : monthKeys
+  const rows = txMonths.flatMap(mk => (data.TXS[mk] || []).map(r => ({...r, mk})))
+  rows.sort((a,b) => {
+    if (a.mk !== b.mk) return b.mk.localeCompare(a.mk)
+    return b.d.localeCompare(a.d)
+  })
+  const rowsTotal = rows.reduce((s,r) => s+r.a, 0)
+  document.getElementById('an-txMeta').textContent =
+    rows.length + ' платежей · ' + (anSelMonth ? MONTH_LBL_FULL[parseInt(anSelMonth.split('-')[1],10)] : 'все месяцы')
+  document.getElementById('an-txBody').innerHTML = rows.map((r,i) => {
+    const clr = _anClientColor(r.c)
+    const big = r.a >= 3000000
+    return `<tr class="${i%2?'alt':''}">
+      <td style="color:#666;white-space:nowrap">${r.d}</td>
+      <td><span class="an-dot" style="background:${clr}"></span>${r.c}</td>
+      <td class="r"><span class="an-amount-cell${big?' big':''}">${_fmtAn2(r.a)} ₽</span></td>
+      <td class="r" style="color:#666;font-size:10px">${_pctAn(r.a, rowsTotal)}</td>
+    </tr>`
+  }).join('')
+}
+
 
 // ── init ──────────────────────────────────────────────────────────────────────
 function initApp(){
