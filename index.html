@@ -947,7 +947,7 @@ function switchMonth(m) {
   // В текущем месяце разворачиваем текущую неделю, в остальных — первую
   if (cwi >= 0) wkCollapsed[cwi] = false
   else wkCollapsed[0] = false
-  renderTabs(); render()
+  renderTabs(); render(); updateLastUpdDisplay()
 }
 function setUM(m) {
   uploadMonth = m
@@ -989,6 +989,15 @@ function sv(view) {
 }
 
 // ── API ───────────────────────────────────────────────────────────────────────
+function updateLastUpdDisplay() {
+  const el = document.getElementById('last-upd')
+  if (!el) return
+  const t = uploadTimes[curMonth]
+  el.innerHTML = t
+    ? 'Обновлено: <span>' + curMonth + ' · ' + t + '</span>'
+    : ''
+}
+
 async function fetchData() {
   try {
     const r = await fetch(API+'/api/data', {mode:'cors'})
@@ -1029,19 +1038,7 @@ async function fetchData() {
     }
     document.getElementById('sdot').className = 'dot ok'
     document.getElementById('stxt').textContent = 'онлайн'
-    try {
-      const sr = await fetch(API+'/api/status')
-      if (sr.ok) {
-        const sd = await sr.json()
-        if (sd.month) {
-          const dt = new Date(sd.created_at + 'Z')
-          const dtStr = dt.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Moscow'})
-          document.getElementById('last-upd').innerHTML =
-            'Обновлено: <span>'+sd.month+' · '+dtStr+'</span>'
-
-        }
-      }
-    } catch(e) {}
+    updateLastUpdDisplay()
   } catch(e) {
     document.getElementById('sdot').className = 'dot err'
     document.getElementById('stxt').textContent = 'недоступен'
