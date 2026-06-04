@@ -533,8 +533,8 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
         <table class="an-week-table">
           <thead>
             <tr>
-              <th style="width:110px">Период</th>
-              <th style="width:130px">Недели</th>
+              <th style="width:130px">Неделя</th>
+              <th style="width:140px">Период</th>
               <th>Поступления</th>
               <th class="r" style="width:70px">Плат.</th>
               <th class="r" style="width:80px">Доля</th>
@@ -2150,15 +2150,34 @@ function _anParseDate(s) {
   if (p.length !== 3) return null
   const day = parseInt(p[0],10), month = parseInt(p[1],10), year = parseInt(p[2],10)
   if (!day || !month || !year) return null
-  // ISO неделя месяца — округление до недели начиная с 1-го числа
-  const d = new Date(year, month-1, day)
-  const firstDow = new Date(year, month-1, 1).getDay() || 7  // 1=Пн
-  const weekOfMonth = Math.ceil((day + firstDow - 1) / 7)
+  // ISO week number (Mon-Sun, week with Thu = week of the year)
+  const d = new Date(Date.UTC(year, month-1, day))
+  const dayNum = d.getUTCDay() || 7
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum)
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1))
+  const isoWeek = Math.ceil((((d - yearStart) / 86400000) + 1) / 7)
   return {
     year, month, day,
     monthKey: `${year}-${String(month).padStart(2,'0')}`,
-    weekOfMonth,
+    isoWeek,
   }
+}
+
+// Диапазон дат ISO-недели → {start, end} как Date
+function _isoWeekRange(year, week) {
+  const jan4 = new Date(Date.UTC(year, 0, 4))
+  const dayOfJan4 = jan4.getUTCDay() || 7
+  const week1Mon = new Date(jan4)
+  week1Mon.setUTCDate(jan4.getUTCDate() - (dayOfJan4 - 1))
+  const start = new Date(week1Mon)
+  start.setUTCDate(week1Mon.getUTCDate() + (week - 1) * 7)
+  const end = new Date(start)
+  end.setUTCDate(start.getUTCDate() + 6)
+  return {start, end}
+}
+
+function _fmtDM(d) {
+  return String(d.getUTCDate()).padStart(2,'0') + '.' + String(d.getUTCMonth()+1).padStart(2,'0')
 }
 
 // Собирает агрегаты из serverOpsCache
@@ -2196,13 +2215,13 @@ function _anAggregate() {
       MONTHLY[mk].sum += op.amount
       MONTHLY[mk].cnt += 1
 
-      WEEKLY[mk] = WEEKLY[mk] || {}
-      const w = parsed.weekOfMonth
-      WEEKLY[mk][w] = WEEKLY[mk][w] || {sum:0,cnt:0,d_min:parsed.day,d_max:parsed.day}
-      WEEKLY[mk][w].sum += op.amount
-      WEEKLY[mk][w].cnt += 1
-      WEEKLY[mk][w].d_min = Math.min(WEEKLY[mk][w].d_min, parsed.day)
-      WEEKLY[mk][w].d_max = Math.max(WEEKLY[mk][w].d_max, parsed.day)
+      // ISO-неделя года — ключ глобальный, по году+номеру
+      const wkKey = parsed.year + '-W' + String(parsed.isoWeek).padStart(2,'0')
+      WEEKLY[wkKey] = WEEKLY[wkKey] || {sum:0,cnt:0,isoWeek:parsed.isoWeek,year:parsed.year,
+                                          months:new Set()}
+      WEEKLY[wkKey].sum += op.amount
+      WEEKLY[wkKey].cnt += 1
+      WEEKLY[wkKey].months.add(mk)
 
       CLIENTS[grp] = CLIENTS[grp] || {name:grp,total:0,months:{}}
       CLIENTS[grp].total += op.amount
@@ -2245,10 +2264,18 @@ function renderAnalytics() {
   document.getElementById('an-kpi-best-month').textContent = (MONTH_LBL_FULL[bestMonthNum]||'') + ' ' + bestMk.split('-')[0]
   document.getElementById('an-kpi-cnt').textContent = totalCnt
 
-  const clientsList = Object.values(data.CLIENTS).sort((a,b)=>b.total-a.total)
+  // Список клиентов — с учётом фильтра по месяцу
+  const clientsList = Object.values(data.CLIENTS).map(c => ({
+    name: c.name,
+    total: anSelMonth ? (c.months[anSelMonth] || 0) : c.total,
+  })).filter(c => c.total > 0).sort((a,b) => b.total - a.total)
+
+  const clientsTotal = clientsList.reduce((s,c) => s+c.total, 0)
   if (clientsList.length) {
     document.getElementById('an-kpi-top').innerHTML = clientsList[0].name.replace(/ \(.+/,'<br>(группа)').replace(/ /g,' ').slice(0,40)
-    document.getElementById('an-kpi-top-pct').textContent = ((clientsList[0].total/TOTAL)*100).toFixed(1) + '% от оборота'
+    document.getElementById('an-kpi-top-pct').textContent =
+      ((clientsList[0].total / (clientsTotal || 1)) * 100).toFixed(1) +
+      '% от ' + (anSelMonth ? MONTH_LBL_FULL[parseInt(anSelMonth.split('-')[1],10)].toLowerCase() : 'оборота')
   }
 
   // BAR chart
@@ -2291,44 +2318,48 @@ function renderAnalytics() {
     }
   })
 
-  // DONUT
+  // DONUT — фильтр по месяцу
+  const donutDenom = clientsTotal || TOTAL
   const donutData = clientsList.slice(0, 6).map(c => ({name: c.name, val: c.total, color: _anClientColor(c.name)}))
-  const otherSum = TOTAL - donutData.reduce((s,x)=>s+x.val,0)
+  const otherSum = clientsTotal - donutData.reduce((s,x)=>s+x.val,0)
   if (otherSum > 0) donutData.push({name:'Остальные',val:otherSum,color:'#3A3835'})
 
   if (anDonutChart) anDonutChart.destroy()
-  anDonutChart = new Chart(document.getElementById('an-donutChart'), {
-    type: 'doughnut',
-    data: {
-      labels: donutData.map(c => c.name),
-      datasets: [{
-        data: donutData.map(c => c.val),
-        backgroundColor: donutData.map(c => c.color),
-        borderColor: '#111', borderWidth: 2, hoverOffset: 5
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false, cutout: '64%',
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#181816', borderColor: '#f0a500', borderWidth: 1,
-          titleColor: '#e0e0e0', bodyColor: '#888',
-          callbacks: { label: ctx => ' ' + ((ctx.raw/TOTAL)*100).toFixed(1) + '% · ' + _fmtAn(ctx.raw) + ' ₽' }
+  if (donutData.length && donutDenom > 0) {
+    anDonutChart = new Chart(document.getElementById('an-donutChart'), {
+      type: 'doughnut',
+      data: {
+        labels: donutData.map(c => c.name),
+        datasets: [{
+          data: donutData.map(c => c.val),
+          backgroundColor: donutData.map(c => c.color),
+          borderColor: '#111', borderWidth: 2, hoverOffset: 5
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '64%',
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#181816', borderColor: '#f0a500', borderWidth: 1,
+            titleColor: '#e0e0e0', bodyColor: '#888',
+            callbacks: { label: ctx => ' ' + ((ctx.raw/donutDenom)*100).toFixed(1) + '% · ' + _fmtAn(ctx.raw) + ' ₽' }
+          }
         }
       }
-    }
-  })
+    })
+  }
 
   document.getElementById('an-donutLegend').innerHTML = donutData.map(c => `
     <div class="an-dl-item">
       <span class="an-dl-sq" style="background:${c.color}"></span>
       <span class="an-dl-name">${c.name.length > 24 ? c.name.slice(0,22)+'…' : c.name}</span>
-      <span class="an-dl-pct">${((c.val/TOTAL)*100).toFixed(0)}%</span>
+      <span class="an-dl-pct">${((c.val/(donutDenom||1))*100).toFixed(0)}%</span>
     </div>`).join('')
 
-  // Client bars
-  const maxClient = clientsList[0].total
+  // Client bars — учитывают фильтр по месяцу
+  const maxClient = clientsList[0] ? clientsList[0].total : 1
+  const clientsDenom = clientsTotal || TOTAL
   document.getElementById('an-clientBars').innerHTML = clientsList.map(c => {
     const pct = (c.total/maxClient*100).toFixed(1)
     const color = _anClientColor(c.name)
@@ -2338,7 +2369,7 @@ function renderAnalytics() {
         <div class="an-client-bar-inner" style="width:0%;background:${color}44;border-right:2px solid ${color}" data-w="${pct}"></div>
         <span class="an-client-bar-label" style="color:${color}">${_fmtAn(c.total)}</span>
       </div>
-      <div class="an-client-total">${((c.total/TOTAL)*100).toFixed(1)}%</div>
+      <div class="an-client-total">${((c.total/(clientsDenom||1))*100).toFixed(1)}%</div>
     </div>`
   }).join('')
   setTimeout(()=>{
@@ -2356,53 +2387,39 @@ function renderAnalytics() {
     })
   ].join('')
 
-  // Weekly table
-  const showMonths = anSelMonth ? [anSelMonth] : monthKeys
-  const allWeekSums = []
-  for (const m of Object.values(data.WEEKLY)) for (const w of Object.values(m)) allWeekSums.push(w.sum)
-  const maxWeekSum = Math.max(...allWeekSums, 1)
-  let weekHtml = ''
-  for (const mk of showMonths) {
-    const mw = data.WEEKLY[mk] || {}
-    const mTotal = data.MONTHLY[mk].sum
-    const mCnt = data.MONTHLY[mk].cnt
-    const mNum = parseInt(mk.split('-')[1],10)
-    const mLabel = MONTH_LBL_FULL[mNum]
-    const weeks = Object.keys(mw).sort((a,b)=>+a-+b)
-    for (const w of weeks) {
-      const wd = mw[w]
-      const barW = (wd.sum/maxWeekSum*100).toFixed(1)
-      const mn = String(mNum).padStart(2,'0')
-      weekHtml += `<tr class="week-row">
-        <td><span class="an-dates-chip">${String(wd.d_min).padStart(2,'0')}–${String(wd.d_max).padStart(2,'0')}.${mn}</span></td>
-        <td><span class="an-week-label">Нед. ${w}</span> <span style="font-size:10px;color:#666">${mLabel}</span></td>
-        <td>
-          <div class="an-bar-wrap">
-            <div class="an-bar-bg"><div class="an-bar-fill" style="width:${barW}%"></div></div>
-            <span class="an-sum-val">${_fmtAn2(wd.sum)} ₽</span>
-          </div>
-        </td>
-        <td class="r"><span class="an-cnt-chip">${wd.cnt}</span></td>
-        <td class="r"><span class="an-pct-val">${_pctAn(wd.sum,mTotal)}</span></td>
-      </tr>`
-    }
-    weekHtml += `<tr class="an-month-total-row">
-      <td style="font-size:10px;color:#f0a500;letter-spacing:2px;text-transform:uppercase">${mLabel}</td>
-      <td><span class="an-week-label">ИТОГО</span></td>
-      <td><div class="an-bar-wrap"><span class="an-sum-val big">${_fmtAn2(mTotal)} ₽</span></div></td>
-      <td class="r" style="font-size:12px;color:#e0e0e0">${mCnt}</td>
-      <td class="r" style="font-size:11px;color:#f0a500">${((mTotal/TOTAL)*100).toFixed(1)}%</td>
-    </tr><tr><td colspan="5" style="height:8px;background:transparent;border:none"></td></tr>`
-  }
-  document.getElementById('an-weekBody').innerHTML = weekHtml
+  // Weekly table — ISO weeks, сортировка по возрастанию
+  const allWeeks = Object.entries(data.WEEKLY)
+    .map(([k,v]) => ({key:k, ...v}))
+  // Фильтр по выбранному месяцу: показываем недели, у которых есть операции в этом месяце
+  const visibleWeeks = anSelMonth
+    ? allWeeks.filter(w => w.months.has(anSelMonth))
+    : allWeeks
+  visibleWeeks.sort((a,b) => a.isoWeek - b.isoWeek || a.year - b.year)
+  const maxWeekSum = Math.max(...allWeeks.map(w => w.sum), 1)
+  const weekDenom = anSelMonth ? data.MONTHLY[anSelMonth].sum : TOTAL
+
+  document.getElementById('an-weekBody').innerHTML = visibleWeeks.map(w => {
+    const rng = _isoWeekRange(w.year, w.isoWeek)
+    const barW = (w.sum/maxWeekSum*100).toFixed(1)
+    return `<tr class="week-row">
+      <td><span class="an-week-label">Неделя ${w.isoWeek}</span></td>
+      <td><span class="an-dates-chip">${_fmtDM(rng.start)} – ${_fmtDM(rng.end)}</span></td>
+      <td>
+        <div class="an-bar-wrap">
+          <div class="an-bar-bg"><div class="an-bar-fill" style="width:${barW}%"></div></div>
+          <span class="an-sum-val">${_fmtAn2(w.sum)} ₽</span>
+        </div>
+      </td>
+      <td class="r"><span class="an-cnt-chip">${w.cnt}</span></td>
+      <td class="r"><span class="an-pct-val">${_pctAn(w.sum, weekDenom)}</span></td>
+    </tr>`
+  }).join('')
 
   // TX table
   const txMonths = anSelMonth ? [anSelMonth] : monthKeys
   const rows = txMonths.flatMap(mk => (data.TXS[mk] || []).map(r => ({...r, mk})))
-  rows.sort((a,b) => {
-    if (a.mk !== b.mk) return b.mk.localeCompare(a.mk)
-    return b.d.localeCompare(a.d)
-  })
+  // Сортировка от большего платежа к меньшему
+  rows.sort((a,b) => b.a - a.a)
   const rowsTotal = rows.reduce((s,r) => s+r.a, 0)
   document.getElementById('an-txMeta').textContent =
     rows.length + ' платежей · ' + (anSelMonth ? MONTH_LBL_FULL[parseInt(anSelMonth.split('-')[1],10)] : 'все месяцы')
