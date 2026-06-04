@@ -2163,18 +2163,30 @@ function _anParseDate(s) {
 
 // Собирает агрегаты из serverOpsCache
 function _anAggregate() {
-  const MONTHLY = {}    // monthKey → {sum, cnt}
-  const WEEKLY  = {}    // monthKey → weekNum → {sum, cnt, d_min, d_max}
-  const CLIENTS = {}    // groupName → {total, months: monthKey→sum}
-  const TXS     = {}    // monthKey → [{d, c, a}]
+  const MONTHLY = {}
+  const WEEKLY  = {}
+  const CLIENTS = {}
+  const TXS     = {}
 
   if (typeof serverOpsCache === 'undefined') return {MONTHLY, WEEKLY, CLIENTS, TXS, total:0, cnt:0}
 
-  for (const ops of Object.values(serverOpsCache)) {
+  // Дедупликация: один платёж попавший в БД дважды (баги старых merge)
+  // должен учитываться один раз. Счётчик идёт внутри месяца БД.
+  const dedupSeen = new Set()
+
+  for (const [bdMonth, ops] of Object.entries(serverOpsCache)) {
     const opsList = Array.isArray(ops) ? ops : (ops.ops || [])
+    const dupCounter = {}
     for (const op of opsList) {
       if (op.is_debit) continue
       if (!op.amount || op.amount <= 0) continue
+      // Уникальный ключ как на странице Продажи
+      const baseKey = (op.date||'') + '|' + (op.contractor||'') + '|' + op.amount
+      const idx = (dupCounter[baseKey] = (dupCounter[baseKey] || 0) + 1)
+      const dedupKey = baseKey + '|' + (op.desc||'').slice(0,40) + '|#' + idx
+      if (dedupSeen.has(dedupKey)) continue
+      dedupSeen.add(dedupKey)
+
       const parsed = _anParseDate(op.date)
       if (!parsed) continue
       const mk = parsed.monthKey
@@ -2249,8 +2261,10 @@ function renderAnalytics() {
       labels: monthKeys.map(k => MONTH_LBL_SHORT[parseInt(k.split('-')[1],10)]),
       datasets: [{
         data: monthKeys.map(k => data.MONTHLY[k].sum),
-        backgroundColor: monthKeys.map(k => anSelMonth === k ? '#f0a500' :
-          (k === bestMk ? '#f0a500' : 'rgba(240,165,0,0.35)')),
+        backgroundColor: monthKeys.map(k => {
+          if (anSelMonth) return k === anSelMonth ? '#f0a500' : 'rgba(240,165,0,0.18)'
+          return k === bestMk ? '#f0a500' : 'rgba(240,165,0,0.35)'
+        }),
         borderColor: '#f0a500', borderWidth: 1, borderRadius: 3,
       }]
     },
