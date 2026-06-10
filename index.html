@@ -1667,7 +1667,17 @@ function sortDir(col) {
 
 function renderDir() {
   const q = (document.getElementById('dir-search')?.value || '').toLowerCase()
-  const catF = document.getElementById('dir-cat-filter')?.value || ''
+  const sel = document.getElementById('dir-cat-filter')
+  const catF = sel?.value || ''
+
+  // Обновляем список категорий из текущих данных (работает и при fallback)
+  if (sel && dirData.length) {
+    const cats = [...new Set(dirData.map(c => c.cat).filter(Boolean))].sort()
+    const curVal = sel.value
+    sel.innerHTML = '<option value="">Все категории</option>' +
+      cats.map(c => '<option value="' + c + '"' + (c === curVal ? ' selected' : '') + '>' + c + '</option>').join('')
+  }
+
   let rows = dirData.filter(c => {
     if (q && !(c.name || '').toLowerCase().includes(q)) return false
     if (catF && c.cat !== catF) return false
@@ -1697,7 +1707,7 @@ function renderDir() {
     const dateStr = c.first_seen ? c.first_seen.slice(0, 10) : '—'
     return '<tr>' +
       '<td class="dir-date">' + dateStr + '</td>' +
-      '<td class="dir-name" title="' + esc(c.name || '') + '">' + esc((c.name || '').slice(0, 55)) + '</td>' +
+      '<td class="dir-name" title="' + esc(c.name || '') + '" onclick="showContractorCard(' + JSON.stringify(c.name || '') + ')" style="cursor:pointer" onmouseover="this.style.color=\'#f0a500\'" onmouseout="this.style.color=\'\'">' + esc((c.name || '').slice(0, 55)) + '</td>' +
       '<td>' + N(c.total) + '</td>' +
       '<td><select class="dir-cat-sel" id="dcat-' + idx + '" onchange="onDirCatChange(' + idx + ')">' + catOpts + '</select></td>' +
       '<td><textarea class="dir-comment" id="dcmt-' + idx + '" placeholder="Добавить комментарий..." ' +
