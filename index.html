@@ -402,7 +402,7 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
   .brand-sub  { display: none; }
   .last-upd   { display: none; }
   .sdot-wrap  { display: none; }
-  .ubtn[id="sync-btn"]  { display: none; }
+  /* sync-btn на мобиле убран из шапки — перенесён в mob-status */
   .ubtn[id="ubtn"]      { display: none; }
   .ubtn:last-child      { padding: 7px 10px; font-size: 10px; }
 
@@ -1332,6 +1332,7 @@ function renderMobile() {
           ? '<div class="mob-status-fact-dot"></div>' +
             '<div class="mob-status-fact-txt">факт загружен</div>'
           : '') +
+        '<button onclick="manualSync()" style="margin-left:auto;padding:3px 9px;border:1px solid #2a2a2a;border-radius:5px;background:transparent;color:#555;font-size:11px;cursor:pointer;font-family:inherit" id="mob-sync-btn">&#x27F3; обновить</button>' +
       '</div>' +
       '<div class="mob-status-balance' + (balVal ? '' : ' no-bal') + '">' +
         (balVal ? balVal : '') +
