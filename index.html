@@ -615,7 +615,7 @@ async function doLogin(){
   btn.disabled=true; btn.textContent='Проверяем...'
   try{
     const auth = 'Basic ' + btoa(user+':'+pass)
-    const r = await fetch(API+'/api/sync/status',{headers:{Authorization:auth}})
+    const r = await fetch(API+'/api/raiffeisen/status',{headers:{Authorization:auth}})
     if(r.status===200||r.status===404){
       sessionStorage.setItem('nvt_auth', auth)
       document.getElementById('login-screen').classList.add('hidden')
@@ -2028,10 +2028,11 @@ async function manualSync() {
   btn.disabled = true
   btn.textContent = '⟳ Обновляем...'
   btn.style.opacity = '0.7'
-  showToast('Запрашиваю выписки из почты...')
+  showToast('Запрашиваю выписку из банка...')
 
   try {
-    const r = await fetch(API + '/api/sync', {
+    // 1. Запускаем фоновую задачу
+    const r = await fetch(API + '/api/raiffeisen/sync', {
       method: 'POST',
       headers: { Authorization: getAuth(), 'Content-Type': 'application/json' },
     })
@@ -2039,29 +2040,39 @@ async function manualSync() {
       const txt = await r.text().catch(() => '')
       throw new Error(r.status + ' ' + txt.slice(0, 200))
     }
-    const data = await r.json()
-    const processed = data.processed || 0
-    const skipped = data.skipped || 0
-    const errors = (data.errors || []).length
+    const { job_id } = await r.json()
 
-    if (processed > 0) {
-      const details = (data.details || []).map(d =>
-        `${d.file} → ${(d.months || [d.month]).join(', ')} (${d.ops} оп.)`
-      ).join('; ')
-      showToast(`✓ Обработано выписок: ${processed}. ${details}`)
-      // Подгружаем свежие данные
-      await fetchData()
-      // Если открыта страница продаж — пересинхронизируем
-      const salesPage = document.getElementById('page-sales')
-      if (salesPage && salesPage.style.display !== 'none') {
-        salesSyncFromServer()
-        renderSales()
+    // 2. Поллим статус каждые 5 секунд (макс 5 минут)
+    let seconds = 0
+    while (seconds < 300) {
+      await new Promise(res => setTimeout(res, 5000))
+      seconds += 5
+      btn.textContent = `⟳ Ждём... ${seconds}с`
+
+      const s = await fetch(API + '/api/raiffeisen/sync/' + job_id, {
+        headers: { Authorization: getAuth() }
+      })
+      if (!s.ok) continue
+      const data = await s.json()
+
+      if (data.status === 'ok') {
+        const processed = data.processed || 0
+        const months = (data.months || []).join(', ')
+        showToast(processed > 0
+          ? `✓ Загружено операций: ${processed}. Месяцы: ${months}`
+          : '✓ Синхронизация завершена, новых данных нет')
+        await fetchData()
+        const salesPage = document.getElementById('page-sales')
+        if (salesPage && salesPage.style.display !== 'none') {
+          salesSyncFromServer(); renderSales()
+        }
+        return
       }
-    } else if (errors > 0) {
-      showToast('Ошибка при опросе почты: ' + (data.errors || []).join('; '))
-    } else {
-      showToast('Новых выписок в почте нет (пропущено: ' + skipped + ')')
+      if (data.status === 'error') {
+        throw new Error(data.detail || 'Неизвестная ошибка')
+      }
     }
+    throw new Error('Таймаут ожидания ответа от банка')
   } catch(e) {
     showToast('Ошибка обновления: ' + e.message)
   } finally {
