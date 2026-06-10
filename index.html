@@ -1311,7 +1311,6 @@ function showContractorCard(contractorName) {
     }
   }
 
-  if (!all.length) return
   all.sort((a, b) => (b.date || '').localeCompare(a.date || ''))
 
   const totalIn  = all.filter(o => !o.is_debit).reduce((s, o) => s + (o.amount || 0), 0)
@@ -1322,6 +1321,12 @@ function showContractorCard(contractorName) {
     `${all.length} операций  ·  поступления <span style="color:#3db88a">${new Intl.NumberFormat('ru-RU').format(Math.round(totalIn))} ₽</span>  ·  расходы <span style="color:#d95f5f">${new Intl.NumberFormat('ru-RU').format(Math.round(totalOut))} ₽</span>`
 
   const tbody = document.getElementById('contractor-card-tbody')
+  if (!all.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="color:#555;padding:24px;text-align:center">Нет операций в базе за загруженные месяцы</td></tr>'
+    document.getElementById('contractor-card-modal').classList.add('show')
+    document.body.style.overflow = 'hidden'
+    return
+  }
   tbody.innerHTML = all.map(op => {
     const dt = esc(op.date)
     const m  = esc(op._month)
@@ -1707,7 +1712,7 @@ function renderDir() {
     const dateStr = c.first_seen ? c.first_seen.slice(0, 10) : '—'
     return '<tr>' +
       '<td class="dir-date">' + dateStr + '</td>' +
-      '<td class="dir-name" title="' + esc(c.name || '') + '" onclick="showContractorCard(' + JSON.stringify(c.name || '') + ')" style="cursor:pointer" onmouseover="this.style.color=\'#f0a500\'" onmouseout="this.style.color=\'\'">' + esc((c.name || '').slice(0, 55)) + '</td>' +
+      '<td class="dir-name" title="' + esc(c.name || '') + '" data-cname="' + esc(c.name || '') + '" onclick="showContractorCard(this.dataset.cname)" style="cursor:pointer" onmouseover="this.style.color=\'#f0a500\'" onmouseout="this.style.color=\'\'">' + esc((c.name || '').slice(0, 55)) + '</td>' +
       '<td>' + N(c.total) + '</td>' +
       '<td><select class="dir-cat-sel" id="dcat-' + idx + '" onchange="onDirCatChange(' + idx + ')">' + catOpts + '</select></td>' +
       '<td><textarea class="dir-comment" id="dcmt-' + idx + '" placeholder="Добавить комментарий..." ' +
