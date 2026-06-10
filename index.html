@@ -1099,9 +1099,11 @@ function render() {
   document.getElementById('tbody').innerHTML = buildTbody()
   const wm = WM[curMonth]
   const _balHtml = _accountBalance
-    ? '<span style="color:#2a2a2a;margin:0 10px;font-size:13px">│</span>' +
-      '<span style="color:#777;font-size:11px;letter-spacing:.04em;text-transform:uppercase;margin-right:6px">Остаток</span>' +
-      '<span style="font-size:20px;font-weight:700;font-family:monospace;color:#3db88a;letter-spacing:-.5px">' + _accountBalance.fmt + '</span>'
+    ? '<span style="color:#2a2a2a;margin:0 12px;font-size:13px;font-weight:300">│</span>' +
+      '<span style="font-size:14px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#e0e0e0">Остаток на счёту</span>' +
+      '<span style="color:#555;margin:0 6px;font-size:13px">·</span>' +
+      '<span style="font-size:14px;font-weight:400;color:#666;letter-spacing:.02em">' + (_accountBalance.upd || '') + '</span>' +
+      '<span style="margin-left:12px;font-size:14px;font-weight:700;font-family:monospace;color:#3db88a;letter-spacing:-.3px">' + _accountBalance.fmt + '</span>'
     : ''
   document.getElementById('mbar-title').innerHTML =
     curMonth.toUpperCase() + ' 2026' +
