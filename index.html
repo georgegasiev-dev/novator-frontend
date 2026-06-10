@@ -391,6 +391,157 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
 .an-amount-cell.big{color:#f0a500;font-weight:600}
 @media (max-width: 1100px){.an-g2{grid-template-columns:1fr}}
 @media (max-width: 700px){.an-kpi-row{grid-template-columns:repeat(2,1fr)}}
+
+/* ═══════════════════════════════════════════════
+   МОБИЛЬНАЯ ВЕРСИЯ  (≤ 768px)
+═══════════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* Шапка */
+  .brand-name { font-size: 15px; }
+  .brand-sub  { display: none; }
+  .last-upd   { display: none; }
+  .sdot-wrap  { display: none; }
+  .ubtn[id="sync-btn"]  { display: none; }
+  .ubtn[id="ubtn"]      { display: none; }
+  .ubtn:last-child      { padding: 7px 10px; font-size: 10px; }
+
+  /* Навигация страниц */
+  #page-nav { overflow-x: auto; }
+  #page-nav button { padding: 11px 14px; font-size: 11px; }
+
+  /* Вкладки месяцев */
+  .mtabs { display: flex; }
+  .mtab  { padding: 9px 12px; font-size: 11px; }
+
+  /* mbar — скрыть диапазон недель, он не нужен на мобиле */
+  .mbar-right { display: none; }
+  .mbar-title { font-size: 12px; }
+
+  /* Десктопная таблица — скрыть */
+  .tbl-wrap table { display: none; }
+
+  /* Мобильный список — показать */
+  .mob-tbl-wrap { display: block !important; }
+
+  /* Навигатор недели */
+  .mob-week-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: #111;
+    border-bottom: 1px solid #222;
+    flex-shrink: 0;
+  }
+  .mob-week-nav .mob-wn-btn {
+    width: 36px; height: 36px;
+    border: 1px solid #2a2a2a; border-radius: 6px;
+    background: transparent; color: #888;
+    font-size: 18px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .15s; flex-shrink: 0;
+  }
+  .mob-week-nav .mob-wn-btn:hover { border-color: #f0a500; color: #f0a500; }
+  .mob-week-nav .mob-wn-btn:disabled { color: #2a2a2a; border-color: #1a1a1a; cursor: default; }
+  .mob-week-nav .mob-wn-info {
+    text-align: center; flex: 1;
+  }
+  .mob-week-nav .mob-wn-num  { font-size: 13px; font-weight: 700; color: #f0a500; }
+  .mob-week-nav .mob-wn-dates{ font-size: 10px; color: #444; margin-top: 2px; letter-spacing: .3px; }
+
+  /* Список строк */
+  .mob-rows { overflow-y: auto; flex: 1; }
+
+  /* Группа */
+  .mob-group-hdr {
+    padding: 8px 14px 7px;
+    background: #131313;
+    border-bottom: 1px solid #1e1e1e;
+    border-top: 1px solid #252525;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .mob-group-hdr .mob-grp-icon {
+    width: 18px; height: 18px; border: 1px solid #2a2a2a; border-radius: 3px;
+    background: transparent; color: #555; font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .mob-group-hdr .mob-grp-label {
+    font-size: 11px; font-weight: 700; color: #ccc; flex: 1;
+    letter-spacing: .3px; text-transform: uppercase;
+  }
+  .mob-group-hdr .mob-grp-sum {
+    font-size: 12px; font-weight: 700; color: #e0e0e0;
+    font-family: monospace;
+  }
+
+  /* Строка */
+  .mob-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 14px 10px 28px;
+    border-bottom: 1px solid #181818;
+    background: #111;
+    min-height: 44px;
+  }
+  .mob-row:nth-child(even) { background: #141414; }
+  .mob-row .mob-row-label {
+    font-size: 12px; color: #aaa; flex: 1; padding-right: 12px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .mob-row .mob-row-fact {
+    font-size: 13px; font-weight: 700;
+    font-family: monospace; white-space: nowrap; flex-shrink: 0;
+  }
+
+  /* Итоговые строки */
+  .mob-row.mob-total {
+    background: #111928; padding-left: 14px; border-top: 1px solid #222;
+  }
+  .mob-row.mob-total .mob-row-label {
+    font-size: 11px; font-weight: 700; color: #888;
+    letter-spacing: .5px; text-transform: uppercase;
+  }
+  .mob-row.mob-grand {
+    background: #0d1f0d; padding-left: 14px; border-top: 2px solid #1a3a1a;
+  }
+  .mob-row.mob-grand .mob-row-label {
+    font-size: 11px; font-weight: 700; color: #3db88a;
+    letter-spacing: .5px; text-transform: uppercase;
+  }
+  .mob-row.mob-income {
+    background: #0c1f0c; padding-left: 14px; border-top: 2px solid #1a3a1a;
+  }
+  .mob-row.mob-income .mob-row-label {
+    font-size: 12px; font-weight: 700; color: #f0a500;
+  }
+  .mob-row.mob-sep {
+    height: 8px; background: #0b0b0b; border: none; display: block; padding: 0;
+  }
+
+  /* Остаток на счету — мобильная версия */
+  .mob-balance {
+    padding: 10px 14px;
+    background: #0d1a0d;
+    border-bottom: 1px solid #1a3a1a;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .mob-balance-label { font-size: 10px; color: #555; letter-spacing: .5px; text-transform: uppercase; }
+  .mob-balance-val   { font-size: 15px; font-weight: 700; color: #f0a500; font-family: monospace; }
+}
+
+/* На десктопе мобильный блок не показываем */
+@media (min-width: 769px) {
+  .mob-tbl-wrap { display: none !important; }
+}
 </style>
 </head>
 <body>
@@ -473,6 +624,20 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
 
 <div class="tbl-wrap">
   <table id="tbl"><thead id="thead"></thead><tbody id="tbody"></tbody></table>
+</div>
+
+<!-- МОБИЛЬНАЯ ВЕРСИЯ ТАБЛИЦЫ -->
+<div class="mob-tbl-wrap" id="mob-tbl-wrap" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+  <div id="mob-balance" class="mob-balance" style="display:none"></div>
+  <div class="mob-week-nav">
+    <button class="mob-wn-btn" id="mob-wn-prev" onclick="mobWeekNav(-1)">&#8249;</button>
+    <div class="mob-wn-info">
+      <div class="mob-wn-num" id="mob-wn-num">Неделя —</div>
+      <div class="mob-wn-dates" id="mob-wn-dates"></div>
+    </div>
+    <button class="mob-wn-btn" id="mob-wn-next" onclick="mobWeekNav(+1)">&#8250;</button>
+  </div>
+  <div class="mob-rows" id="mob-rows"></div>
 </div>
 
 </div>
@@ -1112,7 +1277,144 @@ function render() {
       : '')
   document.getElementById('mbar-w').textContent =
     wm[0].n + ' — ' + wm[4].n + ' · ' + wm[0].d.split('—')[0].trim() + ' — ' + (wm[4].d.split('—')[1]||'').trim()
+  renderMobile()
 }
+
+// ── МОБИЛЬНЫЙ РЕНДЕР ──────────────────────────────────────────────────────────
+let mobWeekIdx = 0  // текущая отображаемая неделя на мобиле
+
+function isMobile() { return window.innerWidth <= 768 }
+
+function initMobWeek() {
+  const cwi = getCurWeekIdx(curMonth)
+  mobWeekIdx = cwi >= 0 ? cwi : 0
+}
+
+function mobWeekNav(delta) {
+  const weeks = WM[curMonth]
+  const maxWi = weeks.length - 1
+  mobWeekIdx = Math.max(0, Math.min(maxWi, mobWeekIdx + delta))
+  renderMobile()
+}
+
+function renderMobile() {
+  if (!isMobile()) return
+
+  const weeks  = WM[curMonth]
+  const wi     = mobWeekIdx
+  const w      = weeks[wi]
+  const plan   = STD
+  const fact   = serverFacts[curMonth] || (curMonth === 'Май' ? MAY_FACT : null)
+  const totals = computeTotals(plan, fact)
+  const maxWi  = weeks.length - 1
+
+  // Навигатор
+  document.getElementById('mob-wn-num').textContent   = 'Нед ' + w.n
+  document.getElementById('mob-wn-dates').textContent = w.d
+  document.getElementById('mob-wn-prev').disabled     = wi === 0
+  document.getElementById('mob-wn-next').disabled     = wi === maxWi
+
+  // Остаток на счёту
+  const balEl = document.getElementById('mob-balance')
+  if (_accountBalance) {
+    balEl.style.display = 'flex'
+    balEl.innerHTML =
+      '<span class="mob-balance-label">Остаток на счёту</span>' +
+      '<span class="mob-balance-val">' + _accountBalance.fmt + '</span>'
+  } else {
+    balEl.style.display = 'none'
+  }
+
+  // Строки
+  let html = ''
+
+  GROUPS.forEach(grp => {
+    const gid       = grp.id
+    const collapsed = grpState[gid]
+    const gPlan     = groupSum(gid, plan)
+    const gFact     = groupSum(gid, fact)
+    const gf        = gFact ? gFact[wi] : null
+    const gfFmt     = gf == null ? '—' : fN(gf)
+    const gfCls     = gf == null ? 'c-none' : (gf > 0 ? 'c-fact' : 'c-fact')
+
+    html += `<div class="mob-group-hdr" onclick="toggleGroup('${gid}')">
+      <div class="mob-grp-icon">${collapsed ? '+' : '−'}</div>
+      <div class="mob-grp-label">${grp.label}</div>
+      <div class="mob-grp-sum ${gfCls}">${gfFmt}</div>
+    </div>`
+
+    if (!collapsed) {
+      ROWS.filter(r => r.grp === gid).forEach((row, ri) => {
+        const pArr = plan[row.id] || [0,0,0,0,0]
+        const fArr = fact ? (fact[row.id] || Array(5).fill(null)) : null
+        const f    = fArr ? fArr[wi] : null
+        const p    = pArr[wi] || 0
+        const fCls = fClass(p, f, false)
+        const fVal = f == null ? '—' : fN(f)
+        html += `<div class="mob-row">
+          <div class="mob-row-label">${row.label}</div>
+          <div class="mob-row-fact ${fCls}">${fVal}</div>
+        </div>`
+      })
+    }
+  })
+
+  // Итоговые строки (без инфо-строки _fury, без proizvod)
+  let prevWasIncome = false
+  ROWS.filter(r => r.grp === null && r.id !== '_fury' && r.id !== 'proizvod').forEach(row => {
+    const isTotal    = row.rt === 'total'
+    const isGrand    = row.rt === 'grand'
+    const isIncome   = row.rt === 'income'
+    const isOtherUnk = row.rt === 'other_unk'
+
+    if (isIncome && !prevWasIncome) {
+      html += '<div class="mob-row mob-sep"></div>'
+    }
+    prevWasIncome = isIncome
+
+    let pArr, fArr
+    if (row.id.startsWith('_')) {
+      const t = totals[row.id]
+      pArr = t?.plan || [0,0,0,0,0]
+      fArr = t?.fact || null
+    } else {
+      pArr = plan[row.id] || [0,0,0,0,0]
+      fArr = fact ? (fact[row.id] || Array(5).fill(null)) : null
+    }
+
+    const f    = fArr ? fArr[wi] : null
+    const p    = pArr[wi] || 0
+    const fCls = fClass(p, f, isIncome)
+    const fVal = f == null ? '—' : fN(f)
+
+    const cls  = isGrand ? 'mob-row mob-grand' : isTotal ? 'mob-row mob-total' : isIncome ? 'mob-row mob-income' : 'mob-row'
+
+    html += `<div class="${cls}">
+      <div class="mob-row-label">${row.label}</div>
+      <div class="mob-row-fact ${fCls}">${fVal}</div>
+    </div>`
+  })
+
+  document.getElementById('mob-rows').innerHTML = html
+}
+
+// Переключение между desktop и mobile при ресайзе
+function applyLayout() {
+  const mob    = document.getElementById('mob-tbl-wrap')
+  const desk   = document.querySelector('.tbl-wrap')
+  if (!mob || !desk) return
+  if (isMobile()) {
+    mob.style.display  = 'flex'
+    desk.style.display = 'none'
+    renderMobile()
+  } else {
+    mob.style.display  = 'none'
+    desk.style.display = ''
+  }
+}
+
+window.addEventListener('resize', applyLayout)
+
 
 async function fetchBalance() {
   try {
@@ -1145,6 +1447,7 @@ function switchMonth(m) {
   // В текущем месяце разворачиваем текущую неделю, в остальных — первую
   if (cwi >= 0) wkCollapsed[cwi] = false
   else wkCollapsed[0] = false
+  initMobWeek()
   renderTabs(); render(); updateLastUpdDisplay()
 }
 function setUM(m) {
@@ -2492,11 +2795,14 @@ function initApp(){
   wkCollapsed = {0:true,1:true,2:true,3:true,4:true}
   if (cwi >= 0) wkCollapsed[cwi] = false
 
+  initMobWeek()   // ← инициализируем индекс недели для мобила
+
   salesLoad()
   showPage('calendar')
   renderTabs()
   document.getElementById('tbody').innerHTML = '<tr><td colspan="22" style="text-align:center;padding:60px 20px;color:#333;font-size:11px;letter-spacing:1px;text-transform:uppercase">Загрузка данных...</td></tr>'
   fetchData()
+  applyLayout()  // ← показываем нужный вид сразу
 }
 
 // При загрузке — показываем логин если нет сессии
@@ -2615,3 +2921,4 @@ if(sessionStorage.getItem('nvt_auth')){
 
 </body>
 </html>
+
