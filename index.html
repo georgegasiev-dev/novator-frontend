@@ -468,11 +468,6 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
 
 <div class="mbar">
   <div class="mbar-title" id="mbar-title">МАЙ 2026</div>
-  <div id="account-balance-block" style="display:none;align-items:baseline;gap:8px">
-    <span style="color:#555;font-size:11px;letter-spacing:.04em;text-transform:uppercase">Остаток</span>
-    <span id="account-balance-val" style="font-size:22px;font-weight:700;font-family:'JetBrains Mono',monospace;color:#3db88a;letter-spacing:-.5px">—</span>
-    <span id="account-balance-upd" style="color:#444;font-size:11px"></span>
-  </div>
   <div class="mbar-right">Нед <span id="mbar-w"></span> &nbsp;·&nbsp; <span style="color:#3db88a">+переплата</span> / <span style="color:#d95f5f">−экономия</span></div>
 </div>
 
@@ -874,6 +869,7 @@ function dClass(d, isIncome) {
 // состояние
 let curMonth = 'Май'   // переопределится в initApp() через getCurrentMonthName()
 let uploadTimes = {}
+let _accountBalance = null  // { val: 3596297.89, fmt: '3 596 297 ₽', upd: '10.06 13:44' }
 let uploadMonth = 'Май'  // переопределится в initApp()
 let serverFacts = {}
 let monthsWithFact = new Set(['Май'])
@@ -1102,11 +1098,16 @@ function render() {
   document.getElementById('thead').innerHTML = buildThead()
   document.getElementById('tbody').innerHTML = buildTbody()
   const wm = WM[curMonth]
+  const _balHtml = _accountBalance
+    ? '<span style="color:#2a2a2a;margin:0 10px;font-size:13px">│</span>' +
+      '<span style="color:#777;font-size:11px;letter-spacing:.04em;text-transform:uppercase;margin-right:6px">Остаток</span>' +
+      '<span style="font-size:20px;font-weight:700;font-family:monospace;color:#3db88a;letter-spacing:-.5px">' + _accountBalance.fmt + '</span>'
+    : ''
   document.getElementById('mbar-title').innerHTML =
     curMonth.toUpperCase() + ' 2026' +
     (monthsWithFact.has(curMonth)
       ? '<span class="fact-tag">● ФАКТ ЗАГРУЖЕН' +
-        (uploadTimes[curMonth] ? ' · ' + uploadTimes[curMonth] : '') + '</span>'
+        (uploadTimes[curMonth] ? ' · ' + uploadTimes[curMonth] : '') + '</span>' + _balHtml
       : '')
   document.getElementById('mbar-w').textContent =
     wm[0].n + ' — ' + wm[4].n + ' · ' + wm[0].d.split('—')[0].trim() + ' — ' + (wm[4].d.split('—')[1]||'').trim()
@@ -1118,10 +1119,9 @@ async function fetchBalance() {
     if (!r.ok) return
     const d = await r.json()
     if (d.balance == null) return
-    const fmt = new Intl.NumberFormat('ru-RU', {maximumFractionDigits: 2}).format(d.balance)
-    document.getElementById('account-balance-val').textContent = fmt + ' ₽'
-    document.getElementById('account-balance-upd').textContent = d.updated_fmt ? '· ' + d.updated_fmt : ''
-    document.getElementById('account-balance-block').style.display = 'flex'
+    const fmt = new Intl.NumberFormat('ru-RU', {maximumFractionDigits: 0}).format(d.balance) + ' ₽'
+    _accountBalance = { val: d.balance, fmt, upd: d.updated_fmt || '' }
+    render()
   } catch(e) {}
 }
 
