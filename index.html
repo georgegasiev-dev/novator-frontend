@@ -414,15 +414,54 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
   .mtabs { display: flex; }
   .mtab  { padding: 9px 12px; font-size: 11px; }
 
-  /* mbar — скрыть диапазон недель, он не нужен на мобиле */
-  .mbar-right { display: none; }
-  .mbar-title { font-size: 12px; }
+  /* mbar — полностью скрыть на мобиле */
+  .mbar { display: none; }
 
   /* Десктопная таблица — скрыть */
   .tbl-wrap table { display: none; }
 
   /* Мобильный список — показать */
   .mob-tbl-wrap { display: block !important; }
+
+  /* ── Статус-плашка (месяц + выписка + остаток) ── */
+  .mob-status {
+    padding: 10px 14px 9px;
+    background: #0f0f0f;
+    border-bottom: 1px solid #1e1e1e;
+    flex-shrink: 0;
+  }
+  /* Строка 1: месяц + точка факта */
+  .mob-status-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .mob-status-month {
+    font-size: 13px; font-weight: 700;
+    color: #e0e0e0; letter-spacing: .5px; text-transform: uppercase;
+  }
+  .mob-status-fact-dot {
+    width: 6px; height: 6px; border-radius: 50%; background: #3db88a; flex-shrink: 0;
+  }
+  .mob-status-fact-txt {
+    font-size: 10px; color: #3db88a; letter-spacing: .5px;
+  }
+  /* Строка 2: остаток — крупно */
+  .mob-status-balance {
+    font-size: 22px; font-weight: 700;
+    color: #f0a500; font-family: monospace;
+    letter-spacing: -.5px; line-height: 1;
+    margin-bottom: 5px;
+  }
+  .mob-status-balance.no-bal {
+    display: none;
+  }
+  /* Строка 3: дата выписки — мелко */
+  .mob-status-upd {
+    font-size: 10px; color: #444; letter-spacing: .3px;
+  }
+  .mob-status-upd span { color: #666; }
 
   /* Навигатор недели */
   .mob-week-nav {
@@ -444,11 +483,9 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
   }
   .mob-week-nav .mob-wn-btn:hover { border-color: #f0a500; color: #f0a500; }
   .mob-week-nav .mob-wn-btn:disabled { color: #2a2a2a; border-color: #1a1a1a; cursor: default; }
-  .mob-week-nav .mob-wn-info {
-    text-align: center; flex: 1;
-  }
-  .mob-week-nav .mob-wn-num  { font-size: 13px; font-weight: 700; color: #f0a500; }
-  .mob-week-nav .mob-wn-dates{ font-size: 10px; color: #444; margin-top: 2px; letter-spacing: .3px; }
+  .mob-week-nav .mob-wn-info { text-align: center; flex: 1; }
+  .mob-week-nav .mob-wn-num   { font-size: 13px; font-weight: 700; color: #f0a500; }
+  .mob-week-nav .mob-wn-dates { font-size: 10px; color: #444; margin-top: 2px; letter-spacing: .3px; }
 
   /* Список строк */
   .mob-rows { overflow-y: auto; flex: 1; }
@@ -459,11 +496,8 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
     background: #131313;
     border-bottom: 1px solid #1e1e1e;
     border-top: 1px solid #252525;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    user-select: none;
+    display: flex; align-items: center; gap: 8px;
+    cursor: pointer; user-select: none;
   }
   .mob-group-hdr .mob-grp-icon {
     width: 18px; height: 18px; border: 1px solid #2a2a2a; border-radius: 3px;
@@ -475,19 +509,14 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
     letter-spacing: .3px; text-transform: uppercase;
   }
   .mob-group-hdr .mob-grp-sum {
-    font-size: 12px; font-weight: 700; color: #e0e0e0;
-    font-family: monospace;
+    font-size: 12px; font-weight: 700; color: #e0e0e0; font-family: monospace;
   }
 
   /* Строка */
   .mob-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    display: flex; align-items: center; justify-content: space-between;
     padding: 11px 14px 10px 28px;
-    border-bottom: 1px solid #181818;
-    background: #111;
-    min-height: 44px;
+    border-bottom: 1px solid #181818; background: #111; min-height: 44px;
   }
   .mob-row:nth-child(even) { background: #141414; }
   .mob-row .mob-row-label {
@@ -495,47 +524,21 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   .mob-row .mob-row-fact {
-    font-size: 13px; font-weight: 700;
-    font-family: monospace; white-space: nowrap; flex-shrink: 0;
+    font-size: 13px; font-weight: 700; font-family: monospace; white-space: nowrap; flex-shrink: 0;
   }
 
   /* Итоговые строки */
-  .mob-row.mob-total {
-    background: #111928; padding-left: 14px; border-top: 1px solid #222;
-  }
+  .mob-row.mob-total { background: #111928; padding-left: 14px; border-top: 1px solid #222; }
   .mob-row.mob-total .mob-row-label {
-    font-size: 11px; font-weight: 700; color: #888;
-    letter-spacing: .5px; text-transform: uppercase;
+    font-size: 11px; font-weight: 700; color: #888; letter-spacing: .5px; text-transform: uppercase;
   }
-  .mob-row.mob-grand {
-    background: #0d1f0d; padding-left: 14px; border-top: 2px solid #1a3a1a;
-  }
+  .mob-row.mob-grand { background: #0d1f0d; padding-left: 14px; border-top: 2px solid #1a3a1a; }
   .mob-row.mob-grand .mob-row-label {
-    font-size: 11px; font-weight: 700; color: #3db88a;
-    letter-spacing: .5px; text-transform: uppercase;
+    font-size: 11px; font-weight: 700; color: #3db88a; letter-spacing: .5px; text-transform: uppercase;
   }
-  .mob-row.mob-income {
-    background: #0c1f0c; padding-left: 14px; border-top: 2px solid #1a3a1a;
-  }
-  .mob-row.mob-income .mob-row-label {
-    font-size: 12px; font-weight: 700; color: #f0a500;
-  }
-  .mob-row.mob-sep {
-    height: 8px; background: #0b0b0b; border: none; display: block; padding: 0;
-  }
-
-  /* Остаток на счету — мобильная версия */
-  .mob-balance {
-    padding: 10px 14px;
-    background: #0d1a0d;
-    border-bottom: 1px solid #1a3a1a;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-shrink: 0;
-  }
-  .mob-balance-label { font-size: 10px; color: #555; letter-spacing: .5px; text-transform: uppercase; }
-  .mob-balance-val   { font-size: 15px; font-weight: 700; color: #f0a500; font-family: monospace; }
+  .mob-row.mob-income { background: #0c1f0c; padding-left: 14px; border-top: 2px solid #1a3a1a; }
+  .mob-row.mob-income .mob-row-label { font-size: 12px; font-weight: 700; color: #f0a500; }
+  .mob-row.mob-sep { height: 8px; background: #0b0b0b; border: none; display: block; padding: 0; }
 }
 
 /* На десктопе мобильный блок не показываем */
@@ -628,7 +631,7 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
 
 <!-- МОБИЛЬНАЯ ВЕРСИЯ ТАБЛИЦЫ -->
 <div class="mob-tbl-wrap" id="mob-tbl-wrap" style="display:none;flex-direction:column;flex:1;overflow:hidden">
-  <div id="mob-balance" class="mob-balance" style="display:none"></div>
+  <div id="mob-status" class="mob-status"></div>
   <div class="mob-week-nav">
     <button class="mob-wn-btn" id="mob-wn-prev" onclick="mobWeekNav(-1)">&#8249;</button>
     <div class="mob-wn-info">
@@ -1314,15 +1317,30 @@ function renderMobile() {
   document.getElementById('mob-wn-prev').disabled     = wi === 0
   document.getElementById('mob-wn-next').disabled     = wi === maxWi
 
-  // Остаток на счёту
-  const balEl = document.getElementById('mob-balance')
-  if (_accountBalance) {
-    balEl.style.display = 'flex'
-    balEl.innerHTML =
-      '<span class="mob-balance-label">Остаток на счёту</span>' +
-      '<span class="mob-balance-val">' + _accountBalance.fmt + '</span>'
-  } else {
-    balEl.style.display = 'none'
+  // Статус-плашка: месяц + факт + остаток + дата выписки
+  const stEl = document.getElementById('mob-status')
+  if (stEl) {
+    const hasFact = monthsWithFact.has(curMonth)
+    const upd = uploadTimes[curMonth] || ''
+    const balVal = _accountBalance ? _accountBalance.fmt : null
+    const balUpd = _accountBalance ? (_accountBalance.upd || '') : ''
+
+    stEl.innerHTML =
+      '<div class="mob-status-top">' +
+        '<div class="mob-status-month">' + curMonth + ' 2026</div>' +
+        (hasFact
+          ? '<div class="mob-status-fact-dot"></div>' +
+            '<div class="mob-status-fact-txt">факт загружен</div>'
+          : '') +
+      '</div>' +
+      '<div class="mob-status-balance' + (balVal ? '' : ' no-bal') + '">' +
+        (balVal ? balVal : '') +
+      '</div>' +
+      '<div class="mob-status-upd">' +
+        (balVal
+          ? 'Остаток на счету · обновлено <span>' + balUpd + '</span>'
+          : (hasFact ? 'Выписка загружена: <span>' + upd + '</span>' : 'Факт не загружен')) +
+      '</div>'
   }
 
   // Строки
