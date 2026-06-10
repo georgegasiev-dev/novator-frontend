@@ -1463,7 +1463,7 @@ async function onModalCatChange(oi) {
     const r = await fetch(API + '/api/reclassify', {
       method: 'POST',
       headers: { Authorization: getAuth(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ month: currentModalMonth, contractor: contractor, new_cat: newCat })
+      body: JSON.stringify({ month: currentModalMonth, contractor: contractor, new_cat: newCat, date: op ? op.date : undefined, amount: op ? op.amount : undefined })
     })
     sel.classList.remove('saving')
     if (r.ok || r.status === 200) {
@@ -1578,15 +1578,13 @@ async function onRefCatChange(sel) {
 
   // Отправляем на сервер — меняем для всех месяцев
   try {
-    for (const month of MONTHS) {
-      if (!serverOpsCache[month]) continue
-      await fetch(API + '/api/reclassify', {
-        method: 'POST',
-        headers: { Authorization: getAuth(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ month, contractor: key, new_cat: newCat })
-      })
-    }
-    showToast('✓ Категория обновлена для «' + key.slice(0,30) + '»', 'ok')
+    // Справочник: сохраняем постоянно через /api/contractors/update
+    await fetch(API + '/api/contractors/update', {
+      method: 'POST',
+      headers: { Authorization: getAuth(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contractor: key, cat: newCat })
+    })
+    showToast('✓ Категория сохранена для «' + key.slice(0,30) + '» навсегда', 'ok')
     await fetchData()
     renderRef()
   } catch(e) {
