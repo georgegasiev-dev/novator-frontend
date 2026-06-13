@@ -771,9 +771,10 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
 
 <script>
 const API  = 'https://zavod-production.up.railway.app'
+const API_KEY = 'JOD5qL4QLP6SfoMhnmA6e6zkyjQwL3dy---thYDUAr4'
 // ── авторизация ──────────────────────────────────────────────────────────────
 function getAuth(){ return sessionStorage.getItem('nvt_auth') || '' }
-function getAuthHeader(){ return { Authorization: getAuth() } }
+function getAuthHeader(){ return { Authorization: getAuth(), 'X-API-Key': API_KEY } }
 
 async function doLogin(){
   const user = document.getElementById('l-user').value.trim()
@@ -1437,7 +1438,7 @@ window.addEventListener('resize', applyLayout)
 
 async function fetchBalance() {
   try {
-    const r = await fetch(API + '/api/balance')
+    const r = await fetch(API + '/api/balance', {headers:{'X-API-Key':API_KEY}})
     if (!r.ok) return
     const d = await r.json()
     if (d.balance == null) return
@@ -1520,7 +1521,7 @@ function updateLastUpdDisplay() {
 
 async function fetchData() {
   try {
-    const r = await fetch(API+'/api/data', {mode:'cors'})
+    const r = await fetch(API+'/api/data', {mode:'cors', headers:{'X-API-Key':API_KEY}})
     if (!r.ok) throw new Error(r.status)
     const d = await r.json()
     for (const [m, v] of Object.entries(d)) {
@@ -1966,7 +1967,7 @@ async function loadDir() {
   document.getElementById('dir-tbody').innerHTML =
     '<tr><td colspan="5" class="dir-loading">Загрузка...</td></tr>'
   try {
-    const r = await fetch(API + '/api/contractors')
+    const r = await fetch(API + '/api/contractors', {headers:{'X-API-Key':API_KEY}})
     if (r.ok) {
       dirData = await r.json()
       // Заполняем фильтр категорий
