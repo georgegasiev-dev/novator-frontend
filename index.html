@@ -546,6 +546,143 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
 @media (min-width: 769px) {
   .mob-tbl-wrap { display: none !important; }
 }
+
+/* ── Мобильные стили страницы Продажи ───────────────────────────── */
+@media (max-width: 768px) {
+  /* Тулбар — вертикально */
+  .sales-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 10px 14px;
+    background: #0f0f0f;
+    border-bottom: 1px solid #1e1e1e;
+    margin-bottom: 0;
+  }
+  .sales-toolbar-row1 {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .sales-toolbar input {
+    flex: 1;
+    width: auto !important;
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+  .sales-add-btn {
+    white-space: nowrap;
+    padding: 8px 14px;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  /* Статистика — горизонтально в 3 ячейки */
+  .sales-stat {
+    margin-left: 0;
+    gap: 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    background: #111;
+    border-radius: 8px;
+    border: 1px solid #1e1e1e;
+    overflow: hidden;
+  }
+  .sales-stat-item {
+    padding: 10px 12px;
+    border-right: 1px solid #1e1e1e;
+    align-items: center;
+    text-align: center;
+  }
+  .sales-stat-item:last-child { border-right: none; }
+  .sales-stat-val { font-size: 15px; }
+  .sales-stat-lbl { font-size: 8px; text-align: center; }
+
+  /* Таблица → скрыть */
+  .sales-table { display: none; }
+
+  /* Обёртка */
+  .sales-wrap { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
+
+  /* Карточки продаж */
+  .sales-cards {
+    overflow-y: auto;
+    flex: 1;
+    padding: 8px 12px 20px;
+  }
+  .sales-card {
+    background: #111;
+    border: 1px solid #1e1e1e;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    overflow: hidden;
+  }
+  .sales-card.auto-card { border-left: 3px solid #1a3a6b; }
+  .sales-card.manual-card { border-left: 3px solid #2a5a2a; }
+  .sales-card-main {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 11px 12px 10px;
+    gap: 8px;
+    cursor: pointer;
+  }
+  .sales-card-left { flex: 1; min-width: 0; }
+  .sales-card-company {
+    font-size: 13px; font-weight: 600; color: #e0e0e0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-bottom: 4px;
+  }
+  .sales-card-meta {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 10px; color: #555;
+  }
+  .sales-card-right {
+    display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0;
+  }
+  .sales-card-amount {
+    font-size: 15px; font-weight: 700; color: #3db88a;
+  }
+  .sales-card-chevron {
+    font-size: 10px; color: #333; transition: transform .2s;
+  }
+  .sales-card.open .sales-card-chevron { transform: rotate(180deg); }
+
+  /* Expandable блок редактирования */
+  .sales-card-detail {
+    display: none;
+    padding: 0 12px 12px;
+    border-top: 1px solid #1a1a1a;
+  }
+  .sales-card.open .sales-card-detail { display: block; }
+  .sales-card-fields {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;
+  }
+  .sales-card-field label {
+    display: block; font-size: 9px; color: #555; letter-spacing: .8px;
+    text-transform: uppercase; margin-bottom: 4px;
+  }
+  .sales-card-field input {
+    width: 100%; background: #0d0d0d; border: 1px solid #222; border-radius: 5px;
+    color: #ccc; font-size: 13px; padding: 7px 10px; outline: none; text-align: right;
+  }
+  .sales-card-field input:focus { border-color: #f0a500; }
+  .sales-card-field.full { grid-column: 1 / -1; }
+  .sales-card-field.full input { text-align: left; }
+  .sales-card-actions {
+    display: flex; justify-content: space-between; align-items: center; margin-top: 10px;
+  }
+  .sales-card-del {
+    background: none; border: 1px solid #2a2a2a; color: #555; border-radius: 5px;
+    font-size: 11px; padding: 5px 12px; cursor: pointer;
+  }
+  .sales-card-del:active { color: #d95f5f; border-color: #d95f5f; }
+}
+
+@media (min-width: 769px) {
+  .sales-toolbar-row1 { display: contents; }
+  .sales-cards { display: none; }
+}
 </style>
 </head>
 <body>
@@ -607,6 +744,7 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
            color:#555;cursor:pointer;font-size:12px;font-weight:400;white-space:nowrap;letter-spacing:.3px">
     📋 Справочник контрагентов
   </button>
+  <a href="/eovr.html" target="_blank" style="padding:11px 22px;border:none;border-bottom:2px solid transparent;background:transparent;color:#555;cursor:pointer;font-size:12px;font-weight:400;white-space:nowrap;letter-spacing:.3px;text-decoration:none;display:inline-block">📊 ЕОВР</a>
 </div>
 
 <div id="page-calendar" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
@@ -2323,9 +2461,89 @@ function renderSales() {
        <div class="sales-stat-item"><div class="sales-stat-val">${totalSheets.toLocaleString('ru-RU')}</div><div class="sales-stat-lbl">Всего листов</div></div>
        <div class="sales-stat-item"><div class="sales-stat-val">${avgPrice.toLocaleString('ru-RU')} ₽</div><div class="sales-stat-lbl">Средняя цена за лист</div></div>`
     : ''
+
+  // Мобильные карточки
+  renderSalesCards()
 }
 
 // Меняем количество листов → цена пересчитывается от суммы платежа
+function renderSalesCards() {
+  const cards = document.getElementById('sales-cards')
+  if (!cards) return
+
+  const monthFilter = salesCurMonth || ''
+  const searchFilter = (document.getElementById('sales-search')?.value || '').toLowerCase()
+
+  const deals = salesDeals.filter(d => {
+    const dealMonth = _monthFromDate(d.date) || d.month
+    if (monthFilter && dealMonth !== monthFilter) return false
+    if (searchFilter && !(d.company||'').toLowerCase().includes(searchFilter)) return false
+    return true
+  }).slice().sort((a,b) => (b.date||'').localeCompare(a.date||''))
+
+  if (!deals.length) {
+    cards.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#333;font-size:11px;letter-spacing:1px;text-transform:uppercase">Нет данных — загрузите выписку<br>или добавьте сделку вручную</div>'
+    return
+  }
+
+  cards.innerHTML = deals.map(d => {
+    const cardClass = d.source === 'auto' ? 'auto-card' : 'manual-card'
+    const srcLabel = d.source === 'auto' ? 'из выписки' : 'вручную'
+    const srcColor = d.source === 'auto' ? '#5588cc' : '#5cb85c'
+    return `<div class="sales-card ${cardClass}" id="sc-${d.id}">
+      <div class="sales-card-main" onclick="toggleSalesCard(${d.id})">
+        <div class="sales-card-left">
+          <div class="sales-card-company" title="${(d.company||'').replace(/"/g,'&quot;')}">${d.company || '—'}</div>
+          <div class="sales-card-meta">
+            <span>${d.date || '—'}</span>
+            <span>·</span>
+            <span style="color:${srcColor}">${srcLabel}</span>
+            ${d.sheets ? `<span>·</span><span>${d.sheets.toLocaleString('ru-RU')} л.</span>` : ''}
+          </div>
+        </div>
+        <div class="sales-card-right">
+          <div class="sales-card-amount">${(d.payment||0).toLocaleString('ru-RU')} ₽</div>
+          <div class="sales-card-chevron">▼</div>
+        </div>
+      </div>
+      <div class="sales-card-detail">
+        <div class="sales-card-fields">
+          <div class="sales-card-field">
+            <label>Листов</label>
+            <input type="number" value="${d.sheets||0}" min="1" step="1"
+              onchange="salesUpdateSheets(${d.id}, +this.value)">
+          </div>
+          <div class="sales-card-field">
+            <label>Цена за лист</label>
+            <input type="number" value="${d.pricePerSheet||0}" min="1" step="1"
+              onchange="salesUpdatePrice(${d.id}, +this.value)">
+          </div>
+          <div class="sales-card-field full">
+            <label>Комментарий</label>
+            <input type="text" value="${(d.comment||'').replace(/"/g,'&quot;')}" placeholder="Комментарий..."
+              onchange="salesUpdateField(${d.id},'comment',this.value)">
+          </div>
+        </div>
+        <div class="sales-card-actions">
+          <button class="sales-card-del" onclick="salesDeleteCard(${d.id})">✕ Удалить</button>
+          <span style="font-size:10px;color:#444">${d.pricePerSheet ? (d.pricePerSheet.toLocaleString('ru-RU')+' ₽/л') : ''}</span>
+        </div>
+      </div>
+    </div>`
+  }).join('')
+}
+
+function toggleSalesCard(id) {
+  const card = document.getElementById('sc-' + id)
+  if (card) card.classList.toggle('open')
+}
+
+function salesDeleteCard(id) {
+  salesDeals = salesDeals.filter(d => d.id !== id)
+  salesSave()
+  renderSales()
+}
+
 function salesUpdateSheets(id, sheets) {
   const d = salesDeals.find(x => x.id === id)
   if (!d || sheets <= 0) return
@@ -2839,8 +3057,10 @@ if(sessionStorage.getItem('nvt_auth')){
   <div class="mtabs" id="sales-mtabs"></div>
   <div class="sales-wrap">
     <div class="sales-toolbar">
-      <input type="text" id="sales-search" placeholder="Поиск по компании..." oninput="renderSales()" style="width:200px">
-      <button class="sales-add-btn" onclick="salesAddManual()">+ Добавить сделку</button>
+      <div class="sales-toolbar-row1">
+        <input type="text" id="sales-search" placeholder="Поиск по компании..." oninput="renderSales()" style="width:200px">
+        <button class="sales-add-btn" onclick="salesAddManual()">+ Добавить сделку</button>
+      </div>
       <div class="sales-stat" id="sales-stat"></div>
     </div>
     <table class="sales-table">
@@ -2858,6 +3078,8 @@ if(sessionStorage.getItem('nvt_auth')){
       </thead>
       <tbody id="sales-tbody"></tbody>
     </table>
+    <!-- МОБИЛЬНЫЙ вид карточек -->
+    <div class="sales-cards" id="sales-cards"></div>
   </div>
 </div>
 
