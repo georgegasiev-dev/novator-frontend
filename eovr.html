@@ -3,861 +3,904 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ЕОВР — Ежедневная отчётность | Новатор</title>
+<title>ЕОВР — Новатор</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
     --bg: #0f1117;
-    --bg2: #171b26;
-    --bg3: #1e2333;
-    --border: #2a3050;
-    --accent: #e8a03a;
-    --accent2: #5b8cf5;
-    --accent3: #4ecdc4;
-    --accent4: #e74c3c;
-    --accent5: #9b59b6;
-    --text: #c8d0e7;
-    --text-dim: #6b7a9d;
-    --text-bright: #f0f4ff;
-    --mono: 'IBM Plex Mono', monospace;
-    --sans: 'IBM Plex Sans', sans-serif;
+    --surface: #1a1d27;
+    --surface2: #222535;
+    --border: rgba(255,255,255,0.08);
+    --text: #e8eaf0;
+    --muted: #7b8099;
+    --accent: #4f7cff;
+    --c-lush: #4f7cff;
+    --c-sush: #34d399;
+    --c-sborka: #f59e0b;
+    --c-lam: #f472b6;
+    --c-obr: #a78bfa;
+    --radius: 12px;
+    --radius-sm: 8px;
   }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     background: var(--bg);
     color: var(--text);
-    font-family: var(--sans);
-    font-size: 14px;
     min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
   }
 
-  /* HEADER */
-  .header {
-    background: var(--bg2);
+  header {
     border-bottom: 1px solid var(--border);
     padding: 16px 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
     position: sticky;
     top: 0;
-    z-index: 100;
+    background: rgba(15,17,23,0.92);
+    backdrop-filter: blur(12px);
+    z-index: 10;
   }
 
-  .header-left {
+  .logo {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 10px;
   }
 
-  .header-tag {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--accent);
-    background: rgba(232,160,58,0.12);
-    border: 1px solid rgba(232,160,58,0.3);
-    padding: 3px 8px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+  .logo-mark {
+    width: 32px;
+    height: 32px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.5px;
   }
 
-  .header-title {
-    font-family: var(--mono);
+  .logo-text {
     font-size: 15px;
     font-weight: 600;
-    color: var(--text-bright);
-    letter-spacing: 0.03em;
+    color: var(--text);
   }
 
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .status-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #4ecdc4;
-    animation: pulse 2s infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-  }
-
-  .status-text {
-    font-family: var(--mono);
+  .logo-sub {
     font-size: 11px;
-    color: var(--text-dim);
+    color: var(--muted);
+    margin-top: 1px;
   }
 
-  /* MAIN */
-  .main { padding: 20px 24px; max-width: 1400px; margin: 0 auto; }
-
-  /* CONTROLS */
   .controls {
     display: flex;
-    gap: 12px;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
     align-items: center;
-  }
-
-  .ctrl-label {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin-right: 4px;
-  }
-
-  select {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    color: var(--text-bright);
-    font-family: var(--mono);
-    font-size: 12px;
-    padding: 7px 12px;
-    cursor: pointer;
-    outline: none;
-    appearance: none;
-    -webkit-appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7a9d'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 10px center;
-    padding-right: 28px;
-    transition: border-color 0.2s;
-  }
-
-  select:hover { border-color: var(--accent); }
-
-  .btn-group {
-    display: flex;
-    gap: 6px;
-  }
-
-  .btn {
-    font-family: var(--mono);
-    font-size: 11px;
-    padding: 7px 14px;
-    border: 1px solid var(--border);
-    background: var(--bg2);
-    color: var(--text-dim);
-    cursor: pointer;
-    transition: all 0.15s;
-    letter-spacing: 0.06em;
-  }
-
-  .btn:hover { border-color: var(--accent); color: var(--accent); }
-  .btn.active { border-color: var(--accent); color: var(--accent); background: rgba(232,160,58,0.08); }
-
-  /* KPIS */
-  .kpi-row {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
     gap: 10px;
-    margin-bottom: 20px;
+    flex-wrap: wrap;
   }
 
-  .kpi {
-    background: var(--bg2);
+  select, input[type="text"], input[type="password"] {
+    background: var(--surface);
     border: 1px solid var(--border);
-    padding: 14px 16px;
-    position: relative;
-    overflow: hidden;
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    padding: 8px 12px;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s;
+    font-family: inherit;
   }
 
-  .kpi::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
+  select:focus, input:focus {
+    border-color: var(--accent);
   }
 
-  .kpi-lush::before { background: var(--accent); }
-  .kpi-sush::before { background: var(--accent3); }
-  .kpi-sborka::before { background: var(--accent4); }
-  .kpi-lam::before { background: var(--accent2); }
-  .kpi-obr::before { background: #888; }
+  select option { background: #1a1d27; }
 
-  .kpi-label {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin-bottom: 8px;
+  button {
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius-sm);
+    color: #fff;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    font-family: inherit;
   }
 
-  .kpi-value {
-    font-family: var(--mono);
-    font-size: 24px;
-    font-weight: 600;
-    color: var(--text-bright);
-    line-height: 1;
-    margin-bottom: 4px;
-  }
-
-  .kpi-delta {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--text-dim);
-  }
-
-  .kpi-delta.pos { color: #4ecdc4; }
-  .kpi-delta.neg { color: var(--accent4); }
-
-  /* CHARTS GRID */
-  .charts-grid {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 12px;
-    margin-bottom: 12px;
-  }
-
-  .charts-grid-3 {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 12px;
-  }
-
-  .card {
-    background: var(--bg2);
+  button:hover { opacity: 0.85; }
+  button:disabled { opacity: 0.45; cursor: not-allowed; }
+  button.secondary {
+    background: var(--surface2);
+    color: var(--muted);
     border: 1px solid var(--border);
-    padding: 16px;
   }
 
-  .card-title {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin-bottom: 14px;
+  main { padding: 24px; max-width: 1280px; margin: 0 auto; }
+
+  /* Key input screen */
+  .key-screen {
+    max-width: 480px;
+    margin: 80px auto;
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .key-screen h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+  }
+
+  .key-screen h1 span { color: var(--accent); }
+
+  .key-screen p {
+    color: var(--muted);
+    line-height: 1.7;
+    font-size: 14px;
+  }
+
+  .key-row {
+    display: flex;
     gap: 8px;
   }
 
-  .card-title::before {
-    content: '//';
+  .key-row input { flex: 1; }
+
+  .hint-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .hint-box .hint-title {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .hint-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .hint-num {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--surface2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
     color: var(--accent);
-    opacity: 0.6;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .error-msg {
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.3);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    color: #f87171;
+    font-size: 13px;
+  }
+
+  /* Dashboard */
+  #dashboard { display: none; flex-direction: column; gap: 24px; }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+  }
+
+  .metric-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: border-color 0.15s;
+  }
+
+  .metric-card:hover { border-color: rgba(255,255,255,0.15); }
+
+  .metric-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-bottom: 4px;
+  }
+
+  .metric-label {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  .metric-value {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    line-height: 1;
+  }
+
+  .metric-unit {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .metric-trend {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 16px;
+  }
+
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+
+  .chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .chart-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .chart-total {
+    font-size: 12px;
+    color: var(--muted);
   }
 
   .chart-wrap {
     position: relative;
-  }
-
-  /* LOADING */
-  .loading {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 60px;
-    gap: 16px;
-    color: var(--text-dim);
-    font-family: var(--mono);
-    font-size: 12px;
+    width: 100%;
+    height: 160px;
   }
 
   .loading-bar {
-    width: 200px;
     height: 2px;
-    background: var(--border);
-    position: relative;
+    background: var(--surface2);
+    border-radius: 2px;
     overflow: hidden;
+    margin-bottom: 24px;
   }
 
-  .loading-bar::after {
-    content: '';
-    position: absolute;
-    top: 0; left: -50%;
-    width: 50%;
+  .loading-bar-fill {
     height: 100%;
     background: var(--accent);
-    animation: load 1.2s infinite;
+    border-radius: 2px;
+    animation: loading 1.2s ease-in-out infinite;
+    width: 40%;
   }
 
-  @keyframes load {
-    to { left: 150%; }
+  @keyframes loading {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(350%); }
   }
 
-  /* TABLE */
-  .table-wrap {
-    overflow-x: auto;
-    margin-bottom: 12px;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-family: var(--mono);
-    font-size: 11px;
-  }
-
-  thead tr {
-    background: var(--bg3);
-  }
-
-  th {
-    padding: 8px 12px;
-    text-align: right;
-    color: var(--text-dim);
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    border-bottom: 1px solid var(--border);
-    white-space: nowrap;
-  }
-
-  th:first-child { text-align: left; }
-
-  td {
-    padding: 7px 12px;
-    text-align: right;
-    border-bottom: 1px solid rgba(42,48,80,0.5);
-    color: var(--text);
-  }
-
-  td:first-child {
-    text-align: left;
-    color: var(--text-dim);
-    font-size: 10px;
-  }
-
-  tbody tr:hover { background: rgba(255,255,255,0.02); }
-
-  .td-lush { color: var(--accent); }
-  .td-sush { color: var(--accent3); }
-  .td-sborka { color: var(--accent4); }
-  .td-lam { color: var(--accent2); }
-  .td-obr { color: #888; }
-
-  /* FOOTER */
-  .footer {
-    padding: 16px 24px;
-    border-top: 1px solid var(--border);
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--text-dim);
+  .status-row {
     display: flex;
+    align-items: center;
     justify-content: space-between;
-    margin-top: 32px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--muted);
   }
 
-  /* RESPONSIVE */
-  @media (max-width: 900px) {
-    .kpi-row { grid-template-columns: repeat(2, 1fr); }
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--c-sush);
+    display: inline-block;
+    margin-right: 6px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 24px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  #loading-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15,17,23,0.7);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid var(--surface2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 600px) {
+    main { padding: 16px; }
     .charts-grid { grid-template-columns: 1fr; }
-    .charts-grid-3 { grid-template-columns: 1fr; }
+    .metric-value { font-size: 22px; }
   }
 </style>
 </head>
 <body>
 
-<header class="header">
-  <div class="header-left">
-    <div class="header-tag">ЕОВР</div>
-    <div class="header-title">Ежедневная отчётность выполненных работ</div>
+<div id="loading-overlay">
+  <div class="spinner"></div>
+</div>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">Н</div>
+    <div>
+      <div class="logo-text">Новатор</div>
+      <div class="logo-sub">Ежедневный отчёт о выработке</div>
+    </div>
   </div>
-  <div class="header-right">
-    <div class="status-dot" id="statusDot"></div>
-    <div class="status-text" id="statusText">загрузка...</div>
+  <div class="controls" id="header-controls" style="display:none;">
+    <select id="month-select"></select>
+    <button class="secondary" onclick="showDebug()">Отладка</button>
+    <button class="secondary" onclick="resetKey()">Сменить ключ</button>
   </div>
 </header>
 
-<main class="main">
-
-  <div class="controls">
-    <span class="ctrl-label">Год</span>
-    <select id="yearSel" onchange="onFilterChange()"></select>
-
-    <span class="ctrl-label" style="margin-left:8px">Месяц</span>
-    <select id="monthSel" onchange="onFilterChange()"></select>
-
-    <span class="ctrl-label" style="margin-left:8px">Вид</span>
-    <div class="btn-group">
-      <button class="btn active" id="btnMonth" onclick="setView('month')">Месяц</button>
-      <button class="btn" id="btnYear" onclick="setView('year')">Год</button>
-      <button class="btn" id="btnAll" onclick="setView('all')">Все годы</button>
+<main>
+  <!-- Экран ввода API-ключа -->
+  <div class="key-screen" id="key-screen">
+    <div>
+      <h1>Дашборд<br><span>производства</span></h1>
+      <p style="margin-top:12px;">Введите Google Sheets API-ключ для загрузки данных из таблицы ЕОВР.</p>
     </div>
-  </div>
 
-  <!-- KPIs -->
-  <div class="kpi-row" id="kpiRow">
-    <div class="kpi kpi-lush"><div class="kpi-label">Лущилка</div><div class="kpi-value" id="k1">—</div><div class="kpi-delta" id="kd1"></div></div>
-    <div class="kpi kpi-sush"><div class="kpi-label">Сушилка</div><div class="kpi-value" id="k2">—</div><div class="kpi-delta" id="kd2"></div></div>
-    <div class="kpi kpi-sborka"><div class="kpi-label">Сборка (18+21)</div><div class="kpi-value" id="k3">—</div><div class="kpi-delta" id="kd3"></div></div>
-    <div class="kpi kpi-lam"><div class="kpi-label">Ламинация</div><div class="kpi-value" id="k4">—</div><div class="kpi-delta" id="kd4"></div></div>
-    <div class="kpi kpi-obr"><div class="kpi-label">Обрезка</div><div class="kpi-value" id="k5">—</div><div class="kpi-delta" id="kd5"></div></div>
-  </div>
-
-  <!-- Main chart + donut -->
-  <div class="charts-grid">
-    <div class="card">
-      <div class="card-title" id="mainChartTitle">Выработка по переделам</div>
-      <div class="chart-wrap" style="height:280px">
-        <canvas id="mainChart"></canvas>
+    <div>
+      <div class="key-row">
+        <input type="password" id="api-key-input" placeholder="AIza..." autocomplete="off" />
+        <button id="connect-btn" onclick="connect()">Подключить</button>
       </div>
+      <div id="key-error" class="error-msg" style="display:none; margin-top:10px;"></div>
     </div>
-    <div class="card">
-      <div class="card-title">Структура выработки</div>
-      <div class="chart-wrap" style="height:280px">
-        <canvas id="pieChart"></canvas>
+
+    <div class="hint-box">
+      <div class="hint-title">Как получить ключ</div>
+      <div class="hint-item">
+        <div class="hint-num">1</div>
+        <span>Зайди на <a href="https://console.cloud.google.com" target="_blank" style="color:var(--accent);">console.cloud.google.com</a></span>
+      </div>
+      <div class="hint-item">
+        <div class="hint-num">2</div>
+        <span>APIs & Services → Library → включи Google Sheets API</span>
+      </div>
+      <div class="hint-item">
+        <div class="hint-num">3</div>
+        <span>Credentials → Create Credentials → API Key → ограничь до Google Sheets API</span>
+      </div>
+      <div class="hint-item">
+        <div class="hint-num">4</div>
+        <span>Убедись, что таблица открыта для просмотра по ссылке</span>
       </div>
     </div>
   </div>
 
-  <!-- 3 charts -->
-  <div class="charts-grid-3">
-    <div class="card">
-      <div class="card-title">Сборка 18 мм vs 21 мм</div>
-      <div class="chart-wrap" style="height:200px">
-        <canvas id="sbChart"></canvas>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">Лущилка 1 vs Лущилка 2</div>
-      <div class="chart-wrap" style="height:200px">
-        <canvas id="lushChart"></canvas>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">Ламинация по месяцам</div>
-      <div class="chart-wrap" style="height:200px">
-        <canvas id="lamChart"></canvas>
-      </div>
-    </div>
-  </div>
+  <!-- Дашборд -->
+  <div id="dashboard">
 
-  <!-- Table -->
-  <div class="card">
-    <div class="card-title">Данные по месяцам</div>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Период</th>
-            <th>Лущилка 1</th>
-            <th>Лущилка 2</th>
-            <th>Итого лущ.</th>
-            <th>Сушилка</th>
-            <th>Сборка 18</th>
-            <th>Сборка 21</th>
-            <th>Итого сборка</th>
-            <th>Ламинация</th>
-            <th>Обрезка</th>
-          </tr>
-        </thead>
-        <tbody id="dataTable"></tbody>
-      </table>
+    <div class="status-row">
+      <span><span class="status-dot"></span><span id="status-text">Загрузка...</span></span>
+      <span id="last-update"></span>
     </div>
-  </div>
 
+    <div class="metrics-grid" id="metrics-grid"></div>
+
+    <div class="charts-grid" id="charts-grid"></div>
+
+    <div id="empty-state" class="empty-state" style="display:none;">
+      Нет данных за выбранный месяц
+    </div>
+
+  </div>
 </main>
 
-<footer class="footer">
-  <span>ООО Новатор · ЕОВР · Google Sheets live sync</span>
-  <span id="lastUpdate"></span>
-</footer>
+<!-- Debug overlay -->
+<div id="debug-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000;overflow:auto;padding:20px;">
+  <div style="max-width:1400px;margin:0 auto;background:#1a1d27;border-radius:12px;padding:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h2 style="margin:0;color:#fff;font-size:18px;">Отладка — сырые данные таблицы</h2>
+      <button class="secondary" onclick="hideDebug()">Закрыть</button>
+    </div>
+    <p style="color:#aaa;font-size:13px;margin-bottom:12px;">
+      Цифры в первом столбце — номер строки (с 1, как в таблице).
+      Числа в зелёных заголовках — индекс колонки (с 0, как в коде парсера).
+      Покажи Клоду этот скриншот для исправления формул.
+    </p>
+    <div id="debug-content" style="font-family:Menlo,monospace;font-size:11px;color:#ddd;overflow-x:auto;"></div>
+  </div>
+</div>
 
 <script>
 const SHEET_ID = '1iYEuupLfhvM-jS4D8NiaL2dcnoUheu1GRPy5UJc9yUg';
 
-// All months
-const MONTHS_RU = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
-const MONTH_MAP = {};
-MONTHS_RU.forEach((m, i) => MONTH_MAP[m] = i + 1);
+const METRICS = [
+  { key: 'lush',   label: 'Лущилка',   color: '#4f7cff', unit: 'л' },
+  { key: 'sush',   label: 'Сушилка',   color: '#34d399', unit: 'л' },
+  { key: 'sborka', label: 'Сборка',    color: '#f59e0b', unit: 'л' },
+  { key: 'lam',    label: 'Ламинация', color: '#f472b6', unit: 'м²' },
+  { key: 'obr',    label: 'Обрезка',   color: '#a78bfa', unit: 'л' },
+];
 
-// Data store
-let allData = []; // {year, month, monthNum, lush1, lush2, sush, sb18, sb21, lam, obr}
-let currentView = 'month'; // month | year | all
+const MONTH_NAMES = {
+  'январь':1,'февраль':2,'март':3,'апрель':4,'май':5,'июнь':6,
+  'июль':7,'август':8,'сентябрь':9,'октябрь':10,'ноябрь':11,'декабрь':12,
+  'Январь':1,'Февраль':2,'Март':3,'Апрель':4,'Май':5,'Июнь':6,
+  'Июль':7,'Август':8,'Сентябрь':9,'Октябрь':10,'Ноябрь':11,'Декабрь':12,
+};
+
+let apiKey = localStorage.getItem('novator_api_key') || '';
+let sheets = [];
 let charts = {};
 
-// Build sheet names list: Aug 2016 to current
-function getSheetNames() {
-  const names = [];
-  const now = new Date();
-  const curYear = now.getFullYear();
-  const curMonth = now.getMonth() + 1;
-  for (let year = 2016; year <= curYear; year++) {
-    const startM = year === 2016 ? 8 : 1;
-    const endM = year === curYear ? curMonth : 12;
-    for (let m = startM; m <= endM; m++) {
-      names.push({ name: `${MONTHS_RU[m-1]} ${year}`, year, month: m });
-    }
+function parseSheetName(name) {
+  const parts = name.trim().split(/\s+/);
+  let month = null, year = null;
+  for (const p of parts) {
+    const mn = MONTH_NAMES[p];
+    if (mn) month = mn;
+    const y = parseInt(p);
+    if (y >= 2016 && y <= 2030) year = y;
   }
-  return names;
+  return (month && year) ? { month, year, label: name.trim() } : null;
 }
 
-async function fetchSheet(sheetName) {
-  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+function parseRows(rows) {
+  const days = {};
+  let controlTotal = null;
+
+  // Зафиксированная структура колонок (0-based) подтверждена по скриншоту отладки
+  // строка 1 (итог месяца): [4]=30463 итого Лущилка, [7]=26925 итого Сушилка, [10]=24589 итого Сборка
+  // строка 3 (итоги по линиям): [2]=2501 Лущ1, [4]=0 Лущ2, [5]=27962 Полноформат → сумма 30463 ✓
+  //
+  // В дневных строках:
+  // [2] Лущ1 Фан.кряж     [3] Лущ1 Тонкомер
+  // [4] Лущ2 (одна колонка — сейчас не используется)
+  // [5] Полноформат Фан.кряж   [6] Полноформат Тонкомер
+  // [7] Сушилка (листов по счётчику)
+  // [8] полноформ. сушилка (не используется)
+  // [9] Сборка 1смена 18мм   [10] Сборка 1смена 21мм
+  // [11] Сборка 2смена 18мм  [12] Сборка 2смена 21мм
+  // [13] Остаток клея   [14]/[15] Остаток шпона
+  // [16] Ламинация
+  // [17]/[18] Остаток плёнки (текстовые)
+  // [19] Обрезка
+  const COL_LUSH = [2, 3, 4, 5, 6];      // Лущ1(2) + Лущ2(1) + Полноформат(2)
+  const COL_SUSH = 7;
+  const COL_SBORKA = [9, 10, 11, 12];
+  const COL_LAM = 16;
+  const COL_OBR = 19;
+
+  // Найти строку с заголовками отделов чтобы понять где начинаются данные
+  let headerRow = -1;
+  for (let i = 0; i < Math.min(10, rows.length); i++) {
+    const joined = (rows[i] || []).map(c => String(c).toLowerCase()).join('|');
+    if (joined.includes('фан') && joined.includes('тонкомер')) {
+      headerRow = i;
+      break;
+    }
+  }
+  // Если детальный заголовок не нашли, пытаемся найти строку "Лущилка"
+  if (headerRow < 0) {
+    for (let i = 0; i < Math.min(10, rows.length); i++) {
+      const joined = (rows[i] || []).map(c => String(c).toLowerCase()).join('|');
+      if (joined.includes('лущилка')) { headerRow = i + 1; break; }
+    }
+  }
+
+  // Контрольная сумма лущилки — из строки 1 (итог месяца) в столбце [4]
+  if (rows[0]) {
+    const v4 = parseFloat(String(rows[0][4] || '').replace(',','.').replace(/[^0-9.]/g,''));
+    if (v4 > 1000) controlTotal = v4;
+  }
+
+  // Данные начинаются после строки 5 (1-based) — то есть с индекса 5 (0-based)
+  // headerRow обычно 4 (1-based 5), значит dataStart = 5
+  const dataStart = Math.max(headerRow + 1, 5);
+
+  const parseN = (r, idx) => {
+    if (idx < 0 || idx >= r.length) return 0;
+    const v = String(r[idx] || '').replace(',', '.').replace(/[^0-9.]/g, '');
+    const n = parseFloat(v);
+    return (n && n < 100000) ? n : 0;
+  };
+
+  const sumCols = (r, cols) => cols.reduce((s, c) => s + parseN(r, c), 0);
+
+  // Запоминаем дату — строки смен 2 и 3 идут без даты
+  let lastDate = null;
+
+  for (let i = dataStart; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r || r.length < 2) continue;
+
+    const dateRaw  = String(r[0] || '').trim();
+    const shiftRaw = String(r[1] || '').trim();
+
+    const parsedDate = parseInt(dateRaw);
+    if (parsedDate >= 1 && parsedDate <= 31) lastDate = parsedDate;
+
+    const shift = parseInt(shiftRaw);
+    if (!shift || shift < 1 || shift > 3 || !lastDate) continue;
+
+    const date = lastDate;
+    if (!days[date]) days[date] = { lush: 0, sush: 0, sborka: 0, lam: 0, obr: 0 };
+
+    days[date].lush   += sumCols(r, COL_LUSH);
+    days[date].sush   += parseN(r, COL_SUSH);
+    days[date].sborka += sumCols(r, COL_SBORKA);
+    days[date].lam    += parseN(r, COL_LAM);
+    days[date].obr    += parseN(r, COL_OBR);
+  }
+
+  days._control = controlTotal;
+  return days;
+}
+
+function showLoading(on) {
+  document.getElementById('loading-overlay').style.display = on ? 'flex' : 'none';
+}
+
+function showError(msg) {
+  const el = document.getElementById('key-error');
+  el.textContent = msg;
+  el.style.display = msg ? 'block' : 'none';
+}
+
+async function connect() {
+  const key = document.getElementById('api-key-input').value.trim();
+  if (!key) return;
+  showError('');
+  showLoading(true);
+  document.getElementById('connect-btn').disabled = true;
+
   try {
-    const r = await fetch(url);
-    if (!r.ok) return null;
-    const text = await r.text();
-    return parseCSV(text);
-  } catch(e) { return null; }
+    const res = await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}?fields=sheets.properties&key=${key}`
+    );
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err?.error?.message || `Ошибка ${res.status}`);
+    }
+    const data = await res.json();
+    apiKey = key;
+    localStorage.setItem('novator_api_key', key);
+
+    sheets = data.sheets
+      .map(s => ({ ...parseSheetName(s.properties.title), title: s.properties.title }))
+      .filter(s => s.month && s.year)
+      .sort((a, b) => b.year - a.year || b.month - a.month);
+
+    if (!sheets.length) throw new Error('Листы с данными не найдены');
+
+    buildMonthSelect();
+    showDashboard();
+    await loadSheet(sheets[0].title);
+  } catch (e) {
+    showError('Ошибка: ' + e.message);
+  } finally {
+    showLoading(false);
+    document.getElementById('connect-btn').disabled = false;
+  }
 }
 
-function parseCSV(text) {
-  const rows = [];
-  const lines = text.split('\n');
-  for (const line of lines) {
-    const cells = [];
-    let cur = '', inQ = false;
-    for (const ch of line) {
-      if (ch === '"') { inQ = !inQ; }
-      else if (ch === ',' && !inQ) { cells.push(cur.trim()); cur = ''; }
-      else { cur += ch; }
-    }
-    cells.push(cur.trim());
-    rows.push(cells);
-  }
-  return rows;
+function buildMonthSelect() {
+  const sel = document.getElementById('month-select');
+  sel.innerHTML = sheets.map(s =>
+    `<option value="${s.title}">${s.label}</option>`
+  ).join('');
+  sel.onchange = () => loadSheet(sel.value);
 }
 
-function extractMonthData(rows, year, month) {
-  // Row 0: totals header row: col4=lush_total, col7=sush_total, col10=sb18, col16=lam_total, col19=obr_total
-  // Row 2: lush1 total, col5=lush2_total
-  // Row 1: sb18 total in col10, sb21 in col12
-  let lush1=0, lush2=0, sush=0, sb18=0, sb21=0, lam=0, obr=0;
-
-  // Try to find monthly totals from the summary rows (rows 0-3)
-  // The header row has: [empty][Смена][Итого:][empty][number = lush_total]...
-  // We'll scan for numeric values in specific columns
-  function getNum(rows, rowIdx, colIdx) {
-    if (!rows[rowIdx]) return 0;
-    const v = rows[rowIdx][colIdx];
-    if (!v) return 0;
-    const n = parseFloat(v.replace(/\s/g,'').replace(',','.'));
-    return isNaN(n) ? 0 : n;
-  }
-
-  // Row 0 of each sheet has итоги
-  // col 4 = лущилка итого, col 7 = сушилка, col 10 = сборка 18 или итого сборки, col 16 = ламинация, col 19 = обрезка
-  // Row 2 has Лущилка 1, Лущилка 2 sub-totals
-
-  // Find the summary rows — look for row containing "Итого:"
-  let summaryRowIdx = -1;
-  for (let i = 0; i < Math.min(5, rows.length); i++) {
-    const row = rows[i];
-    if (row && row.some(c => c && c.includes('Итого'))) {
-      summaryRowIdx = i;
-      break;
-    }
-  }
-
-  // Scan first 5 rows for large numbers in likely column positions
-  // Strategy: look for the row where col[4] is a large integer (lush total)
-  for (let i = 0; i < Math.min(6, rows.length); i++) {
-    const row = rows[i];
-    if (!row) continue;
-    const c4 = parseFloat((row[4]||'').replace(/\s/g,'').replace(',','.'));
-    const c7 = parseFloat((row[7]||'').replace(/\s/g,'').replace(',','.'));
-    const c19 = parseFloat((row[19]||'').replace(/\s/g,'').replace(',','.'));
-    if (c4 > 1000 && c7 > 500 && c19 > 500) {
-      lush1 = c4; // actually col 4 might be lush1+lush2 total on some sheets
-      sush = c7;
-      lam = parseFloat((row[16]||'').replace(/\s/g,'').replace(',','.')) || 0;
-      obr = c19;
-      break;
-    }
-  }
-
-  // Find sb18 and sb21: look for row with "18 мм" label then next row value
-  for (let i = 0; i < Math.min(4, rows.length); i++) {
-    const row = rows[i];
-    if (!row) continue;
-    for (let j = 0; j < row.length; j++) {
-      if (row[j] && row[j].includes('18')) {
-        // next row should have values
-        if (rows[i+1]) {
-          const v18 = parseFloat((rows[i+1][j]||'').replace(/\s/g,'').replace(',','.'));
-          const v21 = parseFloat((rows[i+1][j+2]||'').replace(/\s/g,'').replace(',','.'));
-          if (v18 > 100) { sb18 = v18; sb21 = v21 || 0; }
-        }
-        break;
-      }
-    }
-  }
-
-  // Find lush1 and lush2 sub-breakdown
-  for (let i = 0; i < Math.min(6, rows.length); i++) {
-    const row = rows[i];
-    if (!row) continue;
-    if (row.some(c => c && c.includes('Лущилка 1'))) {
-      // values should be 2 rows above or below
-      for (let di = -2; di <= 2; di++) {
-        const r2 = rows[i + di];
-        if (!r2) continue;
-        // look for lush1 value in col 2 area
-        const v1 = parseFloat((r2[2]||'').replace(/\s/g,'').replace(',','.'));
-        const v2 = parseFloat((r2[4]||'').replace(/\s/g,'').replace(',','.'));
-        if (v1 > 0 && v2 >= 0 && v1 < 50000) {
-          lush1 = v1;
-          lush2 = v2;
-          break;
-        }
-      }
-      break;
-    }
-  }
-
-  return { year, month, lush1, lush2, lushTotal: lush1+lush2, sush, sb18, sb21, sbTotal: sb18+sb21, lam, obr };
+function showDashboard() {
+  document.getElementById('key-screen').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'flex';
+  document.getElementById('header-controls').style.display = 'flex';
 }
 
-async function loadAllData() {
-  const sheets = getSheetNames();
-  updateStatus('Загружаю данные...');
+function resetKey() {
+  localStorage.removeItem('novator_api_key');
+  document.getElementById('key-screen').style.display = '';
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('header-controls').style.display = 'none';
+  document.getElementById('api-key-input').value = '';
+}
 
-  // Load in parallel batches of 6
-  const batchSize = 6;
-  for (let i = 0; i < sheets.length; i += batchSize) {
-    const batch = sheets.slice(i, i + batchSize);
-    const results = await Promise.all(batch.map(s => fetchSheet(s.name)));
-    results.forEach((rows, j) => {
-      if (rows && rows.length > 3) {
-        const s = batch[j];
-        const d = extractMonthData(rows, s.year, s.month);
-        // Only add if we got meaningful data
-        if (d.lushTotal > 0 || d.sush > 0 || d.sbTotal > 0) {
-          allData.push(d);
+let lastRawData = null;
+let lastSheetTitle = null;
+
+async function loadSheet(sheetTitle) {
+  showLoading(true);
+  document.getElementById('status-text').textContent = 'Загрузка данных...';
+
+  try {
+    // Расширил до AA110 — на случай если в таблице больше столбцов чем мы предполагаем
+    const range = encodeURIComponent(`'${sheetTitle}'!A1:AA110`);
+    const res = await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?key=${apiKey}`
+    );
+    if (!res.ok) throw new Error(`Ошибка ${res.status}`);
+    const data = await res.json();
+    lastRawData = data.values || [];
+    lastSheetTitle = sheetTitle;
+    const days = parseRows(lastRawData);
+    renderDashboard(days, sheetTitle);
+  } catch (e) {
+    document.getElementById('status-text').textContent = 'Ошибка загрузки: ' + e.message;
+  } finally {
+    showLoading(false);
+  }
+}
+
+function showDebug() {
+  if (!lastRawData || !lastRawData.length) {
+    alert('Сначала загрузи месяц');
+    return;
+  }
+  const rows = lastRawData;
+  const maxCols = Math.max(...rows.map(r => r.length), 22);
+  const colLetter = (i) => {
+    let s = '';
+    let n = i;
+    do { s = String.fromCharCode(65 + (n % 26)) + s; n = Math.floor(n / 26) - 1; } while (n >= 0);
+    return s;
+  };
+
+  let html = `<div style="margin-bottom:8px;color:#aaf;font-size:12px;">Лист: <b>${lastSheetTitle}</b> — всего строк: ${rows.length}</div>`;
+  html += '<table style="border-collapse:collapse;width:100%;font-size:11px;">';
+  // Заголовок: буква (Excel) и индекс (код)
+  html += '<tr><th style="position:sticky;left:0;background:#222;padding:4px 6px;border:1px solid #333;color:#888;">#</th>';
+  for (let c = 0; c < maxCols; c++) {
+    html += `<th style="padding:4px 6px;border:1px solid #333;background:#1f2436;color:#7df;min-width:60px;">${colLetter(c)}<br><span style="color:#888;font-weight:normal;">[${c}]</span></th>`;
+  }
+  html += '</tr>';
+
+  // Только первые 20 строк (5 шапка + первые 5 дней)
+  const limit = Math.min(rows.length, 20);
+  for (let r = 0; r < limit; r++) {
+    const row = rows[r] || [];
+    html += `<tr><td style="position:sticky;left:0;padding:3px 6px;border:1px solid #333;background:#222;color:#888;text-align:right;">${r + 1}</td>`;
+    for (let c = 0; c < maxCols; c++) {
+      let val = String(row[c] || '');
+      if (val.length > 14) val = val.slice(0, 12) + '…';
+      const num = !isNaN(parseFloat(val)) && isFinite(val);
+      const bg = num && parseFloat(val) > 0 ? '#1a2e1a' : 'transparent';
+      html += `<td style="padding:3px 6px;border:1px solid #2a2e3a;background:${bg};white-space:nowrap;">${val || '<span style="color:#444;">·</span>'}</td>`;
+    }
+    html += '</tr>';
+  }
+  html += '</table>';
+
+  // Также покажем что насчитал парсер для текущего дня 1
+  const days = parseRows(rows);
+  html += '<div style="margin-top:20px;padding:12px;background:#0f1117;border-radius:6px;font-size:12px;">';
+  html += '<div style="color:#aaf;margin-bottom:6px;">Что насчитал парсер:</div>';
+  html += `<div>Контрольная сумма из шапки (лущилка): <b style="color:#f59e0b;">${days._control || 'не найдена'}</b></div>`;
+  html += '<div style="margin-top:6px;">По дням (день 1-5):</div>';
+  for (let d = 1; d <= 5; d++) {
+    if (!days[d]) continue;
+    html += `<div style="margin-left:12px;color:#ccc;">День ${d}: Лущ=${Math.round(days[d].lush)}, Суш=${Math.round(days[d].sush)}, Сб=${Math.round(days[d].sborka)}, Лам=${Math.round(days[d].lam)}, Обр=${Math.round(days[d].obr)}</div>`;
+  }
+  let total = 0;
+  Object.entries(days).filter(([k])=>k!=='_control').forEach(([,d]) => total += d.lush);
+  html += `<div style="margin-top:6px;color:#4f7cff;">ИТОГО лущилка за месяц: <b>${Math.round(total)}</b> (должно быть ${days._control || '?'})</div>`;
+  html += '</div>';
+
+  document.getElementById('debug-content').innerHTML = html;
+  document.getElementById('debug-overlay').style.display = 'block';
+}
+
+function hideDebug() {
+  document.getElementById('debug-overlay').style.display = 'none';
+}
+
+function renderDashboard(days, sheetTitle) {
+  const controlTotal = days._control;
+  const dayList = Object.entries(days)
+    .filter(([k]) => k !== '_control')
+    .sort((a, b) => +a[0] - +b[0]);
+  const hasData = dayList.length > 0;
+
+  document.getElementById('empty-state').style.display = hasData ? 'none' : 'block';
+  document.getElementById('metrics-grid').style.display = hasData ? '' : 'none';
+  document.getElementById('charts-grid').style.display = hasData ? '' : 'none';
+
+  const now = new Date();
+  document.getElementById('last-update').textContent =
+    'Обновлено: ' + now.toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
+  document.getElementById('status-text').textContent = sheetTitle + ' — данные загружены';
+
+  if (!hasData) return;
+
+  // Totals
+  const totals = dayList.reduce(
+    (acc, [, d]) => {
+      METRICS.forEach(m => acc[m.key] = (acc[m.key] || 0) + d[m.key]);
+      return acc;
+    }, {}
+  );
+
+  // Metric cards — для лущилки показываем контрольную сумму из шапки
+  const mg = document.getElementById('metrics-grid');
+  mg.innerHTML = METRICS.map(m => {
+    const val = Math.round(totals[m.key]);
+    const isLush = m.key === 'lush';
+    const ctrl = isLush && controlTotal ? Math.round(controlTotal) : null;
+    const match = ctrl ? Math.abs(val - ctrl) < 10 : null;
+    const badge = ctrl
+      ? `<div style="font-size:11px;margin-top:4px;color:${match ? '#34d399' : '#f87171'}">
+           ${match ? '✓ сходится' : '⚠ шапка: ' + ctrl.toLocaleString('ru')}
+         </div>`
+      : '';
+    return `
+    <div class="metric-card">
+      <div class="metric-dot" style="background:${m.color}"></div>
+      <div class="metric-label">${m.label}</div>
+      <div class="metric-value" style="color:${m.color}">${val.toLocaleString('ru')}</div>
+      <div class="metric-unit">${m.unit} за месяц</div>
+      ${badge}
+    </div>`;
+  }).join('');
+
+  // Charts
+  Object.values(charts).forEach(c => c.destroy());
+  charts = {};
+
+  const cg = document.getElementById('charts-grid');
+  cg.innerHTML = METRICS.map(m => `
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-title">
+          <span style="width:10px;height:10px;border-radius:50%;background:${m.color};display:inline-block;"></span>
+          ${m.label}
+        </div>
+        <div class="chart-total">итого: ${Math.round(totals[m.key]).toLocaleString('ru')} ${m.unit}</div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-${m.key}" role="img" aria-label="${m.label} по дням"></canvas>
+      </div>
+    </div>
+  `).join('');
+
+  METRICS.forEach(m => {
+    const labels = dayList.map(([d]) => d);
+    const data = dayList.map(([, v]) => Math.round(v[m.key]));
+    const avg = Math.round(data.reduce((a, b) => a + b, 0) / (data.length || 1));
+
+    charts[m.key] = new Chart(document.getElementById('chart-' + m.key), {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: m.label,
+            data,
+            backgroundColor: m.color + '55',
+            borderColor: m.color,
+            borderWidth: 1.5,
+            borderRadius: 4,
+            order: 2,
+          },
+          {
+            label: 'Среднее',
+            data: data.map(() => avg),
+            type: 'line',
+            borderColor: m.color + 'aa',
+            borderWidth: 1.5,
+            borderDash: [4, 4],
+            pointRadius: 0,
+            tension: 0,
+            order: 1,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#1a1d27',
+            borderColor: 'rgba(255,255,255,0.1)',
+            borderWidth: 1,
+            titleColor: '#7b8099',
+            bodyColor: '#e8eaf0',
+            callbacks: {
+              label: ctx => ctx.datasetIndex === 0
+                ? `${ctx.parsed.y.toLocaleString('ru')} ${m.unit}`
+                : `среднее: ${avg.toLocaleString('ru')} ${m.unit}`
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: { color: '#7b8099', font: { size: 11 }, maxTicksLimit: 16 },
+            grid: { display: false },
+            border: { color: 'rgba(255,255,255,0.06)' }
+          },
+          y: {
+            ticks: { color: '#7b8099', font: { size: 11 } },
+            grid: { color: 'rgba(255,255,255,0.05)' },
+            border: { display: false }
+          }
         }
       }
     });
-    const pct = Math.round(((i + batchSize) / sheets.length) * 100);
-    updateStatus(`Загружено: ${Math.min(i+batchSize, sheets.length)}/${sheets.length} листов...`);
-  }
-
-  allData.sort((a,b) => a.year*100+a.month - (b.year*100+b.month));
-  updateStatus(`Обновлено: ${new Date().toLocaleString('ru')}`, true);
-  document.getElementById('lastUpdate').textContent = `Обновлено: ${new Date().toLocaleString('ru')}`;
-  buildSelectors();
-  render();
-}
-
-function updateStatus(msg, ok=false) {
-  document.getElementById('statusText').textContent = msg;
-  document.getElementById('statusDot').style.background = ok ? '#4ecdc4' : '#e8a03a';
-}
-
-function buildSelectors() {
-  const years = [...new Set(allData.map(d=>d.year))].sort();
-  const ySel = document.getElementById('yearSel');
-  ySel.innerHTML = years.map(y=>`<option value="${y}">${y}</option>`).join('');
-  ySel.value = years[years.length-1];
-
-  const mSel = document.getElementById('monthSel');
-  mSel.innerHTML = MONTHS_RU.map((m,i)=>`<option value="${i+1}">${m}</option>`).join('');
-  // pick last available month for selected year
-  const lastForYear = allData.filter(d=>d.year===+ySel.value);
-  if (lastForYear.length) mSel.value = lastForYear[lastForYear.length-1].month;
-}
-
-function setView(v) {
-  currentView = v;
-  ['btnMonth','btnYear','btnAll'].forEach(id => document.getElementById(id).classList.remove('active'));
-  document.getElementById('btn'+v.charAt(0).toUpperCase()+v.slice(1)).classList.add('active');
-  render();
-}
-
-function onFilterChange() { render(); }
-
-function getFilteredData() {
-  const year = +document.getElementById('yearSel').value;
-  const month = +document.getElementById('monthSel').value;
-  if (currentView === 'month') return allData.filter(d=>d.year===year && d.month===month);
-  if (currentView === 'year') return allData.filter(d=>d.year===year);
-  return allData;
-}
-
-function fmt(n) {
-  if (!n || isNaN(n)) return '—';
-  return Math.round(n).toLocaleString('ru');
-}
-
-function render() {
-  const data = getFilteredData();
-  if (!data.length) return;
-
-  // KPIs — sum for selected range
-  const sum = (k) => data.reduce((acc,d)=>acc+(d[k]||0),0);
-  const lushT = sum('lushTotal'), sushT = sum('sush'), sbT = sum('sbTotal'), lamT = sum('lam'), obrT = sum('obr');
-
-  // Compare with previous same period
-  let prevData = [];
-  if (currentView === 'month') {
-    const year = +document.getElementById('yearSel').value;
-    const month = +document.getElementById('monthSel').value;
-    const prevM = month === 1 ? {y:year-1,m:12} : {y:year,m:month-1};
-    prevData = allData.filter(d=>d.year===prevM.y && d.month===prevM.m);
-  } else if (currentView === 'year') {
-    const year = +document.getElementById('yearSel').value;
-    prevData = allData.filter(d=>d.year===year-1);
-  }
-
-  function delta(key, cur) {
-    const prev = prevData.reduce((a,d)=>a+(d[key]||0),0);
-    if (!prev) return '';
-    const pct = ((cur-prev)/prev*100).toFixed(1);
-    return (pct>0?'+':'')+pct+'%';
-  }
-
-  const keys = [['lushTotal','k1','kd1'],['sush','k2','kd2'],['sbTotal','k3','kd3'],['lam','k4','kd4'],['obr','k5','kd5']];
-  const vals = [lushT,sushT,sbT,lamT,obrT];
-  keys.forEach(([k,vid,did],i) => {
-    document.getElementById(vid).textContent = fmt(vals[i]);
-    const d = delta(k, vals[i]);
-    const el = document.getElementById(did);
-    el.textContent = d || 'нет данных за предыдущий период';
-    el.className = 'kpi-delta' + (d.startsWith('+') ? ' pos' : d.startsWith('-') ? ' neg' : '');
-  });
-
-  // Main chart — bars over time
-  renderMainChart(data);
-  renderPieChart(lushT, sushT, sbT, lamT, obrT);
-  renderSbChart(data);
-  renderLushChart(data);
-  renderLamChart();
-  renderTable(data);
-}
-
-const C = {
-  lush: 'rgba(232,160,58,',
-  sush: 'rgba(78,205,196,',
-  sb:   'rgba(231,76,60,',
-  lam:  'rgba(91,140,245,',
-  obr:  'rgba(136,136,136,'
-};
-
-function mkChart(id, type, data, options={}) {
-  if (charts[id]) charts[id].destroy();
-  const ctx = document.getElementById(id).getContext('2d');
-  charts[id] = new Chart(ctx, { type, data, options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: options.legend ?? false, labels: { color: '#6b7a9d', font: { family: 'IBM Plex Mono', size: 10 }, boxWidth: 10 } },
-      tooltip: { backgroundColor: '#1e2333', borderColor: '#2a3050', borderWidth: 1, titleFont: { family: 'IBM Plex Mono', size: 11 }, bodyFont: { family: 'IBM Plex Mono', size: 11 }, titleColor: '#f0f4ff', bodyColor: '#c8d0e7', callbacks: { label: c => c.dataset.label+': '+Math.round(c.parsed.y||c.parsed||0).toLocaleString('ru') } }
-    },
-    scales: options.noScales ? undefined : {
-      x: { ticks: { color: '#6b7a9d', font: { family: 'IBM Plex Mono', size: 10 }, maxRotation: 45 }, grid: { color: 'rgba(42,48,80,0.5)' } },
-      y: { ticks: { color: '#6b7a9d', font: { family: 'IBM Plex Mono', size: 10 }, callback: v => (v/1000).toFixed(0)+'К' }, grid: { color: 'rgba(42,48,80,0.5)' }, beginAtZero: true }
-    },
-    ...options.extra
-  }});
-}
-
-function renderMainChart(data) {
-  const labels = data.map(d => `${MONTHS_RU[d.month-1].slice(0,3)} ${d.year}`);
-  const title = currentView==='month' ? 'Ежедневная выработка (месяц)' : currentView==='year' ? 'Помесячная выработка' : 'Выработка по годам';
-  document.getElementById('mainChartTitle').textContent = title;
-
-  mkChart('mainChart', 'bar', {
-    labels,
-    datasets: [
-      { label:'Лущилка', data: data.map(d=>d.lushTotal), backgroundColor: C.lush+'0.8)', borderColor: C.lush+'1)', borderWidth: 1 },
-      { label:'Сушилка', data: data.map(d=>d.sush), backgroundColor: C.sush+'0.8)', borderColor: C.sush+'1)', borderWidth: 1 },
-      { label:'Сборка', data: data.map(d=>d.sbTotal), backgroundColor: C.sb+'0.8)', borderColor: C.sb+'1)', borderWidth: 1 },
-      { label:'Ламинация', data: data.map(d=>d.lam), backgroundColor: C.lam+'0.8)', borderColor: C.lam+'1)', borderWidth: 1 },
-      { label:'Обрезка', data: data.map(d=>d.obr), backgroundColor: C.obr+'0.8)', borderColor: C.obr+'1)', borderWidth: 1 },
-    ]
-  }, { legend: true, extra: { plugins: { legend: { display: true, labels: { color: '#6b7a9d', font: { family: 'IBM Plex Mono', size: 10 }, boxWidth: 10 } } } } });
-}
-
-function renderPieChart(lushT,sushT,sbT,lamT,obrT) {
-  if (charts['pieChart']) charts['pieChart'].destroy();
-  const ctx = document.getElementById('pieChart').getContext('2d');
-  charts['pieChart'] = new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels: ['Лущилка','Сушилка','Сборка','Ламинация','Обрезка'],
-      datasets: [{
-        data: [lushT,sushT,sbT,lamT,obrT],
-        backgroundColor: [C.lush+'0.85)',C.sush+'0.85)',C.sb+'0.85)',C.lam+'0.85)',C.obr+'0.85)'],
-        borderColor: '#0f1117', borderWidth: 2
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false, cutout: '62%',
-      plugins: {
-        legend: { display: true, position: 'bottom', labels: { color: '#6b7a9d', font: { family: 'IBM Plex Mono', size: 10 }, boxWidth: 10, padding: 10 } },
-        tooltip: { backgroundColor: '#1e2333', borderColor: '#2a3050', borderWidth: 1, titleFont: { family: 'IBM Plex Mono', size: 11 }, bodyFont: { family: 'IBM Plex Mono', size: 11 }, titleColor: '#f0f4ff', bodyColor: '#c8d0e7', callbacks: { label: c => c.label+': '+Math.round(c.parsed).toLocaleString('ru') } }
-      }
-    }
   });
 }
 
-function renderSbChart(data) {
-  const labels = data.map(d=>`${MONTHS_RU[d.month-1].slice(0,3)} ${d.year}`);
-  mkChart('sbChart','bar',{
-    labels,
-    datasets: [
-      { label:'18 мм', data:data.map(d=>d.sb18), backgroundColor:C.sb+'0.8)', borderColor:C.sb+'1)', borderWidth:1 },
-      { label:'21 мм', data:data.map(d=>d.sb21), backgroundColor:'rgba(231,76,60,0.35)', borderColor:C.sb+'0.6)', borderWidth:1 }
-    ]
-  }, { legend: true, extra: { plugins: { legend: { display: true, labels: { color: '#6b7a9d', font: { family: 'IBM Plex Mono', size: 10 }, boxWidth: 8 } } } } });
-}
+// Auto-connect if key saved
+window.addEventListener('load', () => {
+  const saved = localStorage.getItem('novator_api_key');
+  if (saved) {
+    document.getElementById('api-key-input').value = saved;
+    connect();
+  }
 
-function renderLushChart(data) {
-  const labels = data.map(d=>`${MONTHS_RU[d.month-1].slice(0,3)} ${d.year}`);
-  mkChart('lushChart','bar',{
-    labels,
-    datasets: [
-      { label:'Лущилка 1', data:data.map(d=>d.lush1), backgroundColor:C.lush+'0.85)', borderColor:C.lush+'1)', borderWidth:1 },
-      { label:'Лущилка 2', data:data.map(d=>d.lush2), backgroundColor:'rgba(232,160,58,0.35)', borderColor:C.lush+'0.6)', borderWidth:1 }
-    ]
-  }, { legend: true, extra: { plugins: { legend: { display: true, labels: { color: '#6b7a9d', font: { family: 'IBM Plex Mono', size: 10 }, boxWidth: 8 } } } } });
-}
-
-function renderLamChart() {
-  // Show all data for lam trend
-  const d = allData.slice(-24);
-  const labels = d.map(x=>`${MONTHS_RU[x.month-1].slice(0,3)} ${x.year}`);
-  mkChart('lamChart','line',{
-    labels,
-    datasets: [{
-      label:'Ламинация',
-      data:d.map(x=>x.lam),
-      borderColor:C.lam+'1)',
-      backgroundColor:C.lam+'0.1)',
-      fill:true, tension:0.3, pointRadius:2, pointHoverRadius:4, borderWidth:1.5
-    }]
-  }, { legend: false });
-}
-
-function renderTable(data) {
-  const tbody = document.getElementById('dataTable');
-  const rows = [...data].reverse().slice(0,36);
-  tbody.innerHTML = rows.map(d => `
-    <tr>
-      <td>${MONTHS_RU[d.month-1]} ${d.year}</td>
-      <td class="td-lush">${fmt(d.lush1)}</td>
-      <td class="td-lush">${fmt(d.lush2)}</td>
-      <td class="td-lush" style="font-weight:600">${fmt(d.lushTotal)}</td>
-      <td class="td-sush">${fmt(d.sush)}</td>
-      <td class="td-sborka">${fmt(d.sb18)}</td>
-      <td class="td-sborka">${fmt(d.sb21)}</td>
-      <td class="td-sborka" style="font-weight:600">${fmt(d.sbTotal)}</td>
-      <td class="td-lam">${fmt(d.lam)}</td>
-      <td class="td-obr">${fmt(d.obr)}</td>
-    </tr>`).join('');
-}
-
-// Boot
-loadAllData();
+  document.getElementById('api-key-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') connect();
+  });
+});
 </script>
 </body>
 </html>
