@@ -334,6 +334,7 @@
     </div>
     <select id="month-select" style="display:none"></select>
     <select id="year-select" style="display:none"></select>
+    <button class="secondary" id="refresh-btn" onclick="refreshData()" title="Обновить данные из Google Sheets">↻ Обновить</button>
     <button class="secondary" onclick="showDebug()">Отладка</button>
   </div>
 </header>
@@ -867,6 +868,28 @@ function showDebug() {
 }
 
 function hideDebug() { document.getElementById('debug-overlay').style.display='none'; }
+
+async function refreshData() {
+  // Сбросить кеш и перезагрузить текущий вид
+  monthCache = {};
+  const btn = document.getElementById('refresh-btn');
+  btn.textContent = '↻ Загрузка...';
+  btn.disabled = true;
+  try {
+    // Также триггерим синхронизацию на бэкенде (не ждём)
+    fetch('https://zavod-production.up.railway.app/api/eovr/sync', { method: 'POST' })
+      .catch(() => {});
+    if (currentTab === 'month') {
+      const sel = document.getElementById('month-select');
+      if (sel.value) await loadMonth(sel.value);
+    } else {
+      await renderYear();
+    }
+  } finally {
+    btn.textContent = '↻ Обновить';
+    btn.disabled = false;
+  }
+}
 
 window.addEventListener('load', connect);
 </script>
