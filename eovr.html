@@ -36,7 +36,7 @@
 
   header {
     border-bottom: 1px solid var(--border);
-    padding: 16px 24px;
+    padding: 14px 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -44,66 +44,62 @@
     flex-wrap: wrap;
     position: sticky;
     top: 0;
-    background: rgba(15,17,23,0.92);
+    background: rgba(15,17,23,0.95);
     backdrop-filter: blur(12px);
     z-index: 10;
   }
 
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
+  .logo { display: flex; align-items: center; gap: 10px; }
   .logo-mark {
-    width: 32px;
-    height: 32px;
-    background: var(--accent);
-    border-radius: 8px;
+    width: 32px; height: 32px;
+    background: var(--accent); border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700; color: #fff;
+  }
+  .logo-text { font-size: 15px; font-weight: 600; }
+  .logo-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+  .header-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+  /* Tabs */
+  .tabs {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    font-weight: 700;
-    color: #fff;
-    letter-spacing: -0.5px;
+    gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 3px;
   }
-
-  .logo-text {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--text);
-  }
-
-  .logo-sub {
-    font-size: 11px;
+  .tab-btn {
+    background: transparent;
+    border: none;
+    border-radius: 6px;
     color: var(--muted);
-    margin-top: 1px;
+    padding: 6px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .tab-btn:hover { color: var(--text); opacity: 1; }
+  .tab-btn.active {
+    background: var(--accent);
+    color: #fff;
   }
 
-  .controls {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-
-  select, input[type="text"], input[type="password"] {
+  select {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     color: var(--text);
-    padding: 8px 12px;
+    padding: 7px 12px;
     font-size: 13px;
     outline: none;
     transition: border-color 0.15s;
     font-family: inherit;
   }
-
-  select:focus, input:focus {
-    border-color: var(--accent);
-  }
-
+  select:focus { border-color: var(--accent); }
   select option { background: #1a1d27; }
 
   button {
@@ -111,270 +107,155 @@
     border: none;
     border-radius: var(--radius-sm);
     color: #fff;
-    padding: 8px 16px;
+    padding: 7px 14px;
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
     transition: opacity 0.15s;
     font-family: inherit;
   }
-
   button:hover { opacity: 0.85; }
-  button:disabled { opacity: 0.45; cursor: not-allowed; }
   button.secondary {
     background: var(--surface2);
     color: var(--muted);
     border: 1px solid var(--border);
   }
 
-  main { padding: 24px; max-width: 1280px; margin: 0 auto; }
+  main { padding: 24px; max-width: 1360px; margin: 0 auto; }
 
-  /* Key input screen */
-  .key-screen {
-    max-width: 480px;
-    margin: 80px auto;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+  /* Status bar */
+  .status-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 0; border-bottom: 1px solid var(--border);
+    font-size: 12px; color: var(--muted); margin-bottom: 20px;
+  }
+  .status-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--c-sush); display: inline-block; margin-right: 6px;
   }
 
-  .key-screen h1 {
-    font-size: 28px;
-    font-weight: 700;
-    letter-spacing: -0.5px;
-    line-height: 1.2;
-  }
-
-  .key-screen h1 span { color: var(--accent); }
-
-  .key-screen p {
-    color: var(--muted);
-    line-height: 1.7;
-    font-size: 14px;
-  }
-
-  .key-row {
-    display: flex;
-    gap: 8px;
-  }
-
-  .key-row input { flex: 1; }
-
-  .hint-box {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .hint-box .hint-title {
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--muted);
-    margin-bottom: 4px;
-  }
-
-  .hint-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    font-size: 13px;
-    color: var(--muted);
-  }
-
-  .hint-num {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: var(--surface2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--accent);
-    flex-shrink: 0;
-    margin-top: 1px;
-  }
-
-  .error-msg {
-    background: rgba(239,68,68,0.1);
-    border: 1px solid rgba(239,68,68,0.3);
-    border-radius: var(--radius-sm);
-    padding: 10px 14px;
-    color: #f87171;
-    font-size: 13px;
-  }
-
-  /* Dashboard */
-  #dashboard { display: none; flex-direction: column; gap: 24px; }
-
+  /* Metric cards */
   .metrics-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 12px;
+    margin-bottom: 20px;
   }
-
   .metric-card {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+    display: flex; flex-direction: column; gap: 5px;
     transition: border-color 0.15s;
   }
-
   .metric-card:hover { border-color: rgba(255,255,255,0.15); }
-
-  .metric-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    margin-bottom: 4px;
+  .metric-card.highlight {
+    border-color: rgba(245,158,11,0.4);
+    background: rgba(245,158,11,0.05);
   }
+  .metric-dot { width: 8px; height: 8px; border-radius: 50%; margin-bottom: 4px; }
+  .metric-label { font-size: 11px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.3px; }
+  .metric-value { font-size: 26px; font-weight: 700; letter-spacing: -1px; line-height: 1; }
+  .metric-unit { font-size: 11px; color: var(--muted); }
+  .metric-badge { font-size: 11px; margin-top: 2px; }
 
-  .metric-label {
-    font-size: 12px;
-    color: var(--muted);
-    font-weight: 500;
-  }
-
-  .metric-value {
-    font-size: 28px;
-    font-weight: 700;
-    letter-spacing: -1px;
-    line-height: 1;
-  }
-
-  .metric-unit {
-    font-size: 12px;
-    color: var(--muted);
-  }
-
-  .metric-trend {
-    font-size: 11px;
-    color: var(--muted);
-    margin-top: 2px;
-  }
-
+  /* Charts */
   .charts-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
     gap: 16px;
   }
-
   .chart-card {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 20px;
   }
-
+  .chart-card.wide { grid-column: 1 / -1; }
   .chart-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .chart-title { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; }
+  .chart-total { font-size: 12px; color: var(--muted); }
+  .chart-wrap { position: relative; width: 100%; height: 180px; }
+  .chart-wrap.tall { height: 260px; }
+
+  /* Year tab — сборка крупно */
+  .sborka-hero {
+    background: var(--surface);
+    border: 1px solid rgba(245,158,11,0.3);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .sborka-hero-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+  }
+  .sborka-hero-title {
+    font-size: 13px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--c-sborka);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .sborka-hero-stats { display: flex; gap: 24px; flex-wrap: wrap; }
+  .sborka-stat { text-align: right; }
+  .sborka-stat-val { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; color: var(--c-sborka); }
+  .sborka-stat-label { font-size: 11px; color: var(--muted); }
+
+  .year-secondary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    gap: 16px;
   }
 
-  .chart-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    font-weight: 600;
-  }
-
-  .chart-total {
-    font-size: 12px;
-    color: var(--muted);
-  }
-
-  .chart-wrap {
-    position: relative;
-    width: 100%;
-    height: 160px;
-  }
-
-  .loading-bar {
-    height: 2px;
-    background: var(--surface2);
-    border-radius: 2px;
-    overflow: hidden;
-    margin-bottom: 24px;
-  }
-
-  .loading-bar-fill {
-    height: 100%;
-    background: var(--accent);
-    border-radius: 2px;
-    animation: loading 1.2s ease-in-out infinite;
-    width: 40%;
-  }
-
-  @keyframes loading {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(350%); }
-  }
-
-  .status-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 0;
-    border-bottom: 1px solid var(--border);
-    font-size: 12px;
-    color: var(--muted);
-  }
-
-  .status-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--c-sush);
-    display: inline-block;
-    margin-right: 6px;
-  }
-
-  .empty-state {
-    text-align: center;
-    padding: 60px 24px;
-    color: var(--muted);
-    font-size: 14px;
-  }
-
+  /* Loading */
   #loading-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(15,17,23,0.7);
-    z-index: 100;
-    align-items: center;
-    justify-content: center;
+    display: none; position: fixed; inset: 0;
+    background: rgba(15,17,23,0.75); z-index: 100;
+    align-items: center; justify-content: center;
+    flex-direction: column; gap: 12px;
   }
-
   .spinner {
-    width: 36px;
-    height: 36px;
+    width: 36px; height: 36px;
     border: 3px solid var(--surface2);
     border-top-color: var(--accent);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
-
+  .loading-text { font-size: 13px; color: var(--muted); }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  @media (max-width: 600px) {
+  .empty-state { text-align: center; padding: 60px 24px; color: var(--muted); }
+
+  /* Year progress bar */
+  .progress-bar-wrap { margin-top: 8px; }
+  .progress-bar-track {
+    height: 4px; background: var(--surface2); border-radius: 2px; overflow: hidden;
+  }
+  .progress-bar-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+
+  /* Month table in year view */
+  .month-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .month-table th {
+    text-align: right; padding: 6px 10px; color: var(--muted);
+    font-weight: 500; border-bottom: 1px solid var(--border);
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px;
+  }
+  .month-table th:first-child { text-align: left; }
+  .month-table td { padding: 7px 10px; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .month-table td:first-child { text-align: left; color: var(--muted); }
+  .month-table tr:last-child td { border-bottom: none; }
+  .month-table tr.total-row td { border-top: 1px solid var(--border); font-weight: 600; color: var(--text); padding-top: 10px; }
+  .month-table td.sborka-col { color: var(--c-sborka); font-weight: 600; }
+  .month-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  @media (max-width: 640px) {
     main { padding: 16px; }
     .charts-grid { grid-template-columns: 1fr; }
-    .metric-value { font-size: 22px; }
+    .year-secondary-grid { grid-template-columns: 1fr; }
+    .metric-value { font-size: 20px; }
   }
 </style>
 </head>
@@ -382,97 +263,89 @@
 
 <div id="loading-overlay">
   <div class="spinner"></div>
+  <div class="loading-text" id="loading-text">Загрузка данных...</div>
 </div>
 
 <header>
   <div class="logo">
     <div class="logo-mark">Н</div>
     <div>
-      <div class="logo-text">Новатор</div>
-      <div class="logo-sub">Ежедневный отчёт о выработке</div>
+      <div class="logo-text">Новатор · ЕОВР</div>
+      <div class="logo-sub" id="header-sub">Загрузка...</div>
     </div>
   </div>
-  <div class="controls" id="header-controls">
-    <select id="month-select"></select>
+  <div class="header-right">
+    <div class="tabs">
+      <button class="tab-btn active" id="tab-month-btn" onclick="switchTab('month')">Месяц</button>
+      <button class="tab-btn" id="tab-year-btn" onclick="switchTab('year')">Год</button>
+    </div>
+    <select id="month-select" style="display:none"></select>
+    <select id="year-select" style="display:none"></select>
     <button class="secondary" onclick="showDebug()">Отладка</button>
-    <button class="secondary" onclick="resetKey()">Сменить ключ</button>
   </div>
 </header>
 
 <main>
-  <!-- Экран ввода API-ключа -->
-  <div class="key-screen" id="key-screen" style="display:none">
-    <div>
-      <h1>Дашборд<br><span>производства</span></h1>
-      <p style="margin-top:12px;">Введите Google Sheets API-ключ для загрузки данных из таблицы ЕОВР.</p>
-    </div>
-
-    <div>
-      <div class="key-row">
-        <input type="password" id="api-key-input" placeholder="AIza..." autocomplete="off" />
-        <button id="connect-btn" onclick="connect()">Подключить</button>
-      </div>
-      <div id="key-error" class="error-msg" style="display:none; margin-top:10px;"></div>
-    </div>
-
-    <div class="hint-box">
-      <div class="hint-title">Как получить ключ</div>
-      <div class="hint-item">
-        <div class="hint-num">1</div>
-        <span>Зайди на <a href="https://console.cloud.google.com" target="_blank" style="color:var(--accent);">console.cloud.google.com</a></span>
-      </div>
-      <div class="hint-item">
-        <div class="hint-num">2</div>
-        <span>APIs & Services → Library → включи Google Sheets API</span>
-      </div>
-      <div class="hint-item">
-        <div class="hint-num">3</div>
-        <span>Credentials → Create Credentials → API Key → ограничь до Google Sheets API</span>
-      </div>
-      <div class="hint-item">
-        <div class="hint-num">4</div>
-        <span>Убедись, что таблица открыта для просмотра по ссылке</span>
-      </div>
-    </div>
+  <div class="status-row">
+    <span><span class="status-dot"></span><span id="status-text">Загрузка...</span></span>
+    <span id="last-update"></span>
   </div>
 
-  <!-- Дашборд -->
-  <div id="dashboard">
+  <!-- МЕСЯЦ -->
+  <div id="tab-month">
+    <div class="metrics-grid" id="month-metrics"></div>
+    <div class="charts-grid" id="month-charts"></div>
+    <div id="month-empty" class="empty-state" style="display:none">Нет данных за этот месяц</div>
+  </div>
 
-    <div class="status-row">
-      <span><span class="status-dot"></span><span id="status-text">Загрузка...</span></span>
-      <span id="last-update"></span>
+  <!-- ГОД -->
+  <div id="tab-year" style="display:none">
+    <!-- Сборка крупно -->
+    <div class="sborka-hero">
+      <div class="sborka-hero-header">
+        <div class="sborka-hero-title">
+          <span style="width:10px;height:10px;border-radius:50%;background:var(--c-sborka);display:inline-block;"></span>
+          Сборка — динамика по месяцам
+        </div>
+        <div class="sborka-hero-stats" id="year-sborka-stats"></div>
+      </div>
+      <div class="chart-wrap tall">
+        <canvas id="chart-year-sborka"></canvas>
+      </div>
     </div>
 
-    <div class="metrics-grid" id="metrics-grid"></div>
+    <!-- Остальные переделы -->
+    <div class="year-secondary-grid" id="year-secondary-charts"></div>
 
-    <div class="charts-grid" id="charts-grid"></div>
-
-    <div id="empty-state" class="empty-state" style="display:none;">
-      Нет данных за выбранный месяц
+    <!-- Сводная таблица -->
+    <div class="chart-card" style="margin-top:16px;">
+      <div class="chart-header">
+        <div class="chart-title">Сводная таблица по месяцам</div>
+        <div class="chart-total" id="year-table-caption"></div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="month-table" id="year-table"></table>
+      </div>
     </div>
 
+    <div id="year-empty" class="empty-state" style="display:none">Нет данных за этот год</div>
   </div>
 </main>
 
 <!-- Debug overlay -->
-<div id="debug-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000;overflow:auto;padding:20px;">
+<div id="debug-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:1000;overflow:auto;padding:20px;">
   <div style="max-width:1400px;margin:0 auto;background:#1a1d27;border-radius:12px;padding:20px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-      <h2 style="margin:0;color:#fff;font-size:18px;">Отладка — сырые данные таблицы</h2>
+      <h2 style="margin:0;font-size:18px;">Отладка — сырые данные</h2>
       <button class="secondary" onclick="hideDebug()">Закрыть</button>
     </div>
-    <p style="color:#aaa;font-size:13px;margin-bottom:12px;">
-      Цифры в первом столбце — номер строки (с 1, как в таблице).
-      Числа в зелёных заголовках — индекс колонки (с 0, как в коде парсера).
-      Покажи Клоду этот скриншот для исправления формул.
-    </p>
     <div id="debug-content" style="font-family:Menlo,monospace;font-size:11px;color:#ddd;overflow-x:auto;"></div>
   </div>
 </div>
 
 <script>
 const SHEET_ID = '1iYEuupLfhvM-jS4D8NiaL2dcnoUheu1GRPy5UJc9yUg';
+const API_KEY  = 'AIzaSyAdAPQ2x7EMsBH-JBusw6ioxQZ8xdPbEP0';
 
 const METRICS = [
   { key: 'lush',   label: 'Лущилка',   color: '#4f7cff', unit: 'л' },
@@ -488,10 +361,18 @@ const MONTH_NAMES = {
   'Январь':1,'Февраль':2,'Март':3,'Апрель':4,'Май':5,'Июнь':6,
   'Июль':7,'Август':8,'Сентябрь':9,'Октябрь':10,'Ноябрь':11,'Декабрь':12,
 };
+const MONTH_SHORT = ['','Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
+const MONTH_FULL  = ['','Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 
-let apiKey = 'AIzaSyAdAPQ2x7EMsBH-JBusw6ioxQZ8xdPbEP0';
-let sheets = [];
-let charts = {};
+let sheets = [];           // [{month, year, title, label}]
+let charts = {};           // активные Chart.js инстансы
+let monthCache = {};       // title -> totals {lush,sush,sborka,lam,obr,_control}
+let lastRawData = null;
+let lastSheetTitle = null;
+let currentTab = 'month';
+let currentYear = null;
+
+// ─── Парсинг ───────────────────────────────────────────────────────────────
 
 function parseSheetName(name) {
   const parts = name.trim().split(/\s+/);
@@ -509,288 +390,179 @@ function parseRows(rows) {
   const days = {};
   let controlTotal = null;
 
-  // Зафиксированная структура колонок (0-based) подтверждена по скриншоту отладки
-  // строка 1 (итог месяца): [4]=30463 итого Лущилка, [7]=26925 итого Сушилка, [10]=24589 итого Сборка
-  // строка 3 (итоги по линиям): [2]=2501 Лущ1, [4]=0 Лущ2, [5]=27962 Полноформат → сумма 30463 ✓
-  //
-  // В дневных строках:
-  // [2] Лущ1 Фан.кряж     [3] Лущ1 Тонкомер
-  // [4] Лущ2 (одна колонка — сейчас не используется)
-  // [5] Полноформат Фан.кряж   [6] Полноформат Тонкомер
-  // [7] Сушилка (листов по счётчику)
-  // [8] полноформ. сушилка (не используется)
-  // [9] Сборка 1смена 18мм   [10] Сборка 1смена 21мм
-  // [11] Сборка 2смена 18мм  [12] Сборка 2смена 21мм
-  // [13] Остаток клея   [14]/[15] Остаток шпона
-  // [16] Ламинация
-  // [17]/[18] Остаток плёнки (текстовые)
-  // [19] Обрезка
-  const COL_LUSH = [2, 3, 4, 5, 6];      // Лущ1(2) + Лущ2(1) + Полноформат(2)
-  const COL_SUSH = 7;
+  const COL_LUSH   = [2, 3, 4, 5, 6];
+  const COL_SUSH   = 7;
   const COL_SBORKA = [9, 10, 11, 12];
-  const COL_LAM = 16;
-  const COL_OBR = 19;
+  const COL_LAM    = 16;
+  const COL_OBR    = 19;
 
-  // Найти строку с заголовками отделов чтобы понять где начинаются данные
   let headerRow = -1;
   for (let i = 0; i < Math.min(10, rows.length); i++) {
-    const joined = (rows[i] || []).map(c => String(c).toLowerCase()).join('|');
-    if (joined.includes('фан') && joined.includes('тонкомер')) {
-      headerRow = i;
-      break;
-    }
+    const j = (rows[i] || []).map(c => String(c).toLowerCase()).join('|');
+    if (j.includes('фан') && j.includes('тонкомер')) { headerRow = i; break; }
   }
-  // Если детальный заголовок не нашли, пытаемся найти строку "Лущилка"
   if (headerRow < 0) {
     for (let i = 0; i < Math.min(10, rows.length); i++) {
-      const joined = (rows[i] || []).map(c => String(c).toLowerCase()).join('|');
-      if (joined.includes('лущилка')) { headerRow = i + 1; break; }
+      const j = (rows[i] || []).map(c => String(c).toLowerCase()).join('|');
+      if (j.includes('лущилка')) { headerRow = i + 1; break; }
     }
   }
 
-  // Контрольная сумма лущилки — из строки 1 (итог месяца) в столбце [4]
   if (rows[0]) {
-    const v4 = parseFloat(String(rows[0][4] || '').replace(',','.').replace(/[^0-9.]/g,''));
-    if (v4 > 1000) controlTotal = v4;
+    const v = parseFloat(String(rows[0][4] || '').replace(',','.').replace(/[^0-9.]/g,''));
+    if (v > 1000) controlTotal = v;
   }
 
-  // Данные начинаются после строки 5 (1-based) — то есть с индекса 5 (0-based)
-  // headerRow обычно 4 (1-based 5), значит dataStart = 5
   const dataStart = Math.max(headerRow + 1, 5);
-
   const parseN = (r, idx) => {
     if (idx < 0 || idx >= r.length) return 0;
-    const v = String(r[idx] || '').replace(',', '.').replace(/[^0-9.]/g, '');
+    const v = String(r[idx] || '').replace(',','.').replace(/[^0-9.]/g,'');
     const n = parseFloat(v);
     return (n && n < 100000) ? n : 0;
   };
+  const sumCols = (r, cols) => cols.reduce((s,c) => s + parseN(r,c), 0);
 
-  const sumCols = (r, cols) => cols.reduce((s, c) => s + parseN(r, c), 0);
-
-  // Запоминаем дату — строки смен 2 и 3 идут без даты
   let lastDate = null;
-
   for (let i = dataStart; i < rows.length; i++) {
     const r = rows[i];
     if (!r || r.length < 2) continue;
-
-    const dateRaw  = String(r[0] || '').trim();
-    const shiftRaw = String(r[1] || '').trim();
-
-    const parsedDate = parseInt(dateRaw);
-    if (parsedDate >= 1 && parsedDate <= 31) lastDate = parsedDate;
-
-    const shift = parseInt(shiftRaw);
+    const pd = parseInt(String(r[0]||'').trim());
+    if (pd >= 1 && pd <= 31) lastDate = pd;
+    const shift = parseInt(String(r[1]||'').trim());
     if (!shift || shift < 1 || shift > 3 || !lastDate) continue;
-
-    const date = lastDate;
-    if (!days[date]) days[date] = { lush: 0, sush: 0, sborka: 0, lam: 0, obr: 0 };
-
-    days[date].lush   += sumCols(r, COL_LUSH);
-    days[date].sush   += parseN(r, COL_SUSH);
-    days[date].sborka += sumCols(r, COL_SBORKA);
-    days[date].lam    += parseN(r, COL_LAM);
-    days[date].obr    += parseN(r, COL_OBR);
+    if (!days[lastDate]) days[lastDate] = { lush:0, sush:0, sborka:0, lam:0, obr:0 };
+    days[lastDate].lush   += sumCols(r, COL_LUSH);
+    days[lastDate].sush   += parseN(r, COL_SUSH);
+    days[lastDate].sborka += sumCols(r, COL_SBORKA);
+    days[lastDate].lam    += parseN(r, COL_LAM);
+    days[lastDate].obr    += parseN(r, COL_OBR);
   }
-
   days._control = controlTotal;
   return days;
 }
 
-function showLoading(on) {
-  document.getElementById('loading-overlay').style.display = on ? 'flex' : 'none';
+function daysToTotals(days) {
+  const t = { lush:0, sush:0, sborka:0, lam:0, obr:0 };
+  Object.entries(days).filter(([k])=>k!=='_control').forEach(([,d])=>{
+    METRICS.forEach(m => t[m.key] += d[m.key]);
+  });
+  t._control = days._control;
+  return t;
 }
 
-function showError(msg) {
-  const el = document.getElementById('key-error');
-  el.textContent = msg;
-  el.style.display = msg ? 'block' : 'none';
+// ─── Загрузка ──────────────────────────────────────────────────────────────
+
+async function fetchSheet(title) {
+  const range = encodeURIComponent(`'${title}'!A1:AA110`);
+  const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?key=${API_KEY}`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  return data.values || [];
 }
 
 async function connect() {
-  const key = apiKey;
-  showLoading(true);
-
+  showLoading(true, 'Получение списка листов...');
   try {
-    const res = await fetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}?fields=sheets.properties&key=${key}`
-    );
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err?.error?.message || `Ошибка ${res.status}`);
-    }
+    const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}?fields=sheets.properties&key=${API_KEY}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    apiKey = key;
-    localStorage.setItem('novator_api_key', key);
 
     sheets = data.sheets
       .map(s => ({ ...parseSheetName(s.properties.title), title: s.properties.title }))
-      .filter(s => s.month && s.year)
-      .sort((a, b) => b.year - a.year || b.month - a.month);
+      .filter(s => s && s.month && s.year)
+      .sort((a,b) => b.year - a.year || b.month - a.month);
 
-    if (!sheets.length) throw new Error('Листы с данными не найдены');
+    if (!sheets.length) throw new Error('Листы ЕОВР не найдены');
 
-    buildMonthSelect();
-    showDashboard();
-    await loadSheet(sheets[0].title);
-  } catch (e) {
-    showError('Ошибка: ' + e.message);
-  } finally {
-    showLoading(false);
-
-  }
-}
-
-function buildMonthSelect() {
-  const sel = document.getElementById('month-select');
-  sel.innerHTML = sheets.map(s =>
-    `<option value="${s.title}">${s.label}</option>`
-  ).join('');
-  sel.onchange = () => loadSheet(sel.value);
-}
-
-function showDashboard() {
-  document.getElementById('key-screen').style.display = 'none';
-  document.getElementById('dashboard').style.display = 'flex';
-  document.getElementById('header-controls').style.display = 'flex';
-}
-
-function resetKey() {
-  localStorage.removeItem('novator_api_key');
-  document.getElementById('key-screen').style.display = '';
-  document.getElementById('dashboard').style.display = 'none';
-  document.getElementById('header-controls').style.display = 'none';
-  document.getElementById('api-key-input').value = '';
-}
-
-let lastRawData = null;
-let lastSheetTitle = null;
-
-async function loadSheet(sheetTitle) {
-  showLoading(true);
-  document.getElementById('status-text').textContent = 'Загрузка данных...';
-
-  try {
-    // Расширил до AA110 — на случай если в таблице больше столбцов чем мы предполагаем
-    const range = encodeURIComponent(`'${sheetTitle}'!A1:AA110`);
-    const res = await fetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?key=${apiKey}`
-    );
-    if (!res.ok) throw new Error(`Ошибка ${res.status}`);
-    const data = await res.json();
-    lastRawData = data.values || [];
-    lastSheetTitle = sheetTitle;
-    const days = parseRows(lastRawData);
-    renderDashboard(days, sheetTitle);
-  } catch (e) {
-    document.getElementById('status-text').textContent = 'Ошибка загрузки: ' + e.message;
+    buildSelects();
+    updateTimestamp();
+    await switchTab('month');
+  } catch(e) {
+    document.getElementById('status-text').textContent = 'Ошибка: ' + e.message;
   } finally {
     showLoading(false);
   }
 }
 
-function showDebug() {
-  if (!lastRawData || !lastRawData.length) {
-    alert('Сначала загрузи месяц');
+function buildSelects() {
+  // Month select
+  const ms = document.getElementById('month-select');
+  ms.innerHTML = sheets.map(s => `<option value="${s.title}">${s.label}</option>`).join('');
+  ms.onchange = () => loadMonth(ms.value);
+
+  // Year select — уникальные годы
+  const years = [...new Set(sheets.map(s => s.year))].sort((a,b) => b-a);
+  const ys = document.getElementById('year-select');
+  ys.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+  currentYear = years[0];
+  ys.onchange = () => { currentYear = +ys.value; renderYear(); };
+}
+
+async function loadMonth(title) {
+  if (monthCache[title]) {
+    renderMonth(monthCache[title].days, title);
     return;
   }
-  const rows = lastRawData;
-  const maxCols = Math.max(...rows.map(r => r.length), 22);
-  const colLetter = (i) => {
-    let s = '';
-    let n = i;
-    do { s = String.fromCharCode(65 + (n % 26)) + s; n = Math.floor(n / 26) - 1; } while (n >= 0);
-    return s;
-  };
-
-  let html = `<div style="margin-bottom:8px;color:#aaf;font-size:12px;">Лист: <b>${lastSheetTitle}</b> — всего строк: ${rows.length}</div>`;
-  html += '<table style="border-collapse:collapse;width:100%;font-size:11px;">';
-  // Заголовок: буква (Excel) и индекс (код)
-  html += '<tr><th style="position:sticky;left:0;background:#222;padding:4px 6px;border:1px solid #333;color:#888;">#</th>';
-  for (let c = 0; c < maxCols; c++) {
-    html += `<th style="padding:4px 6px;border:1px solid #333;background:#1f2436;color:#7df;min-width:60px;">${colLetter(c)}<br><span style="color:#888;font-weight:normal;">[${c}]</span></th>`;
+  showLoading(true, 'Загрузка месяца...');
+  try {
+    const rows = await fetchSheet(title);
+    lastRawData = rows;
+    lastSheetTitle = title;
+    const days = parseRows(rows);
+    monthCache[title] = { days, totals: daysToTotals(days) };
+    renderMonth(days, title);
+  } catch(e) {
+    document.getElementById('status-text').textContent = 'Ошибка: ' + e.message;
+  } finally {
+    showLoading(false);
   }
-  html += '</tr>';
-
-  // Только первые 20 строк (5 шапка + первые 5 дней)
-  const limit = Math.min(rows.length, 20);
-  for (let r = 0; r < limit; r++) {
-    const row = rows[r] || [];
-    html += `<tr><td style="position:sticky;left:0;padding:3px 6px;border:1px solid #333;background:#222;color:#888;text-align:right;">${r + 1}</td>`;
-    for (let c = 0; c < maxCols; c++) {
-      let val = String(row[c] || '');
-      if (val.length > 14) val = val.slice(0, 12) + '…';
-      const num = !isNaN(parseFloat(val)) && isFinite(val);
-      const bg = num && parseFloat(val) > 0 ? '#1a2e1a' : 'transparent';
-      html += `<td style="padding:3px 6px;border:1px solid #2a2e3a;background:${bg};white-space:nowrap;">${val || '<span style="color:#444;">·</span>'}</td>`;
-    }
-    html += '</tr>';
-  }
-  html += '</table>';
-
-  // Также покажем что насчитал парсер для текущего дня 1
-  const days = parseRows(rows);
-  html += '<div style="margin-top:20px;padding:12px;background:#0f1117;border-radius:6px;font-size:12px;">';
-  html += '<div style="color:#aaf;margin-bottom:6px;">Что насчитал парсер:</div>';
-  html += `<div>Контрольная сумма из шапки (лущилка): <b style="color:#f59e0b;">${days._control || 'не найдена'}</b></div>`;
-  html += '<div style="margin-top:6px;">По дням (день 1-5):</div>';
-  for (let d = 1; d <= 5; d++) {
-    if (!days[d]) continue;
-    html += `<div style="margin-left:12px;color:#ccc;">День ${d}: Лущ=${Math.round(days[d].lush)}, Суш=${Math.round(days[d].sush)}, Сб=${Math.round(days[d].sborka)}, Лам=${Math.round(days[d].lam)}, Обр=${Math.round(days[d].obr)}</div>`;
-  }
-  let total = 0;
-  Object.entries(days).filter(([k])=>k!=='_control').forEach(([,d]) => total += d.lush);
-  html += `<div style="margin-top:6px;color:#4f7cff;">ИТОГО лущилка за месяц: <b>${Math.round(total)}</b> (должно быть ${days._control || '?'})</div>`;
-  html += '</div>';
-
-  document.getElementById('debug-content').innerHTML = html;
-  document.getElementById('debug-overlay').style.display = 'block';
 }
 
-function hideDebug() {
-  document.getElementById('debug-overlay').style.display = 'none';
+// ─── Вкладки ───────────────────────────────────────────────────────────────
+
+async function switchTab(tab) {
+  currentTab = tab;
+  document.getElementById('tab-month').style.display = tab === 'month' ? '' : 'none';
+  document.getElementById('tab-year').style.display  = tab === 'year'  ? '' : 'none';
+  document.getElementById('tab-month-btn').classList.toggle('active', tab === 'month');
+  document.getElementById('tab-year-btn').classList.toggle('active', tab === 'year');
+  document.getElementById('month-select').style.display = tab === 'month' ? '' : 'none';
+  document.getElementById('year-select').style.display  = tab === 'year'  ? '' : 'none';
+
+  if (tab === 'month') {
+    const sel = document.getElementById('month-select');
+    if (sel.value) await loadMonth(sel.value);
+  } else {
+    await renderYear();
+  }
 }
 
-function renderDashboard(days, sheetTitle) {
-  const controlTotal = days._control;
-  const dayList = Object.entries(days)
-    .filter(([k]) => k !== '_control')
-    .sort((a, b) => +a[0] - +b[0]);
+// ─── Рендер месяца ─────────────────────────────────────────────────────────
+
+function renderMonth(days, title) {
+  destroyCharts(['month-']);
+  const dayList = Object.entries(days).filter(([k])=>k!=='_control').sort((a,b)=>+a[0]-+b[0]);
   const hasData = dayList.length > 0;
-
-  document.getElementById('empty-state').style.display = hasData ? 'none' : 'block';
-  document.getElementById('metrics-grid').style.display = hasData ? '' : 'none';
-  document.getElementById('charts-grid').style.display = hasData ? '' : 'none';
-
-  const now = new Date();
-  document.getElementById('last-update').textContent =
-    'Обновлено: ' + now.toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
-  document.getElementById('status-text').textContent = sheetTitle + ' — данные загружены';
+  document.getElementById('month-empty').style.display = hasData ? 'none' : 'block';
+  document.getElementById('month-metrics').style.display = hasData ? '' : 'none';
+  document.getElementById('month-charts').style.display = hasData ? '' : 'none';
+  document.getElementById('status-text').textContent = title + ' — загружено';
+  document.getElementById('header-sub').textContent = title;
 
   if (!hasData) return;
 
-  // Totals
-  const totals = dayList.reduce(
-    (acc, [, d]) => {
-      METRICS.forEach(m => acc[m.key] = (acc[m.key] || 0) + d[m.key]);
-      return acc;
-    }, {}
-  );
+  const totals = daysToTotals(days);
 
-  // Metric cards — для лущилки показываем контрольную сумму из шапки
-  const mg = document.getElementById('metrics-grid');
-  mg.innerHTML = METRICS.map(m => {
+  // Метрики
+  document.getElementById('month-metrics').innerHTML = METRICS.map(m => {
     const val = Math.round(totals[m.key]);
     const isLush = m.key === 'lush';
-    const ctrl = isLush && controlTotal ? Math.round(controlTotal) : null;
-    const match = ctrl ? Math.abs(val - ctrl) < 10 : null;
+    const ctrl = isLush && totals._control ? Math.round(totals._control) : null;
+    const match = ctrl ? Math.abs(val-ctrl) < 10 : null;
     const badge = ctrl
-      ? `<div style="font-size:11px;margin-top:4px;color:${match ? '#34d399' : '#f87171'}">
-           ${match ? '✓ сходится' : '⚠ шапка: ' + ctrl.toLocaleString('ru')}
-         </div>`
+      ? `<div class="metric-badge" style="color:${match?'#34d399':'#f87171'}">${match ? '✓ сходится' : '⚠ шапка: '+ctrl.toLocaleString('ru')}</div>`
       : '';
-    return `
-    <div class="metric-card">
+    return `<div class="metric-card ${m.key==='sborka'?'highlight':''}">
       <div class="metric-dot" style="background:${m.color}"></div>
       <div class="metric-label">${m.label}</div>
       <div class="metric-value" style="color:${m.color}">${val.toLocaleString('ru')}</div>
@@ -799,95 +571,243 @@ function renderDashboard(days, sheetTitle) {
     </div>`;
   }).join('');
 
-  // Charts
-  Object.values(charts).forEach(c => c.destroy());
-  charts = {};
-
-  const cg = document.getElementById('charts-grid');
+  // Графики
+  const cg = document.getElementById('month-charts');
   cg.innerHTML = METRICS.map(m => `
     <div class="chart-card">
       <div class="chart-header">
         <div class="chart-title">
-          <span style="width:10px;height:10px;border-radius:50%;background:${m.color};display:inline-block;"></span>
+          <span style="width:9px;height:9px;border-radius:50%;background:${m.color};display:inline-block;"></span>
           ${m.label}
         </div>
-        <div class="chart-total">итого: ${Math.round(totals[m.key]).toLocaleString('ru')} ${m.unit}</div>
+        <div class="chart-total">${Math.round(totals[m.key]).toLocaleString('ru')} ${m.unit}</div>
       </div>
-      <div class="chart-wrap">
-        <canvas id="chart-${m.key}" role="img" aria-label="${m.label} по дням"></canvas>
-      </div>
-    </div>
-  `).join('');
+      <div class="chart-wrap"><canvas id="month-chart-${m.key}"></canvas></div>
+    </div>`).join('');
 
   METRICS.forEach(m => {
-    const labels = dayList.map(([d]) => d);
-    const data = dayList.map(([, v]) => Math.round(v[m.key]));
-    const avg = Math.round(data.reduce((a, b) => a + b, 0) / (data.length || 1));
-
-    charts[m.key] = new Chart(document.getElementById('chart-' + m.key), {
+    const labels = dayList.map(([d])=>d);
+    const data   = dayList.map(([,v])=>Math.round(v[m.key]));
+    const avg    = Math.round(data.reduce((a,b)=>a+b,0)/(data.length||1));
+    charts['month-'+m.key] = new Chart(document.getElementById('month-chart-'+m.key), {
       type: 'bar',
-      data: {
-        labels,
-        datasets: [
-          {
-            label: m.label,
-            data,
-            backgroundColor: m.color + '55',
-            borderColor: m.color,
-            borderWidth: 1.5,
-            borderRadius: 4,
-            order: 2,
-          },
-          {
-            label: 'Среднее',
-            data: data.map(() => avg),
-            type: 'line',
-            borderColor: m.color + 'aa',
-            borderWidth: 1.5,
-            borderDash: [4, 4],
-            pointRadius: 0,
-            tension: 0,
-            order: 1,
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: '#1a1d27',
-            borderColor: 'rgba(255,255,255,0.1)',
-            borderWidth: 1,
-            titleColor: '#7b8099',
-            bodyColor: '#e8eaf0',
-            callbacks: {
-              label: ctx => ctx.datasetIndex === 0
-                ? `${ctx.parsed.y.toLocaleString('ru')} ${m.unit}`
-                : `среднее: ${avg.toLocaleString('ru')} ${m.unit}`
-            }
-          }
-        },
-        scales: {
-          x: {
-            ticks: { color: '#7b8099', font: { size: 11 }, maxTicksLimit: 16 },
-            grid: { display: false },
-            border: { color: 'rgba(255,255,255,0.06)' }
-          },
-          y: {
-            ticks: { color: '#7b8099', font: { size: 11 } },
-            grid: { color: 'rgba(255,255,255,0.05)' },
-            border: { display: false }
-          }
-        }
-      }
+      data: { labels, datasets: [
+        { label: m.label, data, backgroundColor: m.color+'44', borderColor: m.color, borderWidth: 1.5, borderRadius: 3, order: 2 },
+        { label: 'Среднее', data: data.map(()=>avg), type:'line', borderColor: m.color+'99', borderWidth:1.5, borderDash:[4,4], pointRadius:0, tension:0, order:1 }
+      ]},
+      options: chartOpts(m)
     });
   });
 }
 
-// Auto-connect if key saved
-window.addEventListener('load', () => { connect(); });
+// ─── Рендер года ───────────────────────────────────────────────────────────
+
+async function renderYear() {
+  const yearSheets = sheets.filter(s => s.year === currentYear).sort((a,b)=>a.month-b.month);
+  if (!yearSheets.length) {
+    document.getElementById('year-empty').style.display = 'block';
+    return;
+  }
+  document.getElementById('year-empty').style.display = 'none';
+
+  // Загрузить все незакешированные месяцы года
+  const toLoad = yearSheets.filter(s => !monthCache[s.title]);
+  if (toLoad.length) {
+    showLoading(true, `Загрузка ${toLoad.length} месяцев...`);
+    await Promise.all(toLoad.map(async s => {
+      try {
+        const rows = await fetchSheet(s.title);
+        const days = parseRows(rows);
+        monthCache[s.title] = { days, totals: daysToTotals(days) };
+      } catch(e) { /* пропустить */ }
+    }));
+    showLoading(false);
+  }
+
+  // Собрать данные по месяцам
+  const monthData = yearSheets
+    .filter(s => monthCache[s.title])
+    .map(s => ({ ...s, totals: monthCache[s.title].totals }));
+
+  if (!monthData.length) return;
+
+  destroyCharts(['year-']);
+
+  document.getElementById('header-sub').textContent = `Год ${currentYear}`;
+  document.getElementById('status-text').textContent = `${currentYear} — ${monthData.length} месяцев загружено`;
+  updateTimestamp();
+
+  const labels = monthData.map(d => MONTH_SHORT[d.month]);
+
+  // ── Сборка — главный большой график ──
+  const sborkaData = monthData.map(d => Math.round(d.totals.sborka));
+  const sborkaTotalYear = sborkaData.reduce((a,b)=>a+b,0);
+  const sborkaAvgMonth  = Math.round(sborkaTotalYear / (monthData.length||1));
+  const sborkaMax       = Math.max(...sborkaData);
+
+  document.getElementById('year-sborka-stats').innerHTML = `
+    <div class="sborka-stat">
+      <div class="sborka-stat-val">${sborkaTotalYear.toLocaleString('ru')}</div>
+      <div class="sborka-stat-label">листов за год</div>
+    </div>
+    <div class="sborka-stat">
+      <div class="sborka-stat-val">${sborkaAvgMonth.toLocaleString('ru')}</div>
+      <div class="sborka-stat-label">среднее в месяц</div>
+    </div>
+    <div class="sborka-stat">
+      <div class="sborka-stat-val">${sborkaMax.toLocaleString('ru')}</div>
+      <div class="sborka-stat-label">лучший месяц</div>
+    </div>`;
+
+  charts['year-sborka'] = new Chart(document.getElementById('chart-year-sborka'), {
+    type: 'bar',
+    data: { labels, datasets: [
+      {
+        label: 'Сборка',
+        data: sborkaData,
+        backgroundColor: sborkaData.map(v => v === sborkaMax ? '#f59e0b' : '#f59e0b44'),
+        borderColor: '#f59e0b',
+        borderWidth: 1.5,
+        borderRadius: 4,
+        order: 2
+      },
+      {
+        label: 'Среднее',
+        data: sborkaData.map(()=>sborkaAvgMonth),
+        type:'line', borderColor:'#f59e0b88', borderWidth:1.5,
+        borderDash:[5,4], pointRadius:0, tension:0, order:1
+      }
+    ]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor:'#1a1d27', borderColor:'rgba(255,255,255,0.1)', borderWidth:1,
+          titleColor:'#7b8099', bodyColor:'#e8eaf0',
+          callbacks: { label: ctx => ctx.datasetIndex===0 ? `${ctx.parsed.y.toLocaleString('ru')} л` : `среднее: ${sborkaAvgMonth.toLocaleString('ru')} л` }
+        }
+      },
+      scales: {
+        x: { ticks:{color:'#7b8099',font:{size:12}}, grid:{display:false}, border:{color:'rgba(255,255,255,0.06)'} },
+        y: { ticks:{color:'#7b8099',font:{size:11}}, grid:{color:'rgba(255,255,255,0.05)'}, border:{display:false} }
+      }
+    }
+  });
+
+  // ── Остальные переделы — компактно ──
+  const secMetrics = METRICS.filter(m => m.key !== 'sborka');
+  const sc = document.getElementById('year-secondary-charts');
+  sc.innerHTML = secMetrics.map(m => `
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-title">
+          <span style="width:9px;height:9px;border-radius:50%;background:${m.color};display:inline-block;"></span>
+          ${m.label}
+        </div>
+        <div class="chart-total">${monthData.map(d=>d.totals[m.key]).reduce((a,b)=>a+b,0).toLocaleString('ru')} ${m.unit}</div>
+      </div>
+      <div class="chart-wrap"><canvas id="year-chart-${m.key}"></canvas></div>
+    </div>`).join('');
+
+  secMetrics.forEach(m => {
+    const data = monthData.map(d => Math.round(d.totals[m.key]));
+    const avg  = Math.round(data.reduce((a,b)=>a+b,0)/(data.length||1));
+    charts['year-'+m.key] = new Chart(document.getElementById('year-chart-'+m.key), {
+      type: 'bar',
+      data: { labels, datasets: [
+        { label: m.label, data, backgroundColor: m.color+'44', borderColor: m.color, borderWidth:1.5, borderRadius:3, order:2 },
+        { label:'Среднее', data:data.map(()=>avg), type:'line', borderColor:m.color+'99', borderWidth:1.5, borderDash:[4,4], pointRadius:0, tension:0, order:1 }
+      ]},
+      options: chartOpts(m)
+    });
+  });
+
+  // ── Сводная таблица ──
+  const yearTotals = { lush:0, sush:0, sborka:0, lam:0, obr:0 };
+  METRICS.forEach(m => yearTotals[m.key] = monthData.reduce((s,d)=>s+d.totals[m.key],0));
+
+  document.getElementById('year-table-caption').textContent = `${currentYear} · ${monthData.length} мес.`;
+
+  let html = '<thead><tr><th>Месяц</th>';
+  METRICS.forEach(m => html += `<th style="color:${m.color}">${m.label}</th>`);
+  html += '</tr></thead><tbody>';
+  monthData.forEach(d => {
+    html += `<tr><td>${MONTH_FULL[d.month]}</td>`;
+    METRICS.forEach(m => html += `<td class="${m.key==='sborka'?'sborka-col':''}">${Math.round(d.totals[m.key]).toLocaleString('ru')}</td>`);
+    html += '</tr>';
+  });
+  // Итого
+  html += '<tr class="total-row"><td>Итого</td>';
+  METRICS.forEach(m => html += `<td class="${m.key==='sborka'?'sborka-col':''}">${Math.round(yearTotals[m.key]).toLocaleString('ru')}</td>`);
+  html += '</tr></tbody>';
+  document.getElementById('year-table').innerHTML = html;
+}
+
+// ─── Утилиты ───────────────────────────────────────────────────────────────
+
+function chartOpts(m) {
+  return {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor:'#1a1d27', borderColor:'rgba(255,255,255,0.1)', borderWidth:1,
+        titleColor:'#7b8099', bodyColor:'#e8eaf0',
+        callbacks: { label: ctx => `${ctx.parsed.y.toLocaleString('ru')} ${m.unit}` }
+      }
+    },
+    scales: {
+      x: { ticks:{color:'#7b8099',font:{size:11},maxTicksLimit:16}, grid:{display:false}, border:{color:'rgba(255,255,255,0.06)'} },
+      y: { ticks:{color:'#7b8099',font:{size:11}}, grid:{color:'rgba(255,255,255,0.05)'}, border:{display:false} }
+    }
+  };
+}
+
+function destroyCharts(prefixes) {
+  Object.keys(charts).forEach(k => {
+    if (prefixes.some(p => k.startsWith(p))) { charts[k].destroy(); delete charts[k]; }
+  });
+}
+
+function showLoading(on, text) {
+  const el = document.getElementById('loading-overlay');
+  el.style.display = on ? 'flex' : 'none';
+  if (text) document.getElementById('loading-text').textContent = text;
+}
+
+function updateTimestamp() {
+  document.getElementById('last-update').textContent =
+    'Обновлено: ' + new Date().toLocaleTimeString('ru', {hour:'2-digit',minute:'2-digit'});
+}
+
+function showDebug() {
+  if (!lastRawData) { alert('Сначала загрузи месяц'); return; }
+  const rows = lastRawData;
+  const maxCols = Math.max(...rows.map(r=>r.length), 22);
+  const col = i => { let s='',n=i; do{s=String.fromCharCode(65+(n%26))+s;n=Math.floor(n/26)-1;}while(n>=0); return s; };
+  let html = `<div style="margin-bottom:8px;color:#aaf;">Лист: <b>${lastSheetTitle}</b> — строк: ${rows.length}</div>`;
+  html += '<table style="border-collapse:collapse;font-size:11px;"><tr><th style="background:#222;padding:4px 6px;border:1px solid #333;">#</th>';
+  for(let c=0;c<maxCols;c++) html+=`<th style="padding:4px 6px;border:1px solid #333;background:#1f2436;color:#7df;min-width:55px;">${col(c)}<br><span style="color:#888;font-weight:normal;">[${c}]</span></th>`;
+  html+='</tr>';
+  for(let r=0;r<Math.min(rows.length,20);r++){
+    const row=rows[r]||[];
+    html+=`<tr><td style="background:#222;padding:3px 6px;border:1px solid #333;color:#888;text-align:right;">${r+1}</td>`;
+    for(let c=0;c<maxCols;c++){
+      let v=String(row[c]||''); if(v.length>14)v=v.slice(0,12)+'…';
+      const num=!isNaN(parseFloat(v))&&isFinite(v);
+      html+=`<td style="padding:3px 6px;border:1px solid #2a2e3a;background:${num&&parseFloat(v)>0?'#1a2e1a':'transparent'};white-space:nowrap;">${v||'<span style="color:#444">·</span>'}</td>`;
+    }
+    html+='</tr>';
+  }
+  html+='</table>';
+  document.getElementById('debug-content').innerHTML = html;
+  document.getElementById('debug-overlay').style.display='block';
+}
+
+function hideDebug() { document.getElementById('debug-overlay').style.display='none'; }
+
+window.addEventListener('load', connect);
 </script>
 </body>
 </html>
