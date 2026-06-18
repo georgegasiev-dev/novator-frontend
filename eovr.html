@@ -392,7 +392,7 @@
       <div class="logo-sub">Ежедневный отчёт о выработке</div>
     </div>
   </div>
-  <div class="controls" id="header-controls" style="display:none;">
+  <div class="controls" id="header-controls">
     <select id="month-select"></select>
     <button class="secondary" onclick="showDebug()">Отладка</button>
     <button class="secondary" onclick="resetKey()">Сменить ключ</button>
@@ -401,7 +401,7 @@
 
 <main>
   <!-- Экран ввода API-ключа -->
-  <div class="key-screen" id="key-screen">
+  <div class="key-screen" id="key-screen" style="display:none">
     <div>
       <h1>Дашборд<br><span>производства</span></h1>
       <p style="margin-top:12px;">Введите Google Sheets API-ключ для загрузки данных из таблицы ЕОВР.</p>
@@ -489,7 +489,7 @@ const MONTH_NAMES = {
   'Июль':7,'Август':8,'Сентябрь':9,'Октябрь':10,'Ноябрь':11,'Декабрь':12,
 };
 
-let apiKey = localStorage.getItem('novator_api_key') || '';
+let apiKey = 'AIzaSyAdAPQ2x7EMsBH-JBusw6ioxQZ8xdPbEP0';
 let sheets = [];
 let charts = {};
 
@@ -608,11 +608,8 @@ function showError(msg) {
 }
 
 async function connect() {
-  const key = document.getElementById('api-key-input').value.trim();
-  if (!key) return;
-  showError('');
+  const key = apiKey;
   showLoading(true);
-  document.getElementById('connect-btn').disabled = true;
 
   try {
     const res = await fetch(
@@ -640,7 +637,7 @@ async function connect() {
     showError('Ошибка: ' + e.message);
   } finally {
     showLoading(false);
-    document.getElementById('connect-btn').disabled = false;
+
   }
 }
 
@@ -890,17 +887,7 @@ function renderDashboard(days, sheetTitle) {
 }
 
 // Auto-connect if key saved
-window.addEventListener('load', () => {
-  const saved = localStorage.getItem('novator_api_key');
-  if (saved) {
-    document.getElementById('api-key-input').value = saved;
-    connect();
-  }
-
-  document.getElementById('api-key-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') connect();
-  });
-});
+window.addEventListener('load', () => { connect(); });
 </script>
 </body>
 </html>
