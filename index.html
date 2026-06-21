@@ -1638,40 +1638,52 @@ function esc(s) {
 
 // Карточка контрагента — все его платежи во всех месяцах
 function showContractorCard(contractorName) {
-  // Закрываем текущую модалку операций (если открыта)
   const incomeModal = document.getElementById('income-modal')
   if (incomeModal) incomeModal.classList.remove('show')
 
   const name = contractorName || ''
   if (!name) return
-  const nameLower = name.toLowerCase().trim()
 
-  // Собираем все операции этого контрагента изо всех месяцев
-  const all = []
-  for (const [month, ops] of Object.entries(serverOpsCache || {})) {
-    const opsList = Array.isArray(ops) ? ops : (ops.ops || [])
-    for (const op of opsList) {
-      const c = (op.contractor || '').toLowerCase().trim()
-      if (c === nameLower) all.push({ ...op, _month: month })
-    }
-  }
+  // Показываем модалку сразу с лоадером
+  document.getElementById('contractor-card-name').textContent = name
+  document.getElementById('contractor-card-stat').innerHTML = '<span style="color:#555">Загрузка...</span>'
+  document.getElementById('contractor-card-tbody').innerHTML = '<tr><td colspan="5" style="color:#555;padding:24px;text-align:center">⏳ Загрузка операций...</td></tr>'
+  document.getElementById('contractor-card-modal').classList.add('show')
+  document.body.style.overflow = 'hidden'
 
-  all.sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+  fetch(API + '/api/contractor-ops?name=' + encodeURIComponent(name), {mode:'cors', headers:{'X-API-Key':API_KEY}})
+    .then(r => r.json())
+    .then(data => { renderContractorCard(name, data.ops || []) })
+    .catch(e => {
+      console.error('contractor-ops error:', e)
+      // Fallback: ищем в кэше
+      const nameLower = name.toLowerCase().trim()
+      const all = []
+      for (const [month, ops] of Object.entries(serverOpsCache || {})) {
+        const opsList = Array.isArray(ops) ? ops : (ops.ops || [])
+        for (const op of opsList) {
+          if ((op.contractor || '').toLowerCase().trim() === nameLower) all.push({ ...op, _month: month })
+        }
+      }
+      all.sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+      renderContractorCard(name, all)
+    })
+}
 
+function renderContractorCard(name, all) {
+  const fmtN = n => new Intl.NumberFormat('ru-RU').format(Math.round(n))
   const totalIn  = all.filter(o => !o.is_debit).reduce((s, o) => s + (o.amount || 0), 0)
   const totalOut = all.filter(o =>  o.is_debit).reduce((s, o) => s + (o.amount || 0), 0)
 
-  document.getElementById('contractor-card-name').textContent = name
   document.getElementById('contractor-card-stat').innerHTML =
-    `${all.length} операций  ·  поступления <span style="color:#3db88a">${new Intl.NumberFormat('ru-RU').format(Math.round(totalIn))} ₽</span>  ·  расходы <span style="color:#d95f5f">${new Intl.NumberFormat('ru-RU').format(Math.round(totalOut))} ₽</span>`
+    `${all.length} операций  ·  поступления <span style="color:#3db88a">${fmtN(totalIn)} ₽</span>  ·  расходы <span style="color:#d95f5f">${fmtN(totalOut)} ₽</span>`
 
   const tbody = document.getElementById('contractor-card-tbody')
   if (!all.length) {
-    tbody.innerHTML = '<tr><td colspan="5" style="color:#555;padding:24px;text-align:center">Нет операций в базе за загруженные месяцы</td></tr>'
-    document.getElementById('contractor-card-modal').classList.add('show')
-    document.body.style.overflow = 'hidden'
+    tbody.innerHTML = '<tr><td colspan="5" style="color:#555;padding:24px;text-align:center">Нет операций в базе</td></tr>'
     return
   }
+
   // Группируем по месяцам
   const monthOrder = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь']
   const groups = {}
@@ -1680,7 +1692,6 @@ function showContractorCard(contractorName) {
     if (!groups[mk]) groups[mk] = []
     groups[mk].push(op)
   }
-  // Сортируем месяцы: новые сверху (по году desc, потом по месяцу desc)
   const sortedMonths = Object.keys(groups).sort((a, b) => {
     const pa = a.match(/(\S+)\s+(\d{4})/)
     const pb = b.match(/(\S+)\s+(\d{4})/)
@@ -1695,15 +1706,16 @@ function showContractorCard(contractorName) {
     const ops = groups[mk]
     const mIn  = ops.filter(o => !o.is_debit).reduce((s,o) => s + (o.amount||0), 0)
     const mOut = ops.filter(o =>  o.is_debit).reduce((s,o) => s + (o.amount||0), 0)
-    const fmtN = n => new Intl.NumberFormat('ru-RU').format(Math.round(n))
     let subtotal = ''
-    if (mIn && mOut) subtotal = `<span style="color:#3db88a">+${fmtN(mIn)} ₽</span> / <span style="color:#d95f5f">−${fmtN(mOut)} ₽</span>`
+    if (mIn && mOut) subtotal = `<span style="color:#3db88a">+${fmtN(mIn)} ₽</span>&ensp;/&ensp;<span style="color:#d95f5f">−${fmtN(mOut)} ₽</span>`
     else if (mIn)    subtotal = `<span style="color:#3db88a">+${fmtN(mIn)} ₽</span>`
     else             subtotal = `<span style="color:#d95f5f">−${fmtN(mOut)} ₽</span>`
 
-    html += `<tr><td colspan="5" style="padding:12px 14px 6px;border-bottom:1px solid #222;background:#0a0a0a">
-      <span style="color:#e0e0e0;font-size:12px;font-weight:700;letter-spacing:.5px">${esc(mk)}</span>
-      <span style="float:right;font-size:11px;font-family:monospace">${subtotal}</span>
+    html += `<tr><td colspan="5" style="padding:14px 14px 8px;border-bottom:1px solid #222;background:#0a0a0a">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="color:#e0e0e0;font-size:13px;font-weight:700;letter-spacing:.5px">${esc(mk)}</span>
+        <span style="font-size:11px;font-family:monospace">${subtotal}</span>
+      </div>
     </td></tr>`
 
     for (const op of ops) {
@@ -1722,9 +1734,6 @@ function showContractorCard(contractorName) {
     }
   }
   tbody.innerHTML = html
-
-  document.getElementById('contractor-card-modal').classList.add('show')
-  document.body.style.overflow = 'hidden'
 }
 
 function hideContractorCard() {
