@@ -1692,13 +1692,24 @@ function renderContractorCard(name, all) {
     if (!groups[mk]) groups[mk] = []
     groups[mk].push(op)
   }
+  // Определяем год и индекс для каждой группы
+  function monthSortKey(mk) {
+    const pa = mk.match(/(\S+)\s+(\d{4})/)
+    if (pa) return { y: +pa[2], mi: monthOrder.indexOf(pa[1]) }
+    // Нет года — берём из дат операций
+    const ops = groups[mk] || []
+    let year = 0
+    for (const o of ops) {
+      const dm = (o.date || '').match(/(\d{4})/)
+      if (dm) { year = Math.max(year, +dm[1]); break }
+    }
+    const mi = monthOrder.findIndex(m => mk.startsWith(m))
+    return { y: year || 9999, mi: mi >= 0 ? mi : -1 }
+  }
   const sortedMonths = Object.keys(groups).sort((a, b) => {
-    const pa = a.match(/(\S+)\s+(\d{4})/)
-    const pb = b.match(/(\S+)\s+(\d{4})/)
-    if (!pa || !pb) return a.localeCompare(b)
-    const ya = +pa[2], yb = +pb[2]
-    if (ya !== yb) return yb - ya
-    return monthOrder.indexOf(pb[1]) - monthOrder.indexOf(pa[1])
+    const ka = monthSortKey(a), kb = monthSortKey(b)
+    if (ka.y !== kb.y) return kb.y - ka.y
+    return kb.mi - ka.mi
   })
 
   let html = ''
