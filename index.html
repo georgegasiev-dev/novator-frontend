@@ -617,6 +617,11 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
            color:#555;cursor:pointer;font-size:12px;font-weight:400;white-space:nowrap;letter-spacing:.3px">
     📋 Справочник контрагентов
   </button>
+  <button id="nav-close" onclick="showPage('close')"
+    style="padding:11px 22px;border:none;border-bottom:2px solid transparent;background:transparent;
+           color:#555;cursor:pointer;font-size:12px;font-weight:400;white-space:nowrap;letter-spacing:.3px">
+    📒 Месячное закрытие
+  </button>
   <a href="/eovr.html" target="_blank" style="padding:11px 22px;border:none;border-bottom:2px solid transparent;background:transparent;color:#555;cursor:pointer;font-size:12px;font-weight:400;white-space:nowrap;letter-spacing:.3px;text-decoration:none;display:inline-block">📊 ЕОВР</a>
 </div>
 
@@ -2291,24 +2296,28 @@ function showPage(page) {
   const pSales = document.getElementById('page-sales')
   const pAn    = document.getElementById('page-analytics')
   const pDir   = document.getElementById('page-dir')
+  const pClose = document.getElementById('page-close')
   if (pCal)   pCal.style.display   = page==='calendar'  ? 'flex' : 'none'
   if (pSales) pSales.style.display = page==='sales'     ? 'flex' : 'none'
   if (pAn)    pAn.style.display    = page==='analytics' ? 'flex' : 'none'
   if (pDir)   pDir.style.display   = page==='dir'       ? 'flex' : 'none'
+  if (pClose) pClose.style.display = page==='close'     ? 'flex' : 'none'
 
   const btnStyle = (active) =>
     'padding:11px 22px;border:none;cursor:pointer;font-size:12px;white-space:nowrap;letter-spacing:.3px;flex-shrink:0;' +
     (active ? 'border-bottom:2px solid #f0a500;background:#111;color:#f0a500;font-weight:700'
             : 'border-bottom:2px solid transparent;background:transparent;color:#555;font-weight:400')
 
-  const nc = document.getElementById('nav-calendar')
-  const ns = document.getElementById('nav-sales')
-  const na = document.getElementById('nav-analytics')
-  const nd = document.getElementById('nav-dir')
-  if (nc) nc.style.cssText = btnStyle(page==='calendar')
-  if (ns) ns.style.cssText = btnStyle(page==='sales')
-  if (na) na.style.cssText = btnStyle(page==='analytics')
-  if (nd) nd.style.cssText = btnStyle(page==='dir')
+  const nc  = document.getElementById('nav-calendar')
+  const ns  = document.getElementById('nav-sales')
+  const na  = document.getElementById('nav-analytics')
+  const nd  = document.getElementById('nav-dir')
+  const nco = document.getElementById('nav-close')
+  if (nc)  nc.style.cssText  = btnStyle(page==='calendar')
+  if (ns)  ns.style.cssText  = btnStyle(page==='sales')
+  if (na)  na.style.cssText  = btnStyle(page==='analytics')
+  if (nd)  nd.style.cssText  = btnStyle(page==='dir')
+  if (nco) nco.style.cssText = btnStyle(page==='close')
 
   const mtabs = document.getElementById('mtabs')
   if (mtabs) mtabs.style.display = page==='calendar' ? '' : 'none'
@@ -2322,6 +2331,10 @@ function showPage(page) {
   }
   if (page==='analytics') {
     renderAnalytics()
+  }
+  if (page==='close') {
+    closeRenderTabs()
+    closeLoad()
   }
 }
 
@@ -3018,6 +3031,272 @@ if(sessionStorage.getItem('nvt_auth')){
   document.getElementById('login-screen').classList.add('hidden')
   initApp()
 }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// МЕСЯЧНОЕ ЗАКРЫТИЕ
+// ══════════════════════════════════════════════════════════════════════════════
+
+const CLOSE_CATEGORIES = [
+  { key: 'Лес',                    icon: '🪵', planKey: 'les' },
+  { key: 'Перевозка леса',         icon: '🚚', planKey: 'perev_les' },
+  { key: 'Смола',                  icon: '🧪', planKey: 'smola' },
+  { key: 'Плёнка',                 icon: '📦', planKey: 'plenka' },
+  { key: 'ЗП',                     icon: '💵', planKey: 'zp_avans' },
+  { key: 'НДФЛ',                   icon: '🏛️', planKey: 'ndfl' },
+  { key: 'Электроэнергия',         icon: '⚡', planKey: 'svet' },
+  { key: 'ГСМ',                    icon: '⛽', planKey: 'gsm' },
+  { key: 'Перевозчики',            icon: '🚛', planKey: 'perevozch' },
+  { key: 'Расходники',             icon: '🔧', planKey: 'rashod' },
+  { key: 'Упаковка',               icon: '📫', planKey: 'upakovka' },
+  { key: 'Аренда помещений',       icon: '🏭', planKey: 'arenda' },
+  { key: 'Административные',       icon: '📋', planKey: 'adm' },
+  { key: 'Вывоз мусора',           icon: '🗑️', planKey: 'vuvozmys' },
+  { key: 'Прочие нераспознанные',  icon: '❓', planKey: 'prochie' },
+]
+
+let closeCurMonth = ''
+let closeObligations = {}  // {category: {opening_debt, closing_debt, planned_budget, comment}}
+let closeFactMap = {}      // {category: totalFact}
+
+function closeRenderTabs() {
+  const el = document.getElementById('close-mtabs')
+  if (!el) return
+  const cur = getCurrentMonthName()
+  if (!closeCurMonth) closeCurMonth = cur
+  el.innerHTML = MONTHS.map(m => {
+    const dot = (m === cur) ? '<span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:#f0a500;margin-left:4px;vertical-align:middle"></span>' : ''
+    return `<button onclick="closeSetMonth('${m}')" style="padding:5px 12px;border:1px solid ${m===closeCurMonth?'#f0a500':'#222'};background:${m===closeCurMonth?'#f0a500':'transparent'};color:${m===closeCurMonth?'#000':'#666'};cursor:pointer;font-size:11px;border-radius:2px">${m}${dot}</button>`
+  }).join('')
+}
+
+function closeSetMonth(m) {
+  closeCurMonth = m
+  closeRenderTabs()
+  closeLoad()
+}
+
+async function closeLoad() {
+  const month = closeCurMonth || getCurrentMonthName()
+
+  // Загружаем факт из банковских данных
+  const allData = window.serverMonthCache || window._allMonthData || {}
+  const mdata = allData[month] || {}
+  const ops = mdata.ops || []
+  closeFactMap = {}
+  let miscFact = 0
+  const knownCats = new Set(CLOSE_CATEGORIES.map(c => c.key))
+  knownCats.delete('Прочие нераспознанные')
+
+  for (const op of ops) {
+    if (!op.is_debit) continue
+    const cat = op.cat || 'Прочие нераспознанные'
+    const amt = Math.abs(op.amount || 0)
+    if (knownCats.has(cat)) {
+      closeFactMap[cat] = (closeFactMap[cat] || 0) + amt
+    } else {
+      miscFact += amt
+    }
+  }
+  closeFactMap['Прочие нераспознанные'] = miscFact
+
+  // Загружаем план из существующих данных
+  const planData = window._planData || {}
+  const plan = planData[month] || {}
+
+  // Загружаем сохранённые обязательства
+  try {
+    const API = window.API_BASE || ''
+    const r = await fetch(`${API}/api/obligations?month=${encodeURIComponent(month)}`, {
+      headers: {'X-API-Key': sessionStorage.getItem('nvt_api_key') || ''}
+    })
+    const data = await r.json()
+    closeObligations = {}
+    for (const ob of (data.obligations || [])) {
+      closeObligations[ob.category] = ob
+    }
+  } catch(e) {
+    closeObligations = {}
+  }
+
+  closeRenderTable(plan)
+}
+
+function closeFmt(n) {
+  if (!n && n !== 0) return '—'
+  const v = Math.round(n)
+  if (Math.abs(v) >= 1000000) return (v/1000000).toFixed(1).replace('.',',') + ' млн'
+  if (Math.abs(v) >= 1000) return Math.round(v/1000) + ' тыс'
+  return v.toLocaleString('ru')
+}
+
+function closeStatus(fact, budget, opening, closing) {
+  const deviation = budget ? (budget - fact) / budget : null
+  if (closing > 0) return { color: '#d95f5f', label: 'долг', icon: '⚠️' }
+  if (fact > budget * 1.1) return { color: '#d95f5f', label: 'перерасход', icon: '🔴' }
+  if (deviation !== null && Math.abs(deviation) < 0.05) return { color: '#3db88a', label: 'норма', icon: '✅' }
+  if (fact === 0 && budget > 0) return { color: '#888', label: 'нет данных', icon: '⬜' }
+  return { color: '#f0a500', label: 'внимание', icon: '🟡' }
+}
+
+function closeRenderTable(plan) {
+  const tbody = document.getElementById('close-tbody')
+  if (!tbody) return
+
+  const month = closeCurMonth || getCurrentMonthName()
+  let rows = ''
+  let totOpening = 0, totBudget = 0, totFact = 0, totClosing = 0
+
+  for (const cat of CLOSE_CATEGORIES) {
+    const ob    = closeObligations[cat.key] || {}
+    const fact  = closeFactMap[cat.key] || 0
+    const open  = ob.opening_debt || 0
+    const close = ob.closing_debt || 0
+    // Бюджет: из сохранённых обязательств или из плана (сумма по неделям)
+    let budget = ob.planned_budget
+    if (!budget && cat.planKey && plan[cat.planKey]) {
+      const wArr = plan[cat.planKey]
+      budget = Array.isArray(wArr) ? wArr.reduce((a, b) => a + b, 0) : 0
+    }
+    budget = budget || 0
+
+    const dev = budget ? budget - fact : 0
+    const devSign = dev >= 0 ? '+' : ''
+    const st = closeStatus(fact, budget, open, close)
+
+    totOpening += open
+    totBudget  += budget
+    totFact    += fact
+    totClosing += close
+
+    const rowBg = cat.key === 'Прочие нераспознанные' ? 'background:rgba(255,255,255,.02)' : ''
+    const comment = ob.comment || ''
+
+    rows += `<tr class="close-row" data-cat="${cat.key}" data-month="${month}" style="${rowBg}">
+      <td style="padding:10px 12px;color:#ddd;font-size:12px;border-bottom:1px solid #161616">
+        <span style="margin-right:6px">${cat.icon}</span>${cat.key}
+      </td>
+      <td style="padding:10px 12px;text-align:right;border-bottom:1px solid #161616;color:${open>0?'#d95f5f':'#888'}"
+          data-field="opening_debt" data-val="${open}">
+        <span class="close-cell-val" style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px"
+              onclick="closeEdit(this,'${cat.key}','opening_debt',${open},'${month}')">${closeFmt(open)}</span>
+      </td>
+      <td style="padding:10px 12px;text-align:right;border-bottom:1px solid #161616;color:#aaa"
+          data-field="planned_budget" data-val="${budget}">
+        <span class="close-cell-val" style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px"
+              onclick="closeEdit(this,'${cat.key}','planned_budget',${budget},'${month}')">${closeFmt(budget)}</span>
+      </td>
+      <td style="padding:10px 12px;text-align:right;border-bottom:1px solid #161616;color:#3db88a;font-weight:600">${closeFmt(fact)}</td>
+      <td style="padding:10px 12px;text-align:right;border-bottom:1px solid #161616;color:${close>0?'#d95f5f':'#888'}"
+          data-field="closing_debt" data-val="${close}">
+        <span class="close-cell-val" style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px"
+              onclick="closeEdit(this,'${cat.key}','closing_debt',${close},'${month}')">${closeFmt(close)}</span>
+      </td>
+      <td style="padding:10px 12px;text-align:right;border-bottom:1px solid #161616;color:${dev>=0?'#3db88a':'#d95f5f'}">
+        ${budget ? devSign + closeFmt(dev) : '—'}
+      </td>
+      <td style="padding:10px 12px;border-bottom:1px solid #161616;color:#666;font-size:11px;min-width:140px"
+          data-field="comment">
+        <span class="close-cell-val" style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px"
+              onclick="closeEdit(this,'${cat.key}','comment','${comment.replace(/'/g,"\\'")}','${month}')">${comment||'<span style=color:#333>добавить...</span>'}</span>
+        <span style="margin-left:6px;font-size:10px">${st.icon}</span>
+      </td>
+    </tr>`
+  }
+
+  // Итоговая строка
+  const totDev = totBudget - totFact
+  const totDevSign = totDev >= 0 ? '+' : ''
+  rows += `<tr style="background:#111;border-top:2px solid #222">
+    <td style="padding:12px 12px;color:#f0a500;font-weight:700;font-size:12px;letter-spacing:.5px">ИТОГО</td>
+    <td style="padding:12px 12px;text-align:right;color:${totOpening>0?'#d95f5f':'#888'};font-weight:600">${closeFmt(totOpening)}</td>
+    <td style="padding:12px 12px;text-align:right;color:#aaa;font-weight:600">${closeFmt(totBudget)}</td>
+    <td style="padding:12px 12px;text-align:right;color:#3db88a;font-weight:700">${closeFmt(totFact)}</td>
+    <td style="padding:12px 12px;text-align:right;color:${totClosing>0?'#d95f5f':'#888'};font-weight:600">${closeFmt(totClosing)}</td>
+    <td style="padding:12px 12px;text-align:right;color:${totDev>=0?'#3db88a':'#d95f5f'};font-weight:600">${totBudget?totDevSign+closeFmt(totDev):'—'}</td>
+    <td style="padding:12px 12px;color:#555;font-size:11px">
+      Долг изм.: ${totClosing-totOpening>=0?'+':''}${closeFmt(totClosing-totOpening)}
+    </td>
+  </tr>`
+
+  tbody.innerHTML = rows
+
+  // Сводка
+  const sum = document.getElementById('close-summary')
+  if (sum) {
+    const cell = (label, val, col) =>
+      `<div style="flex:1;min-width:140px;padding:12px 16px;background:#0d0d0d">
+        <div style="font-size:9px;color:#555;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">${label}</div>
+        <div style="font-size:18px;font-family:monospace;color:${col||'#e0e0e0'};font-weight:700">${closeFmt(val)}</div>
+      </div>`
+    sum.innerHTML =
+      cell('Долг на начало', totOpening, '#d95f5f') +
+      cell('Бюджет месяца', totBudget, '#aaa') +
+      cell('Факт оплат', totFact, '#3db88a') +
+      cell('Долг на конец', totClosing, totClosing > 0 ? '#d95f5f' : '#888') +
+      cell('Отклонение', totDev, totDev >= 0 ? '#3db88a' : '#d95f5f') +
+      cell('Изм. долга', totClosing - totOpening, (totClosing-totOpening) > 0 ? '#d95f5f' : '#3db88a')
+  }
+}
+
+function closeEdit(spanEl, category, field, currentVal, month) {
+  const isComment = field === 'comment'
+  const numVal = isComment ? currentVal : (parseFloat(currentVal) || 0)
+
+  const input = document.createElement(isComment ? 'input' : 'input')
+  input.type = isComment ? 'text' : 'number'
+  input.value = isComment ? currentVal : (numVal || '')
+  input.style.cssText = 'background:#1e1e1e;border:1px solid #f0a500;color:#fff;padding:2px 6px;font-size:11px;width:' + (isComment ? '160px' : '100px')
+  spanEl.replaceWith(input)
+  input.focus()
+  input.select()
+
+  const save = async () => {
+    const newVal = isComment ? input.value.trim() : (parseFloat(input.value) || 0)
+
+    // Обновляем локальный кэш
+    if (!closeObligations[category]) closeObligations[category] = {}
+    closeObligations[category][field] = newVal
+
+    // Сохраняем на сервер
+    try {
+      const ob = closeObligations[category]
+      const API = window.API_BASE || ''
+      await fetch(`${API}/api/obligations`, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','X-API-Key': sessionStorage.getItem('nvt_api_key')||''},
+        body: JSON.stringify({
+          month, category,
+          opening_debt:    ob.opening_debt    || 0,
+          closing_debt:    ob.closing_debt    || 0,
+          planned_budget:  ob.planned_budget  || 0,
+          comment:         ob.comment         || ''
+        })
+      })
+    } catch(e) {}
+
+    // Перерисовываем
+    const planData = window._planData || {}
+    closeRenderTable(planData[month] || {})
+  }
+
+  input.addEventListener('blur', save)
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') { input.blur() } if (e.key === 'Escape') { closeRenderTable(window._planData?.[month]||{}) } })
+}
+
+// Хранилище планов (нужно для месячного закрытия)
+window._planData = {}
+;(async function loadAllPlans() {
+  try {
+    const API = window.API_BASE || ''
+    const r = await fetch(`${API}/api/plan/all`, {
+      headers: {'X-API-Key': sessionStorage.getItem('nvt_api_key') || ''}
+    })
+    const d = await r.json()
+    for (const [m, v] of Object.entries(d)) {
+      window._planData[m] = v
+    }
+  } catch(e) {}
+})()
 </script>
 
 
@@ -3123,6 +3402,40 @@ if(sessionStorage.getItem('nvt_auth')){
         <tbody id="contractor-card-tbody"></tbody>
       </table>
     </div>
+  </div>
+</div>
+<!-- Месячное закрытие -->
+<div id="page-close" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+  <div style="padding:12px 16px;border-bottom:1px solid #1e1e1e;display:flex;align-items:center;gap:12px;flex-shrink:0">
+    <div style="font-size:11px;color:#555;letter-spacing:1px;text-transform:uppercase">Месяц:</div>
+    <div id="close-mtabs" style="display:flex;gap:4px;flex-wrap:wrap"></div>
+  </div>
+
+  <!-- Сводка -->
+  <div id="close-summary" style="display:flex;flex-wrap:wrap;gap:1px;background:#1a1a1a;flex-shrink:0;border-bottom:1px solid #1a1a1a">
+  </div>
+
+  <!-- Таблица -->
+  <div style="flex:1;overflow:auto">
+    <table id="close-table" style="width:100%;border-collapse:collapse;font-size:12px;min-width:900px">
+      <thead>
+        <tr style="background:#0d0d0d;position:sticky;top:0;z-index:10">
+          <th style="padding:10px 12px;text-align:left;font-size:10px;color:#f0a500;font-weight:700;letter-spacing:1px;border-bottom:1px solid #222;min-width:160px">Статья расходов</th>
+          <th style="padding:10px 12px;text-align:right;font-size:10px;color:#888;font-weight:400;letter-spacing:1px;border-bottom:1px solid #222">Долг на нач.</th>
+          <th style="padding:10px 12px;text-align:right;font-size:10px;color:#888;font-weight:400;letter-spacing:1px;border-bottom:1px solid #222">Бюджет</th>
+          <th style="padding:10px 12px;text-align:right;font-size:10px;color:#3db88a;font-weight:400;letter-spacing:1px;border-bottom:1px solid #222">Факт оплат</th>
+          <th style="padding:10px 12px;text-align:right;font-size:10px;color:#888;font-weight:400;letter-spacing:1px;border-bottom:1px solid #222">Долг на кон.</th>
+          <th style="padding:10px 12px;text-align:right;font-size:10px;color:#888;font-weight:400;letter-spacing:1px;border-bottom:1px solid #222">Откл.</th>
+          <th style="padding:10px 12px;text-align:left;font-size:10px;color:#888;font-weight:400;letter-spacing:1px;border-bottom:1px solid #222">Комментарий</th>
+        </tr>
+      </thead>
+      <tbody id="close-tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- Инфо панель -->
+  <div id="close-info" style="padding:8px 16px;font-size:10px;color:#444;letter-spacing:.5px;flex-shrink:0;border-top:1px solid #1a1a1a">
+    Нажмите на ячейку, чтобы редактировать
   </div>
 </div>
 
