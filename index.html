@@ -837,35 +837,38 @@ function doLogout(){
 }
 
 const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь']
+// Границы недель (пн–вс) закреплены за месяцем, в котором у недели больше
+// календарных дней. Поэтому у 7 месяцев из 12 фактически 4 недели, а не 5 —
+// пятый слот в этом случае помечен empty:true (пустая/неактивная колонка).
 const WM = {
-  'Январь':  [{n:1,d:'1 — 4 янв'},{n:2,d:'5 — 11 янв'},{n:3,d:'12 — 18 янв'},{n:4,d:'19 — 25 янв'},{n:5,d:'26 — 31 янв'}],
-  'Февраль': [{n:1,d:'1 фев'},{n:2,d:'2 — 8 фев'},{n:3,d:'9 — 15 фев'},{n:4,d:'16 — 22 фев'},{n:5,d:'23 — 28 фев'}],
-  'Март':    [{n:1,d:'1 мар'},{n:2,d:'2 — 8 мар'},{n:3,d:'9 — 15 мар'},{n:4,d:'16 — 22 мар'},{n:5,d:'23 — 31 мар'}],
-  'Апрель':  [{n:1,d:'1 — 5 апр'},{n:2,d:'6 — 12 апр'},{n:3,d:'13 — 19 апр'},{n:4,d:'20 — 26 апр'},{n:5,d:'27 — 30 апр'}],
-  'Май':     [{n:1,d:'1 — 3 мая'},{n:2,d:'4 — 10 мая'},{n:3,d:'11 — 17 мая'},{n:4,d:'18 — 24 мая'},{n:5,d:'25 — 31 мая'}],
-  'Июнь':    [{n:1,d:'1 — 7 июн'},{n:2,d:'8 — 14 июн'},{n:3,d:'15 — 21 июн'},{n:4,d:'22 — 28 июн'},{n:5,d:'29 — 30 июн'}],
-  'Июль':    [{n:1,d:'1 — 5 июл'},{n:2,d:'6 — 12 июл'},{n:3,d:'13 — 19 июл'},{n:4,d:'20 — 26 июл'},{n:5,d:'27 — 31 июл'}],
-  'Август':  [{n:1,d:'1 — 2 авг'},{n:2,d:'3 — 9 авг'},{n:3,d:'10 — 16 авг'},{n:4,d:'17 — 23 авг'},{n:5,d:'24 — 31 авг'}],
-  'Сентябрь':[{n:1,d:'1 — 6 сен'},{n:2,d:'7 — 13 сен'},{n:3,d:'14 — 20 сен'},{n:4,d:'21 — 27 сен'},{n:5,d:'28 — 30 сен'}],
-  'Октябрь': [{n:1,d:'1 — 4 окт'},{n:2,d:'5 — 11 окт'},{n:3,d:'12 — 18 окт'},{n:4,d:'19 — 25 окт'},{n:5,d:'26 — 31 окт'}],
-  'Ноябрь':  [{n:1,d:'1 ноя'},{n:2,d:'2 — 8 ноя'},{n:3,d:'9 — 15 ноя'},{n:4,d:'16 — 22 ноя'},{n:5,d:'23 — 30 ноя'}],
-  'Декабрь': [{n:1,d:'1 — 6 дек'},{n:2,d:'7 — 13 дек'},{n:3,d:'14 — 20 дек'},{n:4,d:'21 — 27 дек'},{n:5,d:'28 — 31 дек'}],
+  'Январь':  [{n:1,d:'29 дек — 4 янв'}, {n:2,d:'5 — 11 янв'}, {n:3,d:'12 — 18 янв'}, {n:4,d:'19 — 25 янв'}, {n:5,d:'26 янв — 1 фев'}],
+  'Февраль': [{n:1,d:'2 — 8 фев'}, {n:2,d:'9 — 15 фев'}, {n:3,d:'16 — 22 фев'}, {n:4,d:'23 фев — 1 мар'}, {n:5,d:'',empty:true}],
+  'Март':    [{n:1,d:'2 — 8 мар'}, {n:2,d:'9 — 15 мар'}, {n:3,d:'16 — 22 мар'}, {n:4,d:'23 — 29 мар'}, {n:5,d:'',empty:true}],
+  'Апрель':  [{n:1,d:'30 мар — 5 апр'}, {n:2,d:'6 — 12 апр'}, {n:3,d:'13 — 19 апр'}, {n:4,d:'20 — 26 апр'}, {n:5,d:'27 апр — 3 мая'}],
+  'Май':     [{n:1,d:'4 — 10 мая'}, {n:2,d:'11 — 17 мая'}, {n:3,d:'18 — 24 мая'}, {n:4,d:'25 — 31 мая'}, {n:5,d:'',empty:true}],
+  'Июнь':    [{n:1,d:'1 — 7 июн'}, {n:2,d:'8 — 14 июн'}, {n:3,d:'15 — 21 июн'}, {n:4,d:'22 — 28 июн'}, {n:5,d:'',empty:true}],
+  'Июль':    [{n:1,d:'29 июн — 5 июл'}, {n:2,d:'6 — 12 июл'}, {n:3,d:'13 — 19 июл'}, {n:4,d:'20 — 26 июл'}, {n:5,d:'27 июл — 2 авг'}],
+  'Август':  [{n:1,d:'3 — 9 авг'}, {n:2,d:'10 — 16 авг'}, {n:3,d:'17 — 23 авг'}, {n:4,d:'24 — 30 авг'}, {n:5,d:'',empty:true}],
+  'Сентябрь':[{n:1,d:'31 авг — 6 сен'}, {n:2,d:'7 — 13 сен'}, {n:3,d:'14 — 20 сен'}, {n:4,d:'21 — 27 сен'}, {n:5,d:'',empty:true}],
+  'Октябрь': [{n:1,d:'28 сен — 4 окт'}, {n:2,d:'5 — 11 окт'}, {n:3,d:'12 — 18 окт'}, {n:4,d:'19 — 25 окт'}, {n:5,d:'26 окт — 1 ноя'}],
+  'Ноябрь':  [{n:1,d:'2 — 8 ноя'}, {n:2,d:'9 — 15 ноя'}, {n:3,d:'16 — 22 ноя'}, {n:4,d:'23 — 29 ноя'}, {n:5,d:'',empty:true}],
+  'Декабрь': [{n:1,d:'30 ноя — 6 дек'}, {n:2,d:'7 — 13 дек'}, {n:3,d:'14 — 20 дек'}, {n:4,d:'21 — 27 дек'}, {n:5,d:'28 дек — 3 янв'}],
 }
 
-// Недели для определения текущей
+// Недели для определения текущей (год указан явно из-за переходов через Новый год)
 const WK_RANGES = {
-  'Январь':  [[1,1,1,4],[1,5,1,11],[1,12,1,18],[1,19,1,25],[1,26,1,31]],
-  'Февраль': [[2,1,2,1],[2,2,2,8],[2,9,2,15],[2,16,2,22],[2,23,2,28]],
-  'Март':    [[3,1,3,1],[3,2,3,8],[3,9,3,15],[3,16,3,22],[3,23,3,31]],
-  'Апрель':  [[4,1,4,5],[4,6,4,12],[4,13,4,19],[4,20,4,26],[4,27,4,30]],
-  'Май':     [[5,1,5,3],[5,4,5,10],[5,11,5,17],[5,18,5,24],[5,25,5,31]],
-  'Июнь':    [[6,1,6,7],[6,8,6,14],[6,15,6,21],[6,22,6,28],[6,29,6,30]],
-  'Июль':    [[7,1,7,5],[7,6,7,12],[7,13,7,19],[7,20,7,26],[7,27,7,31]],
-  'Август':  [[8,1,8,2],[8,3,8,9],[8,10,8,16],[8,17,8,23],[8,24,8,31]],
-  'Сентябрь':[[9,1,9,6],[9,7,9,13],[9,14,9,20],[9,21,9,27],[9,28,9,30]],
-  'Октябрь': [[10,1,10,4],[10,5,10,11],[10,12,10,18],[10,19,10,25],[10,26,10,31]],
-  'Ноябрь':  [[11,1,11,1],[11,2,11,8],[11,9,11,15],[11,16,11,22],[11,23,11,30]],
-  'Декабрь': [[12,1,12,6],[12,7,12,13],[12,14,12,20],[12,21,12,27],[12,28,12,31]],
+  'Январь':  [[2025,12,29,2026,1,4], [2026,1,5,2026,1,11], [2026,1,12,2026,1,18], [2026,1,19,2026,1,25], [2026,1,26,2026,2,1]],
+  'Февраль': [[2026,2,2,2026,2,8], [2026,2,9,2026,2,15], [2026,2,16,2026,2,22], [2026,2,23,2026,3,1]],
+  'Март':    [[2026,3,2,2026,3,8], [2026,3,9,2026,3,15], [2026,3,16,2026,3,22], [2026,3,23,2026,3,29]],
+  'Апрель':  [[2026,3,30,2026,4,5], [2026,4,6,2026,4,12], [2026,4,13,2026,4,19], [2026,4,20,2026,4,26], [2026,4,27,2026,5,3]],
+  'Май':     [[2026,5,4,2026,5,10], [2026,5,11,2026,5,17], [2026,5,18,2026,5,24], [2026,5,25,2026,5,31]],
+  'Июнь':    [[2026,6,1,2026,6,7], [2026,6,8,2026,6,14], [2026,6,15,2026,6,21], [2026,6,22,2026,6,28]],
+  'Июль':    [[2026,6,29,2026,7,5], [2026,7,6,2026,7,12], [2026,7,13,2026,7,19], [2026,7,20,2026,7,26], [2026,7,27,2026,8,2]],
+  'Август':  [[2026,8,3,2026,8,9], [2026,8,10,2026,8,16], [2026,8,17,2026,8,23], [2026,8,24,2026,8,30]],
+  'Сентябрь':[[2026,8,31,2026,9,6], [2026,9,7,2026,9,13], [2026,9,14,2026,9,20], [2026,9,21,2026,9,27]],
+  'Октябрь': [[2026,9,28,2026,10,4], [2026,10,5,2026,10,11], [2026,10,12,2026,10,18], [2026,10,19,2026,10,25], [2026,10,26,2026,11,1]],
+  'Ноябрь':  [[2026,11,2,2026,11,8], [2026,11,9,2026,11,15], [2026,11,16,2026,11,22], [2026,11,23,2026,11,29]],
+  'Декабрь': [[2026,11,30,2026,12,6], [2026,12,7,2026,12,13], [2026,12,14,2026,12,20], [2026,12,21,2026,12,27], [2026,12,28,2027,1,3]],
 }
 
 
@@ -928,11 +931,21 @@ function getCurWeekIdx(month) {
   const today = new Date(); today.setHours(0,0,0,0)
   const rs = WK_RANGES[month] || []
   for (let i = 0; i < rs.length; i++) {
-    const [m1,d1,m2,d2] = rs[i]
-    const s = new Date(2026, m1-1, d1), e = new Date(2026, m2-1, d2)
+    const [y1,m1,d1,y2,m2,d2] = rs[i]
+    const s = new Date(y1, m1-1, d1), e = new Date(y2, m2-1, d2)
     if (today >= s && today <= e) return i
   }
   return -1
+}
+
+// Индекс последней реальной (не пустой) недели месяца — для месяцев с 4 неделями
+// это будет 3, а не 4
+function lastRealWeekIdx(month) {
+  const w = WM[month] || []
+  for (let i = w.length - 1; i >= 0; i--) {
+    if (!w[i].empty) return i
+  }
+  return w.length - 1
 }
 
 // Определяет текущий месяц для дашборда: ищем по сегодняшней дате,
@@ -1078,18 +1091,26 @@ GROUPS.forEach(g => grpState[g.id] = true)  // по умолчанию свёр�
 let wkCollapsed = {0:true,1:true,2:true,3:true,4:true}  // по умолчанию все свёрнуты, текущая откроется в initApp
 
 // ── строка с 5 неделями + итого ──────────────────────────────────────────────
-function rowCells(planArr, factArr, isIncome, isFury, bg, cwi, rowId) {
+function rowCells(planArr, factArr, isIncome, isFury, bg, cwi, rowId, weeks) {
   const fmt = isFury ? fF : fN
   const clickable = rowId && rowId !== '_fury' && rowId !== 'proizvod'
   let h = ''
 
   for (let wi = 0; wi < 5; wi++) {
+    const isEmpty = weeks && weeks[wi] && weeks[wi].empty
+    const isLast = wi === 4
+    const br = isLast ? 'border-right:2px solid #252525' : 'border-right:1px solid #252525'
+
+    if (isEmpty) {
+      // недели не существует в этом месяце — неактивная пустая колонка
+      h += '<td class="v" style="background:#080808;color:#2a2a2a;' + br + '" colspan="' + (wkCollapsed[wi] ? 1 : 3) + '">—</td>'
+      continue
+    }
+
     const p = planArr[wi] || 0
     const f = factArr ? factArr[wi] : null
     const d = f != null ? f - p : null
     const wbg = wi === cwi ? '#0f2818' : bg
-    const isLast = wi === 4
-    const br = isLast ? 'border-right:2px solid #252525' : 'border-right:1px solid #252525'
     const diff = d == null ? '—' : (isFury ? (d>=0?'+':'−')+Math.abs(d).toFixed(2) : fD(d))
 
     if (wkCollapsed[wi]) {
@@ -1133,11 +1154,16 @@ function buildThead() {
   let h = `<tr><th class="th-label" rowspan="2" style="background:${DEF}">Статья расходов</th>`
   for (let i = 0; i < 5; i++) {
     const w = weeks[i]
+    const isLast = i===4
+    const br = isLast ? 'border-right:2px solid #252525' : 'border-right:1px solid #252525'
+    if (w.empty) {
+      h += `<th colspan="${wkCollapsed[i] ? 1 : 3}" class="th-week" style="background:#080808;${br}">
+        <div style="color:#333;font-size:11px">—</div></th>`
+      continue
+    }
     const isCur = i===cwi
     const bg = isCur ? CUR : DEF
-    const isLast = i===4
     const span = wkCollapsed[i] ? 1 : 3
-    const br = isLast ? 'border-right:2px solid #252525' : 'border-right:1px solid #252525'
     h += `<th colspan="${span}" class="th-week" style="background:${bg};${br}">
       <div style="display:flex;align-items:center;justify-content:center;gap:4px">
         <div><div class="th-week-n">Нед ${w.n}</div><div class="th-week-d">${w.d}</div></div>
@@ -1151,14 +1177,18 @@ function buildThead() {
   // строка 2: план / факт / ±
   h += '<tr>'
   for (let wi = 0; wi < 5; wi++) {
+    const isLast = wi===4
+    const br = isLast ? 'border-right:2px solid #252525' : 'border-right:1px solid #252525'
+    if (weeks[wi].empty) {
+      h += `<th class="th-sub" style="background:#080808;color:#2a2a2a;${br}"></th>`
+      continue
+    }
     const isCur = wi===cwi
     const bg = isCur ? CSUB : SUB
-    const isLast = wi===4
     if (wkCollapsed[wi]) {
-      const br = isLast ? 'border-right:2px solid #252525' : 'border-right:1px solid #252525'
       h += `<th class="th-sub" style="background:${bg};color:#888;${br}">факт</th>`
     } else {
-      const br3 = isLast ? 'border-right:2px solid #252525' : 'border-right:1px solid #252525'
+      const br3 = br
       h += `<th class="th-sub" style="background:${bg};color:#444;border-right:1px solid #1e1e1e">план</th>`
       h += `<th class="th-sub" style="background:${bg};color:${hasFact?'#888':'#444'};border-right:1px solid #1e1e1e">факт</th>`
       h += `<th class="th-sub" style="background:${bg};color:#555;${br3}">±</th>`
@@ -1177,6 +1207,7 @@ function buildTbody() {
   const fact = serverFacts[curMonth] || (curMonth==='Май' ? MAY_FACT : null)
   const totals = computeTotals(plan, fact)
   const cwi = getCurWeekIdx(curMonth)
+  const weeks = WM[curMonth]
   let html = ''
 
   // Группы
@@ -1192,7 +1223,7 @@ function buildTbody() {
         <button class="grp-btn" onclick="toggleGroup('${gid}')">${collapsed?'+':'−'}</button>
         <span class="lbl-txt" style="font-weight:700;color:#ccc">${grp.label}</span>
       </div></td>`
-    html += rowCells(gPlan, gFact, false, false, bg, cwi, gid)
+    html += rowCells(gPlan, gFact, false, false, bg, cwi, gid, weeks)
     html += '</tr>'
 
     // дочерние строки
@@ -1204,7 +1235,7 @@ function buildTbody() {
         <td class="lbl" style="background:${alt}">
           <div class="inner"><span class="grp-dot"></span><span class="lbl-txt">${row.label}</span></div>
         </td>`
-      html += rowCells(pArr, fArr, false, false, alt, cwi, row.id)
+      html += rowCells(pArr, fArr, false, false, alt, cwi, row.id, weeks)
       html += '</tr>'
     })
   })
@@ -1246,9 +1277,9 @@ function buildTbody() {
           <span class="lbl-txt" style="color:${lblColor};${bold?'font-weight:700;letter-spacing:.4px;text-transform:uppercase':''}">${row.label}</span>
         </div></td>`
     if (isPrikhod) {
-      html += rowCellsClickable(pArr, fArr, isIncome, isFury, isPrikhod?'#0c1f0c':bg, cwi)
+      html += rowCellsClickable(pArr, fArr, isIncome, isFury, isPrikhod?'#0c1f0c':bg, cwi, weeks)
     } else {
-      html += rowCells(pArr, fArr, isIncome, isFury, bg, cwi, row.id)
+      html += rowCells(pArr, fArr, isIncome, isFury, bg, cwi, row.id, weeks)
     }
     html += '</tr>'
   })
@@ -1258,17 +1289,24 @@ function buildTbody() {
 
 
 // ── rowCells с кликабельными ячейками факта ───────────────────────────────────
-function rowCellsClickable(planArr, factArr, isIncome, isFury, bg, cwi) {
+function rowCellsClickable(planArr, factArr, isIncome, isFury, bg, cwi, weeks) {
   const fmt = isFury ? fF : fN
   let h = ''
 
   for (let wi = 0; wi < 5; wi++) {
+    const isEmpty = weeks && weeks[wi] && weeks[wi].empty
+    const isLast = wi===4
+    const br = isLast ? 'border-right:2px solid #252525' : 'border-right:1px solid #252525'
+
+    if (isEmpty) {
+      h += `<td class="v" style="background:#080808;color:#2a2a2a;${br}" colspan="${wkCollapsed[wi] ? 1 : 3}">—</td>`
+      continue
+    }
+
     const p = planArr[wi] || 0
     const f = factArr ? factArr[wi] : null
     const d = f!=null ? f-p : null
     const wbg = wi===cwi ? '#0f2818' : bg
-    const isLast = wi===4
-    const br = isLast ? 'border-right:2px solid #252525' : 'border-right:1px solid #252525'
     const factVal = f==null ? '—' : `<span class="fact-link ${fClass(p,f,isIncome)}" onclick="showOpsModal('prikhod',${wi})">${fmt(f)}</span>`
 
     if (wkCollapsed[wi]) {
@@ -1417,8 +1455,10 @@ function render() {
       ? '<span class="fact-tag">● ФАКТ ЗАГРУЖЕН' +
         (uploadTimes[curMonth] ? ' · ' + uploadTimes[curMonth] : '') + '</span>' + _balHtml
       : '')
-  document.getElementById('mbar-w').textContent =
-    wm[0].n + ' — ' + wm[4].n + ' · ' + wm[0].d.split('—')[0].trim() + ' — ' + (wm[4].d.split('—')[1]||'').trim()
+  document.getElementById('mbar-w').textContent = (() => {
+    const lastWi = lastRealWeekIdx(curMonth)
+    return wm[0].n + ' — ' + wm[lastWi].n + ' · ' + wm[0].d.split('—')[0].trim() + ' — ' + (wm[lastWi].d.split('—')[1]||'').trim()
+  })()
   renderMobile()
   updateDonutChart()
 }
@@ -1434,8 +1474,7 @@ function initMobWeek() {
 }
 
 function mobWeekNav(delta) {
-  const weeks = WM[curMonth]
-  const maxWi = weeks.length - 1
+  const maxWi = lastRealWeekIdx(curMonth)
   mobWeekIdx = Math.max(0, Math.min(maxWi, mobWeekIdx + delta))
   renderMobile()
 }
@@ -1449,7 +1488,7 @@ function renderMobile() {
   const plan   = STD
   const fact   = serverFacts[curMonth] || (curMonth === 'Май' ? MAY_FACT : null)
   const totals = computeTotals(plan, fact)
-  const maxWi  = weeks.length - 1
+  const maxWi  = lastRealWeekIdx(curMonth)
 
   // Навигатор
   document.getElementById('mob-wn-num').textContent   = 'Нед ' + w.n
