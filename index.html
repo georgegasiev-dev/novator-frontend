@@ -1956,7 +1956,7 @@ function showOpsModal(rowId, weekIdx) {
     if (isAllDebit || catsFilter === null) return true
     if (!catsFilter) return false
     const cat = (op.cat||'').toLowerCase()
-    return catsFilter.some(c => c.toLowerCase() === cat || cat.includes(c.toLowerCase()))
+    return catsFilter.some(c => c.toLowerCase() === cat)
   })
   ops = [...ops].sort((a,b) => (a.date||'').localeCompare(b.date||''))
 
