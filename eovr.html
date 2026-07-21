@@ -137,7 +137,7 @@
   /* Metric cards */
   .metrics-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
     gap: 12px;
     margin-bottom: 20px;
   }
@@ -148,18 +148,20 @@
     padding: 16px;
     display: flex; flex-direction: column; gap: 5px;
     transition: border-color 0.15s;
+    min-width: 0;
   }
   .metric-card.with-forecast {
-    flex-direction: row; align-items: center; justify-content: space-between; gap: 14px;
+    flex-direction: row; align-items: center; justify-content: space-between; gap: 10px;
   }
-  .metric-card-left { display: flex; flex-direction: column; gap: 5px; }
+  .metric-card-left { display: flex; flex-direction: column; gap: 5px; min-width: 0; flex-shrink: 0; }
   .metric-card-right {
-    text-align: right; padding-left: 12px; border-left: 1px solid var(--border);
-    display: flex; flex-direction: column; gap: 3px; white-space: nowrap;
+    text-align: right; padding-left: 10px; border-left: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 3px;
+    min-width: 0; flex-shrink: 1;
   }
-  .metric-forecast-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.3px; }
-  .metric-forecast-val { font-size: 15px; font-weight: 700; }
-  .metric-forecast-days { font-size: 10px; color: var(--muted); }
+  .metric-forecast-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap; }
+  .metric-forecast-val { font-size: 15px; font-weight: 700; white-space: nowrap; }
+  .metric-forecast-days { font-size: 10px; color: var(--muted); white-space: normal; line-height: 1.3; }
   .metric-card:hover { border-color: rgba(255,255,255,0.15); }
   .metric-card.highlight {
     border-color: rgba(245,158,11,0.4);
@@ -679,7 +681,7 @@ function renderMonth(days, title) {
           <div class="metric-forecast-val">${remaining.toLocaleString('ru')}</div>
           <div class="metric-forecast-label" style="margin-top:4px">нужно в сутки</div>
           <div class="metric-forecast-val" style="color:${m.color}">${perDay.toLocaleString('ru',{minimumFractionDigits:1,maximumFractionDigits:1})}</div>
-          <div class="metric-forecast-days">осталось ${daysLeft} дн. до конца мес.</div>`;
+          <div class="metric-forecast-days">до конца мес.: ${daysLeft} дн.</div>`;
       }
       hasForecast = true;
     }
