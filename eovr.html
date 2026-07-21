@@ -159,6 +159,16 @@
   .metric-value { font-size: 26px; font-weight: 700; letter-spacing: -1px; line-height: 1; }
   .metric-unit { font-size: 11px; color: var(--muted); }
   .metric-badge { font-size: 11px; margin-top: 2px; }
+  .metric-plan { font-size: 10px; color: var(--muted); margin-top: 1px; }
+
+  /* Баннер плана по сборке над карточками */
+  .plan-banner { text-align: center; margin: 2px 0 22px; }
+  .plan-banner .plan-goal {
+    font-size: 24px; font-weight: 800; color: var(--c-sborka); letter-spacing: -0.3px;
+  }
+  .plan-banner .plan-done {
+    font-size: 15px; font-weight: 700; margin-top: 5px;
+  }
 
   /* Charts */
   .charts-grid {
@@ -347,6 +357,10 @@
 
   <!-- МЕСЯЦ -->
   <div id="tab-month">
+    <div id="plan-banner" class="plan-banner" style="display:none">
+      <div class="plan-goal">План по выпуску: 35 000 л/мес</div>
+      <div class="plan-done" id="plan-done-text"></div>
+    </div>
     <div class="metrics-grid" id="month-metrics"></div>
     <div class="charts-grid" id="month-charts"></div>
     <div id="month-empty" class="empty-state" style="display:none">Нет данных за этот месяц</div>
@@ -400,6 +414,10 @@
 <script>
 const SHEET_ID = '1iYEuupLfhvM-jS4D8NiaL2dcnoUheu1GRPy5UJc9yUg';
 const API_KEY  = 'AIzaSyAdAPQ2x7EMsBH-JBusw6ioxQZ8xdPbEP0';
+
+// Месячный план по выпуску листов (Лущилка/Сушилка/Сборка меряются в тех же листах)
+const PLAN_SHEETS = 35000;
+const PLAN_METRIC_KEYS = new Set(['lush', 'sush', 'sborka']);
 
 const METRICS = [
   { key: 'lush',   label: 'Лущилка',   color: '#4f7cff', unit: 'л' },
@@ -599,6 +617,7 @@ function renderMonth(days, title) {
   const hasData = dayList.length > 0;
   document.getElementById('month-empty').style.display = hasData ? 'none' : 'block';
   document.getElementById('month-metrics').style.display = hasData ? '' : 'none';
+  document.getElementById('plan-banner').style.display = hasData ? '' : 'none';
   document.getElementById('month-charts').style.display = hasData ? '' : 'none';
   document.getElementById('status-text').textContent = title + ' — загружено';
   document.getElementById('header-sub').textContent = title;
@@ -607,14 +626,23 @@ function renderMonth(days, title) {
 
   const totals = daysToTotals(days);
 
+  // Баннер плана (по Сборке — это финальный передел, целевой показатель месяца)
+  const sborkaVal = Math.round(totals.sborka);
+  const planPct = Math.round((sborkaVal / PLAN_SHEETS) * 100);
+  const planColor = planPct >= 100 ? '#34d399' : (planPct >= 70 ? '#f59e0b' : '#f87171');
+  document.getElementById('plan-banner').style.display = '';
+  document.getElementById('plan-done-text').innerHTML =
+    `Выполнено: <span style="color:${planColor}">${planPct}%</span> от плана`;
+
   // Метрики
   document.getElementById('month-metrics').innerHTML = METRICS.map(m => {
     const val = Math.round(totals[m.key]);
-    const isLush = m.key === 'lush';
-    const ctrl = isLush && totals._control ? Math.round(totals._control) : null;
-    const match = ctrl ? Math.abs(val-ctrl) < 10 : null;
-    const badge = ctrl
-      ? `<div class="metric-badge" style="color:${match?'#34d399':'#f87171'}">${match ? '✓ сходится' : '⚠ шапка: '+ctrl.toLocaleString('ru')}</div>`
+    const showPlan = PLAN_METRIC_KEYS.has(m.key);
+    const pct = showPlan ? Math.round((val / PLAN_SHEETS) * 100) : null;
+    const pctColor = pct == null ? '' : (pct >= 100 ? '#34d399' : (pct >= 70 ? '#f59e0b' : '#f87171'));
+    const badge = showPlan
+      ? `<div class="metric-badge" style="color:${pctColor}">${pct}% от плана</div>
+         <div class="metric-plan">план: ${PLAN_SHEETS.toLocaleString('ru')}</div>`
       : '';
     return `<div class="metric-card ${m.key==='sborka'?'highlight':''}">
       <div class="metric-dot" style="background:${m.color}"></div>
