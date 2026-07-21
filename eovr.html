@@ -149,6 +149,17 @@
     display: flex; flex-direction: column; gap: 5px;
     transition: border-color 0.15s;
   }
+  .metric-card.with-forecast {
+    flex-direction: row; align-items: center; justify-content: space-between; gap: 14px;
+  }
+  .metric-card-left { display: flex; flex-direction: column; gap: 5px; }
+  .metric-card-right {
+    text-align: right; padding-left: 12px; border-left: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 3px; white-space: nowrap;
+  }
+  .metric-forecast-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.3px; }
+  .metric-forecast-val { font-size: 15px; font-weight: 700; }
+  .metric-forecast-days { font-size: 10px; color: var(--muted); }
   .metric-card:hover { border-color: rgba(255,255,255,0.15); }
   .metric-card.highlight {
     border-color: rgba(245,158,11,0.4);
@@ -634,6 +645,15 @@ function renderMonth(days, title) {
   document.getElementById('plan-done-text').innerHTML =
     `Выполнено: <span style="color:${planColor}">${planPct}%</span> от плана`;
 
+  // Прогноз "сколько нужно в сутки, чтобы выполнить план" — только для реального текущего месяца
+  const sheetMeta = sheets.find(s => s.title === title);
+  const now = new Date();
+  let daysLeft = null;
+  if (sheetMeta && sheetMeta.year === now.getFullYear() && sheetMeta.month === (now.getMonth() + 1)) {
+    const daysInMonth = new Date(sheetMeta.year, sheetMeta.month, 0).getDate();
+    daysLeft = daysInMonth - now.getDate() + 1;  // включая сегодняшний день
+  }
+
   // Метрики
   document.getElementById('month-metrics').innerHTML = METRICS.map(m => {
     const val = Math.round(totals[m.key]);
@@ -644,12 +664,35 @@ function renderMonth(days, title) {
       ? `<div class="metric-badge" style="color:${pctColor}">${pct}% от плана</div>
          <div class="metric-plan">план: ${PLAN_SHEETS.toLocaleString('ru')}</div>`
       : '';
-    return `<div class="metric-card ${m.key==='sborka'?'highlight':''}">
-      <div class="metric-dot" style="background:${m.color}"></div>
-      <div class="metric-label">${m.label}</div>
-      <div class="metric-value" style="color:${m.color}">${val.toLocaleString('ru')}</div>
-      <div class="metric-unit">${m.unit} за месяц</div>
-      ${badge}
+
+    // Правый блок: сколько осталось до 100% плана и сколько нужно делать в сутки
+    let forecastHtml = '';
+    let hasForecast = false;
+    if (showPlan && daysLeft != null) {
+      const remaining = PLAN_SHEETS - val;
+      if (remaining <= 0) {
+        forecastHtml = `<div class="metric-forecast-label">до плана</div>
+          <div class="metric-forecast-val" style="color:#34d399">план выполнен ✓</div>`;
+      } else if (daysLeft > 0) {
+        const perDay = remaining / daysLeft;
+        forecastHtml = `<div class="metric-forecast-label">осталось</div>
+          <div class="metric-forecast-val">${remaining.toLocaleString('ru')}</div>
+          <div class="metric-forecast-label" style="margin-top:4px">нужно в сутки</div>
+          <div class="metric-forecast-val" style="color:${m.color}">${perDay.toLocaleString('ru',{minimumFractionDigits:1,maximumFractionDigits:1})}</div>
+          <div class="metric-forecast-days">осталось ${daysLeft} дн. до конца мес.</div>`;
+      }
+      hasForecast = true;
+    }
+
+    return `<div class="metric-card ${m.key==='sborka'?'highlight':''} ${hasForecast?'with-forecast':''}">
+      <div class="metric-card-left">
+        <div class="metric-dot" style="background:${m.color}"></div>
+        <div class="metric-label">${m.label}</div>
+        <div class="metric-value" style="color:${m.color}">${val.toLocaleString('ru')}</div>
+        <div class="metric-unit">${m.unit} за месяц</div>
+        ${badge}
+      </div>
+      ${hasForecast ? `<div class="metric-card-right">${forecastHtml}</div>` : ''}
     </div>`;
   }).join('');
 
