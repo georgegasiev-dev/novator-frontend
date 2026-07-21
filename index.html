@@ -3163,7 +3163,7 @@ async function closeLoad() {
 
   // Загружаем сохранённые обязательства
   try {
-    const API = window.API_BASE || ''
+    const API = window.API_BASE || 'https://api.zavodzavodov.ru'
     const yr = closeCurYear || new Date().getFullYear()
     const r = await fetch(`${API}/api/obligations?month=${encodeURIComponent(month)}&year=${yr}`, {
       headers: {'X-API-Key': sessionStorage.getItem('nvt_api_key') || ''}
@@ -3319,7 +3319,7 @@ function closeEdit(spanEl, category, field, currentVal, month) {
     // Сохраняем на сервер
     try {
       const ob = closeObligations[category]
-      const API = window.API_BASE || ''
+      const API = window.API_BASE || 'https://api.zavodzavodov.ru'
       await fetch(`${API}/api/obligations`, {
         method: 'POST',
         headers: {'Content-Type':'application/json','X-API-Key': sessionStorage.getItem('nvt_api_key')||''},
@@ -3347,7 +3347,7 @@ function closeEdit(spanEl, category, field, currentVal, month) {
 window._planData = {}
 ;(async function loadAllPlans() {
   try {
-    const API = window.API_BASE || ''
+    const API = window.API_BASE || 'https://api.zavodzavodov.ru'
     const r = await fetch(`${API}/api/plan/all`, {
       headers: {'X-API-Key': sessionStorage.getItem('nvt_api_key') || ''}
     })
