@@ -85,13 +85,14 @@
     margin-bottom: 20px;
     overflow: hidden;
   }
-  .site-title {
-    padding: 14px 18px;
+
+  tr.site-row td {
+    padding: 10px 18px;
     font-size: 13px;
     font-weight: 700;
     color: var(--accent);
-    border-bottom: 1px solid var(--border);
     background: var(--surface2);
+    border-bottom: 1px solid var(--border);
   }
 
   .table-wrap { overflow-x: auto; }
@@ -212,12 +213,13 @@ function render(data) {
     (bySite[p.site] = bySite[p.site] || []).push(p);
   });
 
-  let html = '';
+  let html = '<div class="site-block"><div class="table-wrap"><table>';
+  html += '<thead><tr><th class="variant-col">Позиция</th>';
+  days.forEach(d => html += `<th class="${d === today ? 'today-col' : ''}">${fmtDate(d)}</th>`);
+  html += '</tr></thead><tbody>';
+
   Object.keys(bySite).sort().forEach(site => {
-    html += `<div class="site-block"><div class="site-title">🏭 ${site}</div><div class="table-wrap"><table>`;
-    html += '<thead><tr><th class="variant-col">Позиция</th>';
-    days.forEach(d => html += `<th class="${d === today ? 'today-col' : ''}">${fmtDate(d)}</th>`);
-    html += '</tr></thead><tbody>';
+    html += `<tr class="site-row"><td colspan="${days.length + 1}">🏭 ${site}</td></tr>`;
 
     bySite[site].sort((a,b) => a.variant.localeCompare(b.variant)).forEach(p => {
       const nameHtml = p.url
@@ -244,9 +246,9 @@ function render(data) {
       });
       html += '</tr>';
     });
-
-    html += '</tbody></table></div></div>';
   });
+
+  html += '</tbody></table></div></div>';
 
   document.getElementById('content').innerHTML = html;
 }
