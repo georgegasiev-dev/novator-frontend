@@ -102,6 +102,12 @@
   .site-block .table-wrap th.variant-col { background: var(--surface2); }
   tr:last-child td { border-bottom: none; }
 
+  .variant-link { color: var(--text); text-decoration: none; border-bottom: 1px dotted var(--muted); }
+  .variant-link:hover { color: var(--accent); border-bottom-color: var(--accent); }
+
+  th.today-col, td.today-col { background: rgba(79,124,255,0.12); }
+  th.today-col { color: var(--accent); }
+
   .price-up   { color: var(--up); font-size: 10.5px; margin-left: 4px; }
   .price-down { color: var(--down); font-size: 10.5px; margin-left: 4px; }
   .no-stock   { color: var(--muted); font-size: 10.5px; display: block; }
@@ -142,6 +148,26 @@ function fmtDate(iso) {
   return `${d}.${m}`;
 }
 
+// Диапазон дат для таблицы — с 23 по 31 текущего месяца, даже если данных ещё нет
+const RANGE_START = '2026-07-23';
+const RANGE_END   = '2026-07-31';
+
+function dateRange(startIso, endIso) {
+  const out = [];
+  let cur = new Date(startIso + 'T00:00:00');
+  const end = new Date(endIso + 'T00:00:00');
+  while (cur <= end) {
+    out.push(cur.toISOString().slice(0, 10));
+    cur.setDate(cur.getDate() + 1);
+  }
+  return out;
+}
+
+function todayIso() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
 async function loadData() {
   const btn = document.getElementById('refresh-btn');
   btn.disabled = true;
@@ -171,13 +197,14 @@ function render(data) {
     return;
   }
 
-  // Собираем все даты по всем позициям, сортируем от старых к новым
-  const allDays = new Set();
+  // Диапазон 23-31 + любые даты данных, которые выходят за его пределы (объединяем и сортируем)
+  const allDays = new Set(dateRange(RANGE_START, RANGE_END));
   positions.forEach(p => Object.keys(p.days).forEach(d => allDays.add(d)));
   const days = Array.from(allDays).sort();
+  const today = todayIso();
 
   document.getElementById('status-text').textContent =
-    `${positions.length} позиций · ${days.length} ${days.length === 1 ? 'день' : 'дней'} истории`;
+    `${positions.length} позиций · период ${fmtDate(RANGE_START)}–${fmtDate(RANGE_END)}`;
 
   // Группируем по сайту
   const bySite = {};
@@ -189,16 +216,20 @@ function render(data) {
   Object.keys(bySite).sort().forEach(site => {
     html += `<div class="site-block"><div class="site-title">🏭 ${site}</div><div class="table-wrap"><table>`;
     html += '<thead><tr><th class="variant-col">Позиция</th>';
-    days.forEach(d => html += `<th>${fmtDate(d)}</th>`);
+    days.forEach(d => html += `<th class="${d === today ? 'today-col' : ''}">${fmtDate(d)}</th>`);
     html += '</tr></thead><tbody>';
 
     bySite[site].sort((a,b) => a.variant.localeCompare(b.variant)).forEach(p => {
-      html += `<tr><td class="variant-col">${p.variant}</td>`;
+      const nameHtml = p.url
+        ? `<a class="variant-link" href="${p.url}" target="_blank" rel="noopener">${p.variant}</a>`
+        : p.variant;
+      html += `<tr><td class="variant-col">${nameHtml}</td>`;
       let prevPrice = null;
       days.forEach(d => {
         const entry = p.days[d];
+        const cellCls = d === today ? 'today-col' : '';
         if (!entry || entry.price == null) {
-          html += '<td class="empty-cell">—</td>';
+          html += `<td class="empty-cell ${cellCls}">—</td>`;
           return;
         }
         let trend = '';
@@ -208,7 +239,7 @@ function render(data) {
             : `<span class="price-down">↓${entry.price - prevPrice}</span>`;
         }
         const stockNote = entry.in_stock === 0 ? '<span class="no-stock">нет в наличии</span>' : '';
-        html += `<td>${entry.price}₽${trend}${stockNote}</td>`;
+        html += `<td class="${cellCls}">${entry.price}₽${trend}${stockNote}</td>`;
         prevPrice = entry.price;
       });
       html += '</tr>';
