@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ситуация на рынке — Новатор</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #222535;
+    --border: rgba(255,255,255,0.08);
+    --text: #e8eaf0;
+    --muted: #7b8099;
+    --accent: #4f7cff;
+    --up: #f87171;
+    --down: #34d399;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    background: rgba(15,17,23,0.95);
+    backdrop-filter: blur(12px);
+    z-index: 10;
+  }
+
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-mark {
+    width: 32px; height: 32px;
+    background: var(--accent); border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700; color: #fff;
+  }
+  .logo-text { font-size: 15px; font-weight: 600; }
+  .logo-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+  button {
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius-sm);
+    color: #fff;
+    padding: 7px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    font-family: inherit;
+  }
+  button:hover { opacity: 0.85; }
+  button:disabled { opacity: 0.5; cursor: default; }
+
+  main { padding: 24px; max-width: 1400px; margin: 0 auto; }
+
+  .status-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 0; border-bottom: 1px solid var(--border);
+    font-size: 12px; color: var(--muted); margin-bottom: 20px;
+  }
+
+  .site-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .site-title {
+    padding: 14px 18px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 12.5px; white-space: nowrap; }
+  th, td { padding: 8px 14px; text-align: right; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; }
+  td.variant-col, th.variant-col { text-align: left; position: sticky; left: 0; background: var(--surface); font-weight: 500; }
+  .site-block .table-wrap th.variant-col { background: var(--surface2); }
+  tr:last-child td { border-bottom: none; }
+
+  .price-up   { color: var(--up); font-size: 10.5px; margin-left: 4px; }
+  .price-down { color: var(--down); font-size: 10.5px; margin-left: 4px; }
+  .no-stock   { color: var(--muted); font-size: 10.5px; display: block; }
+  .empty-cell { color: rgba(255,255,255,0.15); }
+
+  .empty-state {
+    text-align: center; padding: 60px 20px; color: var(--muted);
+  }
+  .loading-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">Р</div>
+    <div>
+      <div class="logo-text">Ситуация на рынке</div>
+      <div class="logo-sub">Цены конкурентов · ламинированная фанера 18мм 2440×1220</div>
+    </div>
+  </div>
+  <button id="refresh-btn" onclick="loadData()">↻ Обновить</button>
+</header>
+
+<main>
+  <div class="status-row">
+    <span id="status-text">Загрузка...</span>
+    <span id="last-update"></span>
+  </div>
+  <div id="content"><div class="loading-state">Загрузка данных...</div></div>
+</main>
+
+<script>
+const API = 'https://api.zavodzavodov.ru';
+
+function fmtDate(iso) {
+  const [y, m, d] = iso.split('-');
+  return `${d}.${m}`;
+}
+
+async function loadData() {
+  const btn = document.getElementById('refresh-btn');
+  btn.disabled = true;
+  btn.textContent = '↻ Загрузка...';
+  try {
+    const res = await fetch(`${API}/api/competitor-prices`);
+    const data = await res.json();
+    render(data);
+    document.getElementById('last-update').textContent =
+      'Обновлено: ' + new Date().toLocaleTimeString('ru', {hour:'2-digit', minute:'2-digit'});
+  } catch (e) {
+    document.getElementById('content').innerHTML =
+      `<div class="empty-state">Не удалось загрузить данные: ${e.message}</div>`;
+    document.getElementById('status-text').textContent = 'Ошибка загрузки';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '↻ Обновить';
+  }
+}
+
+function render(data) {
+  const positions = data.positions || [];
+  if (!positions.length) {
+    document.getElementById('content').innerHTML =
+      '<div class="empty-state">Пока нет данных. Они появятся после первого автосбора цен (раз в день) или команды /rynok в Telegram-боте.</div>';
+    document.getElementById('status-text').textContent = 'Нет данных';
+    return;
+  }
+
+  // Собираем все даты по всем позициям, сортируем от старых к новым
+  const allDays = new Set();
+  positions.forEach(p => Object.keys(p.days).forEach(d => allDays.add(d)));
+  const days = Array.from(allDays).sort();
+
+  document.getElementById('status-text').textContent =
+    `${positions.length} позиций · ${days.length} ${days.length === 1 ? 'день' : 'дней'} истории`;
+
+  // Группируем по сайту
+  const bySite = {};
+  positions.forEach(p => {
+    (bySite[p.site] = bySite[p.site] || []).push(p);
+  });
+
+  let html = '';
+  Object.keys(bySite).sort().forEach(site => {
+    html += `<div class="site-block"><div class="site-title">🏭 ${site}</div><div class="table-wrap"><table>`;
+    html += '<thead><tr><th class="variant-col">Позиция</th>';
+    days.forEach(d => html += `<th>${fmtDate(d)}</th>`);
+    html += '</tr></thead><tbody>';
+
+    bySite[site].sort((a,b) => a.variant.localeCompare(b.variant)).forEach(p => {
+      html += `<tr><td class="variant-col">${p.variant}</td>`;
+      let prevPrice = null;
+      days.forEach(d => {
+        const entry = p.days[d];
+        if (!entry || entry.price == null) {
+          html += '<td class="empty-cell">—</td>';
+          return;
+        }
+        let trend = '';
+        if (prevPrice !== null && entry.price !== prevPrice) {
+          trend = entry.price > prevPrice
+            ? `<span class="price-up">↑${entry.price - prevPrice}</span>`
+            : `<span class="price-down">↓${entry.price - prevPrice}</span>`;
+        }
+        const stockNote = entry.in_stock === 0 ? '<span class="no-stock">нет в наличии</span>' : '';
+        html += `<td>${entry.price}₽${trend}${stockNote}</td>`;
+        prevPrice = entry.price;
+      });
+      html += '</tr>';
+    });
+
+    html += '</tbody></table></div></div>';
+  });
+
+  document.getElementById('content').innerHTML = html;
+}
+
+window.addEventListener('load', loadData);
+</script>
+</body>
+</html>
