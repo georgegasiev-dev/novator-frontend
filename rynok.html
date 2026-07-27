@@ -156,11 +156,15 @@ const RANGE_END   = '2026-07-31';
 
 function dateRange(startIso, endIso) {
   const out = [];
-  let cur = new Date(startIso + 'T00:00:00');
-  const end = new Date(endIso + 'T00:00:00');
+  let [y, m, d] = startIso.split('-').map(Number);
+  const [ey, em, ed] = endIso.split('-').map(Number);
+  // Работаем в UTC-полдень, чтобы избежать сдвига дня при переводе в локальный часовой пояс браузера
+  let cur = Date.UTC(y, m - 1, d, 12);
+  const end = Date.UTC(ey, em - 1, ed, 12);
   while (cur <= end) {
-    out.push(cur.toISOString().slice(0, 10));
-    cur.setDate(cur.getDate() + 1);
+    const dt = new Date(cur);
+    out.push(`${dt.getUTCFullYear()}-${String(dt.getUTCMonth()+1).padStart(2,'0')}-${String(dt.getUTCDate()).padStart(2,'0')}`);
+    cur += 24 * 60 * 60 * 1000;
   }
   return out;
 }
