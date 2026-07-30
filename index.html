@@ -623,7 +623,6 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
     📒 Месячное закрытие
   </button>
   <a href="/eovr.html" target="_blank" style="padding:11px 22px;border:none;border-bottom:2px solid transparent;background:transparent;color:#555;cursor:pointer;font-size:12px;font-weight:400;white-space:nowrap;letter-spacing:.3px;text-decoration:none;display:inline-block">📊 ЕОВР</a>
-  <a href="/rynok.html" target="_blank" style="padding:11px 22px;border:none;border-bottom:2px solid transparent;background:transparent;color:#555;cursor:pointer;font-size:12px;font-weight:400;white-space:nowrap;letter-spacing:.3px;text-decoration:none;display:inline-block">📈 Ситуация на рынке</a>
 </div>
 
 <div id="page-calendar" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
@@ -1831,7 +1830,7 @@ function showContractorCard(contractorName) {
   document.body.style.overflow = 'hidden'
 
   fetch(API + '/api/contractor-ops?name=' + encodeURIComponent(name), {mode:'cors', headers:{'X-API-Key':API_KEY}})
-    .then(r => r.json())
+    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json() })
     .then(data => { renderContractorCard(name, data.ops || []) })
     .catch(e => {
       console.error('contractor-ops error:', e)
@@ -3096,40 +3095,22 @@ const CLOSE_CATEGORIES = [
 ]
 
 let closeCurMonth = ''
-let closeCurYear = 0
 let closeObligations = {}  // {category: {opening_debt, closing_debt, planned_budget, comment}}
 let closeFactMap = {}      // {category: totalFact}
-const CLOSE_YEARS = [2024, 2025, 2026]
 
 function closeRenderTabs() {
-  const yel = document.getElementById('close-ytabs')
   const el = document.getElementById('close-mtabs')
   if (!el) return
   const cur = getCurrentMonthName()
-  const curYear = new Date().getFullYear()
   if (!closeCurMonth) closeCurMonth = cur
-  if (!closeCurYear) closeCurYear = curYear
-
-  if (yel) {
-    yel.innerHTML = CLOSE_YEARS.map(y =>
-      `<button onclick="closeSetYear(${y})" style="padding:5px 12px;border:1px solid ${y===closeCurYear?'#f0a500':'#222'};background:${y===closeCurYear?'#f0a500':'transparent'};color:${y===closeCurYear?'#000':'#666'};cursor:pointer;font-size:11px;border-radius:2px">${y}</button>`
-    ).join('')
-  }
-
   el.innerHTML = MONTHS.map(m => {
-    const dot = (m === cur && closeCurYear === curYear) ? '<span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:#f0a500;margin-left:4px;vertical-align:middle"></span>' : ''
+    const dot = (m === cur) ? '<span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:#f0a500;margin-left:4px;vertical-align:middle"></span>' : ''
     return `<button onclick="closeSetMonth('${m}')" style="padding:5px 12px;border:1px solid ${m===closeCurMonth?'#f0a500':'#222'};background:${m===closeCurMonth?'#f0a500':'transparent'};color:${m===closeCurMonth?'#000':'#666'};cursor:pointer;font-size:11px;border-radius:2px">${m}${dot}</button>`
   }).join('')
 }
 
 function closeSetMonth(m) {
   closeCurMonth = m
-  closeRenderTabs()
-  closeLoad()
-}
-
-function closeSetYear(y) {
-  closeCurYear = y
   closeRenderTabs()
   closeLoad()
 }
@@ -3164,9 +3145,8 @@ async function closeLoad() {
 
   // Загружаем сохранённые обязательства
   try {
-    const API = window.API_BASE || 'https://api.zavodzavodov.ru'
-    const yr = closeCurYear || new Date().getFullYear()
-    const r = await fetch(`${API}/api/obligations?month=${encodeURIComponent(month)}&year=${yr}`, {
+    const API = window.API_BASE || ''
+    const r = await fetch(`${API}/api/obligations?month=${encodeURIComponent(month)}`, {
       headers: {'X-API-Key': sessionStorage.getItem('nvt_api_key') || ''}
     })
     const data = await r.json()
@@ -3320,12 +3300,11 @@ function closeEdit(spanEl, category, field, currentVal, month) {
     // Сохраняем на сервер
     try {
       const ob = closeObligations[category]
-      const API = window.API_BASE || 'https://api.zavodzavodov.ru'
+      const API = window.API_BASE || ''
       await fetch(`${API}/api/obligations`, {
         method: 'POST',
         headers: {'Content-Type':'application/json','X-API-Key': sessionStorage.getItem('nvt_api_key')||''},
         body: JSON.stringify({
-          year: closeCurYear || new Date().getFullYear(),
           month, category,
           opening_debt:    ob.opening_debt    || 0,
           closing_debt:    ob.closing_debt    || 0,
@@ -3348,7 +3327,7 @@ function closeEdit(spanEl, category, field, currentVal, month) {
 window._planData = {}
 ;(async function loadAllPlans() {
   try {
-    const API = window.API_BASE || 'https://api.zavodzavodov.ru'
+    const API = window.API_BASE || ''
     const r = await fetch(`${API}/api/plan/all`, {
       headers: {'X-API-Key': sessionStorage.getItem('nvt_api_key') || ''}
     })
@@ -3467,10 +3446,8 @@ window._planData = {}
 </div>
 <!-- Месячное закрытие -->
 <div id="page-close" style="display:none;flex-direction:column;flex:1;overflow:hidden">
-  <div style="padding:12px 16px;border-bottom:1px solid #1e1e1e;display:flex;align-items:center;gap:12px;flex-shrink:0;flex-wrap:wrap">
-    <div style="font-size:11px;color:#555;letter-spacing:1px;text-transform:uppercase">Год:</div>
-    <div id="close-ytabs" style="display:flex;gap:4px"></div>
-    <div style="font-size:11px;color:#555;letter-spacing:1px;text-transform:uppercase;margin-left:8px">Месяц:</div>
+  <div style="padding:12px 16px;border-bottom:1px solid #1e1e1e;display:flex;align-items:center;gap:12px;flex-shrink:0">
+    <div style="font-size:11px;color:#555;letter-spacing:1px;text-transform:uppercase">Месяц:</div>
     <div id="close-mtabs" style="display:flex;gap:4px;flex-wrap:wrap"></div>
   </div>
 
