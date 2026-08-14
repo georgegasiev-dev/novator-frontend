@@ -2883,6 +2883,24 @@ function renderAnalytics() {
   if (anBarChart) anBarChart.destroy()
   anBarChart = new Chart(document.getElementById('an-barChart'), {
     type: 'bar',
+    // ponytail: свой мини-плагин вместо chartjs-plugin-datalabels — сумма всегда видна над столбцом
+    plugins: [{
+      id: 'barValues',
+      afterDatasetsDraw(c) {
+        const {ctx} = c
+        ctx.save()
+        ctx.font = '600 10px system-ui, -apple-system, sans-serif'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'bottom'
+        c.getDatasetMeta(0).data.forEach((bar, i) => {
+          const v = c.data.datasets[0].data[i]
+          if (!v) return
+          ctx.fillStyle = anSelMonth ? (monthKeys[i] === anSelMonth ? '#f0a500' : '#555') : '#999'
+          ctx.fillText(_fmtAn(v), bar.x, bar.y - 4)
+        })
+        ctx.restore()
+      }
+    }],
     data: {
       labels: monthKeys.map(k => MONTH_LBL_SHORT[parseInt(k.split('-')[1],10)]),
       datasets: [{
@@ -2896,6 +2914,7 @@ function renderAnalytics() {
     },
     options: {
       responsive: true, maintainAspectRatio: false,
+      layout: { padding: { top: 16 } },
       plugins: {
         legend: { display: false },
         tooltip: {
