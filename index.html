@@ -2841,6 +2841,12 @@ function _anAggregate() {
 function renderAnalytics() {
   const data = _anAggregate()
   const monthKeys = Object.keys(data.MONTHLY).sort()
+  // ponytail: листы берём из сделок Продаж (там же, где их правит пользователь)
+  const sheetsByMonth = {}
+  for (const d of salesDeals) {
+    const p = _anParseDate(d.date)
+    if (p) sheetsByMonth[p.monthKey] = (sheetsByMonth[p.monthKey] || 0) + (d.sheets || 0)
+  }
   if (!monthKeys.length) {
     document.getElementById('an-kpi-total').textContent = '—'
     document.getElementById('an-kpi-best').textContent = '—'
@@ -2902,7 +2908,10 @@ function renderAnalytics() {
       }
     }],
     data: {
-      labels: monthKeys.map(k => MONTH_LBL_SHORT[parseInt(k.split('-')[1],10)]),
+      labels: monthKeys.map(k => [
+        MONTH_LBL_SHORT[parseInt(k.split('-')[1],10)],
+        (sheetsByMonth[k] || 0).toLocaleString('ru-RU') + ' л.'
+      ]),
       datasets: [{
         data: monthKeys.map(k => data.MONTHLY[k].sum),
         backgroundColor: monthKeys.map(k => {
