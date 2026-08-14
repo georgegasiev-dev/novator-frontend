@@ -2760,35 +2760,26 @@ function _anParseDate(s) {
   if (p.length !== 3) return null
   const day = parseInt(p[0],10), month = parseInt(p[1],10), year = parseInt(p[2],10)
   if (!day || !month || !year) return null
-  // ISO week number (Mon-Sun, week with Thu = week of the year)
-  const d = new Date(Date.UTC(year, month-1, day))
-  const dayNum = d.getUTCDay() || 7
-  d.setUTCDate(d.getUTCDate() + 4 - dayNum)
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1))
-  const isoWeek = Math.ceil((((d - yearStart) / 86400000) + 1) / 7)
+  // Неделя внутри календарного месяца: 1-я начинается 1 числа (даже если это не пн),
+  // последняя обрывается последним днём месяца. Месяц не делится с соседями.
+  const firstLen = 8 - (new Date(Date.UTC(year, month-1, 1)).getUTCDay() || 7)  // дней в 1-й неделе
+  const wi = day <= firstLen ? 1 : Math.ceil((day - firstLen) / 7) + 1
   return {
     year, month, day,
     monthKey: `${year}-${String(month).padStart(2,'0')}`,
-    isoWeek,
+    wi,
   }
 }
 
-// Диапазон дат ISO-недели → {start, end} как Date
-function _isoWeekRange(year, week) {
-  const jan4 = new Date(Date.UTC(year, 0, 4))
-  const dayOfJan4 = jan4.getUTCDay() || 7
-  const week1Mon = new Date(jan4)
-  week1Mon.setUTCDate(jan4.getUTCDate() - (dayOfJan4 - 1))
-  const start = new Date(week1Mon)
-  start.setUTCDate(week1Mon.getUTCDate() + (week - 1) * 7)
-  const end = new Date(start)
-  end.setUTCDate(start.getUTCDate() + 6)
-  return {start, end}
+// Границы недели внутри месяца → {s, e} как числа месяца
+function _monthWeekRange(year, month, wi) {
+  const firstLen = 8 - (new Date(Date.UTC(year, month-1, 1)).getUTCDay() || 7)
+  const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate()
+  const s = wi === 1 ? 1 : firstLen + (wi - 2) * 7 + 1
+  return {s, e: Math.min(wi === 1 ? firstLen : s + 6, lastDay)}
 }
 
-function _fmtDM(d) {
-  return String(d.getUTCDate()).padStart(2,'0') + '.' + String(d.getUTCMonth()+1).padStart(2,'0')
-}
+const _fmtDM = (d, m) => String(d).padStart(2,'0') + '.' + String(m).padStart(2,'0')
 
 // Собирает агрегаты из serverOpsCache
 function _anAggregate() {
@@ -2825,13 +2816,11 @@ function _anAggregate() {
       MONTHLY[mk].sum += op.amount
       MONTHLY[mk].cnt += 1
 
-      // ISO-неделя года — ключ глобальный, по году+номеру
-      const wkKey = parsed.year + '-W' + String(parsed.isoWeek).padStart(2,'0')
-      WEEKLY[wkKey] = WEEKLY[wkKey] || {sum:0,cnt:0,isoWeek:parsed.isoWeek,year:parsed.year,
-                                          months:new Set()}
+      // Неделя привязана к месяцу: ключ = месяц + номер недели внутри него
+      const wkKey = mk + '-W' + parsed.wi
+      WEEKLY[wkKey] = WEEKLY[wkKey] || {sum:0,cnt:0,mk,year:parsed.year,month:parsed.month,wi:parsed.wi}
       WEEKLY[wkKey].sum += op.amount
       WEEKLY[wkKey].cnt += 1
-      WEEKLY[wkKey].months.add(mk)
 
       CLIENTS[grp] = CLIENTS[grp] || {name:grp,total:0,months:{}}
       CLIENTS[grp].total += op.amount
@@ -3000,20 +2989,21 @@ function renderAnalytics() {
   // Weekly table — ISO weeks, сортировка по возрастанию
   const allWeeks = Object.entries(data.WEEKLY)
     .map(([k,v]) => ({key:k, ...v}))
-  // Фильтр по выбранному месяцу: показываем недели, у которых есть операции в этом месяце
+  // Фильтр по выбранному месяцу: недели принадлежат ровно одному месяцу
   const visibleWeeks = anSelMonth
-    ? allWeeks.filter(w => w.months.has(anSelMonth))
+    ? allWeeks.filter(w => w.mk === anSelMonth)
     : allWeeks
-  visibleWeeks.sort((a,b) => a.isoWeek - b.isoWeek || a.year - b.year)
+  visibleWeeks.sort((a,b) => a.year - b.year || a.month - b.month || a.wi - b.wi)
   const maxWeekSum = Math.max(...allWeeks.map(w => w.sum), 1)
   const weekDenom = anSelMonth ? data.MONTHLY[anSelMonth].sum : TOTAL
 
   document.getElementById('an-weekBody').innerHTML = visibleWeeks.map(w => {
-    const rng = _isoWeekRange(w.year, w.isoWeek)
+    const rng = _monthWeekRange(w.year, w.month, w.wi)
     const barW = (w.sum/maxWeekSum*100).toFixed(1)
+    const lbl = (anSelMonth ? '' : MONTH_LBL_SHORT[w.month] + ' · ') + 'Неделя ' + w.wi
     return `<tr class="week-row">
-      <td><span class="an-week-label">Неделя ${w.isoWeek}</span></td>
-      <td><span class="an-dates-chip">${_fmtDM(rng.start)} – ${_fmtDM(rng.end)}</span></td>
+      <td><span class="an-week-label">${lbl}</span></td>
+      <td><span class="an-dates-chip">${_fmtDM(rng.s, w.month)} – ${_fmtDM(rng.e, w.month)}</span></td>
       <td>
         <div class="an-bar-wrap">
           <div class="an-bar-bg"><div class="an-bar-fill" style="width:${barW}%"></div></div>
