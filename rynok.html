@@ -150,9 +150,8 @@ function fmtDate(iso) {
   return `${d}.${m}`;
 }
 
-// Диапазон дат для таблицы — с 23 по 31 текущего месяца, даже если данных ещё нет
-const RANGE_START = '2026-07-23';
-const RANGE_END   = '2026-07-31';
+// ponytail: скользящее окно вместо захардкоженных дат — последние 14 дней по сегодняшний
+const WINDOW_DAYS = 14;
 
 function dateRange(startIso, endIso) {
   const out = [];
@@ -172,6 +171,12 @@ function dateRange(startIso, endIso) {
 function todayIso() {
   const d = new Date();
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function isoShift(iso, days) {
+  const [y, m, d] = iso.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d + days, 12));
+  return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth()+1).padStart(2,'0')}-${String(dt.getUTCDate()).padStart(2,'0')}`;
 }
 
 async function loadData() {
@@ -203,14 +208,12 @@ function render(data) {
     return;
   }
 
-  // Диапазон 23-31 + любые даты данных, которые выходят за его пределы (объединяем и сортируем)
-  const allDays = new Set(dateRange(RANGE_START, RANGE_END));
-  positions.forEach(p => Object.keys(p.days).forEach(d => allDays.add(d)));
-  const days = Array.from(allDays).sort();
   const today = todayIso();
+  const rangeStart = isoShift(today, -(WINDOW_DAYS - 1));
+  const days = dateRange(rangeStart, today);
 
   document.getElementById('status-text').textContent =
-    `${positions.length} позиций · период ${fmtDate(RANGE_START)}–${fmtDate(RANGE_END)}`;
+    `${positions.length} позиций · период ${fmtDate(rangeStart)}–${fmtDate(today)}`;
 
   // Группируем по сайту
   const bySite = {};
