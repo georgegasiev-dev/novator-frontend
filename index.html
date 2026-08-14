@@ -2753,6 +2753,28 @@ const _fmtAn = v => v >= 1e6 ? (v/1e6).toFixed(1)+'M' : v >= 1e3 ? Math.round(v/
 const _fmtAn2 = v => new Intl.NumberFormat('ru-RU').format(Math.round(v))
 const _pctAn = (a,b) => b ? (a/b*100).toFixed(1)+'%' : '—'
 
+// Сборка из ЕОВР, 'YYYY-MM' → листов. Заполняется с /api/eovr/year/{year}
+const eovrSborka = {}
+const _eovrYears = new Set()
+
+function eovrLoadYears(monthKeys) {
+  const years = [...new Set(monthKeys.map(k => k.split('-')[0]))].filter(y => !_eovrYears.has(y))
+  if (!years.length) return
+  years.forEach(y => _eovrYears.add(y))
+  Promise.all(years.map(y =>
+    fetch(API + '/api/eovr/year/' + y).then(r => r.ok ? r.json() : null).catch(() => null)
+  )).then(res => {
+    let got = false
+    for (const d of res) {
+      for (const m of (d?.months || [])) {
+        eovrSborka[`${d.year}-${String(m.month).padStart(2,'0')}`] = m.sborka
+        got = true
+      }
+    }
+    if (got) renderAnalytics()
+  })
+}
+
 // Парсит дату "DD.MM.YYYY" → {year, month, day, weekKey, monthKey}
 function _anParseDate(s) {
   if (!s) return null
@@ -2841,12 +2863,7 @@ function _anAggregate() {
 function renderAnalytics() {
   const data = _anAggregate()
   const monthKeys = Object.keys(data.MONTHLY).sort()
-  // ponytail: листы берём из сделок Продаж (там же, где их правит пользователь)
-  const sheetsByMonth = {}
-  for (const d of salesDeals) {
-    const p = _anParseDate(d.date)
-    if (p) sheetsByMonth[p.monthKey] = (sheetsByMonth[p.monthKey] || 0) + (d.sheets || 0)
-  }
+  eovrLoadYears(monthKeys)   // ponytail: подтянет и перерисует, если данных ещё нет
   if (!monthKeys.length) {
     document.getElementById('an-kpi-total').textContent = '—'
     document.getElementById('an-kpi-best').textContent = '—'
@@ -2908,10 +2925,11 @@ function renderAnalytics() {
       }
     }],
     data: {
-      labels: monthKeys.map(k => [
-        MONTH_LBL_SHORT[parseInt(k.split('-')[1],10)],
-        (sheetsByMonth[k] || 0).toLocaleString('ru-RU') + ' л.'
-      ]),
+      labels: monthKeys.map(k => {
+        const s = eovrSborka[k]
+        return [MONTH_LBL_SHORT[parseInt(k.split('-')[1],10)],
+                s == null ? '—' : Math.round(s).toLocaleString('ru-RU') + ' л.']
+      }),
       datasets: [{
         data: monthKeys.map(k => data.MONTHLY[k].sum),
         backgroundColor: monthKeys.map(k => {
