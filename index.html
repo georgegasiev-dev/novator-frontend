@@ -2803,6 +2803,21 @@ function _monthWeekRange(year, month, wi) {
 
 const _fmtDM = (d, m) => String(d).padStart(2,'0') + '.' + String(m).padStart(2,'0')
 
+// Кэш операций по группам клиентов (заполняется в renderAnalytics)
+let _anClientOpsCache = {}
+
+function showClientOpsCard(groupName) {
+  const incomeModal = document.getElementById('income-modal')
+  if (incomeModal) incomeModal.classList.remove('show')
+  if (!groupName) return
+  const g = _anClientOpsCache[groupName]
+  const ops = (g && g.ops) ? [...g.ops].sort((a,b) => (b.date||'').localeCompare(a.date||'')) : []
+  document.getElementById('contractor-card-name').textContent = groupName
+  document.getElementById('contractor-card-modal').classList.add('show')
+  document.body.style.overflow = 'hidden'
+  renderContractorCard(groupName, ops)
+}
+
 // Собирает агрегаты из serverOpsCache
 function _anAggregate() {
   const MONTHLY = {}
@@ -2844,9 +2859,10 @@ function _anAggregate() {
       WEEKLY[wkKey].sum += op.amount
       WEEKLY[wkKey].cnt += 1
 
-      CLIENTS[grp] = CLIENTS[grp] || {name:grp,total:0,months:{}}
+      CLIENTS[grp] = CLIENTS[grp] || {name:grp,total:0,months:{},ops:[]}
       CLIENTS[grp].total += op.amount
       CLIENTS[grp].months[mk] = (CLIENTS[grp].months[mk]||0) + op.amount
+      CLIENTS[grp].ops.push({...op, _month: bdMonth})
 
       TXS[mk] = TXS[mk] || []
       TXS[mk].push({d: `${String(parsed.day).padStart(2,'0')}.${String(parsed.month).padStart(2,'0')}`,
@@ -2862,6 +2878,7 @@ function _anAggregate() {
 
 function renderAnalytics() {
   const data = _anAggregate()
+  _anClientOpsCache = data.CLIENTS
   const monthKeys = Object.keys(data.MONTHLY).sort()
   eovrLoadYears(monthKeys)   // ponytail: подтянет и перерисует, если данных ещё нет
   if (!monthKeys.length) {
@@ -3008,7 +3025,7 @@ function renderAnalytics() {
   document.getElementById('an-clientBars').innerHTML = clientsList.map(c => {
     const pct = (c.total/maxClient*100).toFixed(1)
     const color = _anClientColor(c.name)
-    return `<div class="an-client-bar-row" onclick="showContractorCard('${c.name.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">
+    return `<div class="an-client-bar-row" onclick="showClientOpsCard('${c.name.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">
       <div class="an-client-name" title="${c.name}">${c.name}</div>
       <div class="an-client-bar-outer" title="${_fmtAn2(c.total)} ₽">
         <div class="an-client-bar-inner" style="width:0%;background:${color}44;border-right:2px solid ${color}" data-w="${pct}"></div>
