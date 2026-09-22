@@ -2913,13 +2913,15 @@ function renderAnalytics() {
       '% от ' + (anSelMonth ? MONTH_LBL_FULL[parseInt(anSelMonth.split('-')[1],10)].toLowerCase() : 'оборота')
   }
 
-  // BAR chart
+  // BAR chart — два столбца рядом: оранжевый (оплаты), синий (собрано листов)
   Chart.defaults.font.family = 'system-ui, -apple-system, sans-serif'
   Chart.defaults.color = '#666'
   if (anBarChart) anBarChart.destroy()
+  const AN_BLUE = '#4a90e2'
+  const sheetsData = monthKeys.map(k => eovrSborka[k] == null ? null : Math.round(eovrSborka[k]))
   anBarChart = new Chart(document.getElementById('an-barChart'), {
     type: 'bar',
-    // ponytail: свой мини-плагин вместо chartjs-plugin-datalabels — сумма всегда видна над столбцом
+    // ponytail: свой мини-плагин вместо chartjs-plugin-datalabels — значение всегда видно над столбцом
     plugins: [{
       id: 'barValues',
       afterDatasetsDraw(c) {
@@ -2928,39 +2930,62 @@ function renderAnalytics() {
         ctx.font = '600 10px system-ui, -apple-system, sans-serif'
         ctx.textAlign = 'center'
         ctx.textBaseline = 'bottom'
+        // Оплаты (оранжевый, dataset 0)
         c.getDatasetMeta(0).data.forEach((bar, i) => {
           const v = c.data.datasets[0].data[i]
           if (!v) return
           ctx.fillStyle = anSelMonth ? (monthKeys[i] === anSelMonth ? '#f0a500' : '#555') : '#999'
           ctx.fillText(_fmtAn(v), bar.x, bar.y - 4)
         })
+        // Собрано листов (синий, dataset 1)
+        c.getDatasetMeta(1).data.forEach((bar, i) => {
+          const v = c.data.datasets[1].data[i]
+          if (v == null) return
+          ctx.fillStyle = anSelMonth ? (monthKeys[i] === anSelMonth ? AN_BLUE : '#555') : '#7fb0e8'
+          ctx.fillText(v.toLocaleString('ru-RU'), bar.x, bar.y - 4)
+        })
         ctx.restore()
       }
     }],
     data: {
-      labels: monthKeys.map(k => {
-        const s = eovrSborka[k]
-        return [MONTH_LBL_SHORT[parseInt(k.split('-')[1],10)],
-                s == null ? '—' : Math.round(s).toLocaleString('ru-RU') + ' л.']
-      }),
+      labels: monthKeys.map(k => MONTH_LBL_SHORT[parseInt(k.split('-')[1],10)]),
       datasets: [{
+        label: 'Оплаты',
         data: monthKeys.map(k => data.MONTHLY[k].sum),
         backgroundColor: monthKeys.map(k => {
           if (anSelMonth) return k === anSelMonth ? '#f0a500' : 'rgba(240,165,0,0.18)'
           return k === bestMk ? '#f0a500' : 'rgba(240,165,0,0.35)'
         }),
         borderColor: '#f0a500', borderWidth: 1, borderRadius: 3,
+        yAxisID: 'y',
+      }, {
+        label: 'Собрано листов',
+        data: sheetsData,
+        backgroundColor: monthKeys.map(k => {
+          if (anSelMonth) return k === anSelMonth ? AN_BLUE : 'rgba(74,144,226,0.18)'
+          return 'rgba(74,144,226,0.35)'
+        }),
+        borderColor: AN_BLUE, borderWidth: 1, borderRadius: 3,
+        yAxisID: 'y1',
       }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       layout: { padding: { top: 16 } },
       plugins: {
-        legend: { display: false },
+        legend: {
+          display: true, position: 'top', align: 'end',
+          labels: { boxWidth: 10, boxHeight: 10, font: { size: 10 }, color: '#888', padding: 10 }
+        },
         tooltip: {
           backgroundColor: '#181816', borderColor: '#f0a500', borderWidth: 1,
           titleColor: '#e0e0e0', bodyColor: '#e0e0e0', padding: 10,
-          callbacks: { label: ctx => ' ' + _fmtAn2(ctx.raw) + ' ₽' }
+          mode: 'index', intersect: false,
+          callbacks: {
+            label: ctx => ctx.raw == null ? null :
+              ctx.datasetIndex === 0 ? ' Оплаты: ' + _fmtAn2(ctx.raw) + ' ₽'
+                                      : ' Собрано: ' + _fmtAn2(ctx.raw) + ' л.'
+          }
         }
       },
       onClick(e, els) {
@@ -2971,7 +2996,14 @@ function renderAnalytics() {
       },
       scales: {
         x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { font: { size: 11 } } },
-        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { font: { size: 10 }, callback: v => _fmtAn(v) } }
+        y: {
+          position: 'left', grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: { font: { size: 10 }, color: '#999', callback: v => _fmtAn(v) }
+        },
+        y1: {
+          position: 'right', grid: { display: false },
+          ticks: { font: { size: 10 }, color: '#7fb0e8', callback: v => _fmtAn(v) }
+        }
       }
     }
   })
