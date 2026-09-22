@@ -570,10 +570,6 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
       </div>
     </div>
     <div class="login-field">
-      <label>Логин</label>
-      <input type="text" id="l-user" autocomplete="username" placeholder="admin">
-    </div>
-    <div class="login-field">
       <label>Пароль</label>
       <input type="password" id="l-pass" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
     </div>
@@ -809,11 +805,11 @@ function getAuth(){ return sessionStorage.getItem('nvt_auth') || '' }
 function getAuthHeader(){ return { Authorization: getAuth(), 'X-API-Key': API_KEY } }
 
 async function doLogin(){
-  const user = document.getElementById('l-user').value.trim()
+  const user = 'admin'
   const pass = document.getElementById('l-pass').value
   const btn  = document.getElementById('l-btn')
   const err  = document.getElementById('l-err')
-  if(!user||!pass){err.textContent='Введите логин и пароль';return}
+  if(!pass){err.textContent='Введите пароль';return}
   btn.disabled=true; btn.textContent='Проверяем...'
   try{
     const auth = 'Basic ' + btoa(user+':'+pass)
@@ -824,7 +820,7 @@ async function doLogin(){
       err.textContent=''
       initApp()
     } else {
-      err.textContent = 'Неверный логин или пароль'
+      err.textContent = 'Неверный пароль'
     }
   } catch(e){
     err.textContent = 'Ошибка подключения к серверу'
