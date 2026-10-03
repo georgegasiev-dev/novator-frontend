@@ -184,7 +184,7 @@ async function loadData() {
   btn.disabled = true;
   btn.textContent = '↻ Загрузка...';
   try {
-    const res = await fetch(`${API}/api/competitor-prices`);
+    const res = await fetch(`${API}/api/competitor-prices/refresh`, { method: 'POST' });
     const data = await res.json();
     render(data);
     document.getElementById('last-update').textContent =
