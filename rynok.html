@@ -210,7 +210,8 @@ function render(data) {
 
   const today = todayIso();
   const rangeStart = isoShift(today, -(WINDOW_DAYS - 1));
-  const days = dateRange(rangeStart, today);
+  const days = dateRange(rangeStart, today);          // старое → новое, нужно для расчёта трендов
+  const daysDisplay = [...days].slice().reverse();     // новое → старое, порядок отображения колонок
 
   document.getElementById('status-text').textContent =
     `${positions.length} позиций · период ${fmtDate(rangeStart)}–${fmtDate(today)}`;
@@ -223,34 +224,44 @@ function render(data) {
 
   let html = '<div class="site-block"><div class="table-wrap"><table>';
   html += '<thead><tr><th class="variant-col">Позиция</th>';
-  days.forEach(d => html += `<th class="${d === today ? 'today-col' : ''}">${fmtDate(d)}</th>`);
+  daysDisplay.forEach(d => html += `<th class="${d === today ? 'today-col' : ''}">${fmtDate(d)}</th>`);
   html += '</tr></thead><tbody>';
 
   Object.keys(bySite).sort().forEach(site => {
-    html += `<tr class="site-row"><td colspan="${days.length + 1}">🏭 ${site}</td></tr>`;
+    html += `<tr class="site-row"><td colspan="${daysDisplay.length + 1}">🏭 ${site}</td></tr>`;
 
     bySite[site].sort((a,b) => a.variant.localeCompare(b.variant)).forEach(p => {
       const nameHtml = p.url
         ? `<a class="variant-link" href="${p.url}" target="_blank" rel="noopener">${p.variant}</a>`
         : p.variant;
-      html += `<tr><td class="variant-col">${nameHtml}</td>`;
+
+      // Тренд считаем в хронологическом порядке (старое → новое), независимо от порядка отображения,
+      // чтобы стрелки ↑/↓ всегда сравнивали с действительно предыдущим по времени днём.
+      const trendByDate = {};
       let prevPrice = null;
       days.forEach(d => {
+        const entry = p.days[d];
+        if (entry && entry.price != null) {
+          if (prevPrice !== null && entry.price !== prevPrice) {
+            trendByDate[d] = entry.price > prevPrice
+              ? `<span class="price-up">↑${entry.price - prevPrice}</span>`
+              : `<span class="price-down">↓${entry.price - prevPrice}</span>`;
+          }
+          prevPrice = entry.price;
+        }
+      });
+
+      html += `<tr><td class="variant-col">${nameHtml}</td>`;
+      daysDisplay.forEach(d => {
         const entry = p.days[d];
         const cellCls = d === today ? 'today-col' : '';
         if (!entry || entry.price == null) {
           html += `<td class="empty-cell ${cellCls}">—</td>`;
           return;
         }
-        let trend = '';
-        if (prevPrice !== null && entry.price !== prevPrice) {
-          trend = entry.price > prevPrice
-            ? `<span class="price-up">↑${entry.price - prevPrice}</span>`
-            : `<span class="price-down">↓${entry.price - prevPrice}</span>`;
-        }
+        const trend = trendByDate[d] || '';
         const stockNote = entry.in_stock === 0 ? '<span class="no-stock">нет в наличии</span>' : '';
         html += `<td class="${cellCls}">${entry.price}₽${trend}${stockNote}</td>`;
-        prevPrice = entry.price;
       });
       html += '</tr>';
     });
