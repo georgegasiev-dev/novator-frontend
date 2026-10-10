@@ -799,10 +799,9 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
 
 <script>
 const API  = 'https://api.zavodzavodov.ru'
-const API_KEY = 'JOD5qL4QLP6SfoMhnmA6e6zkyjQwL3dy---thYDUAr4'
 // ── авторизация ──────────────────────────────────────────────────────────────
 function getAuth(){ return sessionStorage.getItem('nvt_auth') || '' }
-function getAuthHeader(){ return { Authorization: getAuth(), 'X-API-Key': API_KEY } }
+function getAuthHeader(){ return { Authorization: getAuth() } }
 
 async function doLogin(){
   const user = 'admin'
@@ -892,6 +891,7 @@ const ID2CATS = {
   'zp_av_shpon': ['ЗП','зп','зп - аванс шпон'],
   'adm':         ['Адм.','адм','адм.','административные'],
   'arenda':      ['Аренда','аренда'],
+  'iz_pribyli': ['Из прибыли','из прибыли'],
   'prochie':     ['Прочие нераспознанные','прочие нераспознанные','Прочее','прочее'],
   'prikhod':     null,  // кредит — обрабатывается отдельно
   'proizvod':    null,
@@ -918,6 +918,7 @@ const ROW_LABELS = {
   'upakovka':'Упаковка','perevozch':'Перевозчик','zp_avans':'ЗП аванс',
   'zp_ofic':'ЗП официалка','zp_bolnich':'ЗП больничные','zp_shpon':'ЗП шпон',
   'zp_av_shpon':'ЗП аванс шпон','adm':'Адм. расходы','arenda':'Аренда',
+  'iz_pribyli':'Из прибыли',
   'prochie':'Прочие нераспознанные',
   'prikhod':'Поступления','_tbeznal':'Итого безнал','_tproch':'Прочие расходы',
   '_tall':'ИТОГО ВСЕГО','g_les':'Лес (группа)','g_smola':'Смола (группа)',
@@ -989,6 +990,7 @@ const ROWS = [
   {id:'adm',        label:'Административные расходы',  grp:'g_other'},
   {id:'arenda',     label:'Аренда у Сем-Прогресс',     grp:'g_other'},
   {id:'prochie',    label:'Прочие нераспознанные',     grp:'g_other'},
+  {id:'iz_pribyli', label:'Из прибыли', grp:null, rt:'total'},
   {id:'_tbeznal',   label:'ИТОГО БЕЗНАЛ',              grp:null, rt:'total'},
   {id:'_tproch',    label:'ИТОГО ПРОЧИЕ РАСХОДЫ',      grp:null, rt:'total'},
   {id:'_tall',      label:'ИТОГО ВСЕГО',               grp:null, rt:'grand'},
@@ -1009,6 +1011,7 @@ const STD = {
   zp_av_shpon:[0,0,0,0,0],adm:[0,0,0,0,0],
   arenda:[50000,50000,50000,50000,50000],
   prochie:[0,0,0,0,0],
+  iz_pribyli:[0,0,0,0,0],
   prikhod:[11820000,11820000,11820000,11820000,11820000],
   proizvod:[0,0,0,0,0],
 }
@@ -1031,13 +1034,14 @@ const CAT2ID = {
   'ндс':'nds','ндфл':'ndfl','упаковка':'upakovka','перевозчик':'perevozch',
   'зп':'zp_avans','аренда':'arenda','адм':'adm','адм.':'adm',
   'поступления от клиентов':'prikhod',
+  'из прибыли':'iz_pribyli',
   'прочее':'prochie',
   'прочие нераспознанные':'prochie',
   'прочие':'prochie',
 }
-const CATS = ['Лес','Перевозка леса','Смола','Плёнка','ГСМ','Расходники','Свет','Вывоз мусора','НДС','НДФЛ','Упаковка','Перевозчик','ЗП','Аренда','Адм.','Прочие нераспознанные','Поступления от клиентов']
+const CATS = ['Лес','Перевозка леса','Смола','Плёнка','ГСМ','Расходники','Свет','Вывоз мусора','НДС','НДФЛ','Упаковка','Перевозчик','ЗП','Аренда','Адм.','Прочие нераспознанные','Из прибыли','Поступления от клиентов']
 
-const BEZNAL = ['les','dolg_les','perev_les','smola','plenka','gsm','rashod','svet','vuvozmys','nds','ndfl','upakovka','perevozch','zp_avans','zp_ofic','zp_bolnich','zp_shpon','zp_av_shpon','adm']
+const BEZNAL = ['les','dolg_les','perev_les','smola','plenka','gsm','rashod','svet','vuvozmys','nds','ndfl','upakovka','perevozch','zp_avans','zp_ofic','zp_bolnich','zp_shpon','zp_av_shpon','adm','prochie','iz_pribyli']
 
 function computeTotals(plan, fact) {
   const s5 = (ids, src) => Array(5).fill(0).map((_,i) => ids.reduce((s,id) => s+(src[id]?.[i]||0), 0))
@@ -1614,7 +1618,7 @@ window.addEventListener('resize', applyLayout)
 
 async function fetchBalance() {
   try {
-    const r = await fetch(API + '/api/balance', {headers:{'X-API-Key':API_KEY}})
+    const r = await fetch(API + '/api/balance', {headers:getAuthHeader()})
     if (!r.ok) return
     const d = await r.json()
     if (d.balance == null) return
@@ -1697,7 +1701,7 @@ function updateLastUpdDisplay() {
 
 async function fetchData() {
   try {
-    const r = await fetch(API+'/api/data', {mode:'cors', headers:{'X-API-Key':API_KEY}})
+    const r = await fetch(API+'/api/data', {mode:'cors', headers:getAuthHeader()})
     if (!r.ok) throw new Error(r.status)
     const d = await r.json()
     for (const [m, v] of Object.entries(d)) {
@@ -1826,7 +1830,7 @@ function showContractorCard(contractorName) {
   document.getElementById('contractor-card-modal').classList.add('show')
   document.body.style.overflow = 'hidden'
 
-  fetch(API + '/api/contractor-ops?name=' + encodeURIComponent(name), {mode:'cors', headers:{'X-API-Key':API_KEY}})
+  fetch(API + '/api/contractor-ops?name=' + encodeURIComponent(name), {mode:'cors', headers:getAuthHeader()})
     .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json() })
     .then(data => { renderContractorCard(name, data.ops || []) })
     .catch(e => {
@@ -2016,7 +2020,7 @@ document.addEventListener('keydown', e => { if (e.key==='Escape') hideModal() })
 const CAT_DISPLAY_LIST = [
   'Лес','Перевозка леса','Смола','Плёнка','ГСМ','Расходники','Свет',
   'Вывоз мусора','НДС','НДФЛ','Упаковка','Перевозчик',
-  'ЗП','Аренда','Адм.','Прочие нераспознанные','Поступления от клиентов'
+  'ЗП','Аренда','Адм.','Прочие нераспознанные','Из прибыли','Поступления от клиентов'
 ]
 
 let currentModalOps = []
@@ -2039,39 +2043,18 @@ async function onModalCatChange(oi) {
       headers: { Authorization: getAuth(), 'Content-Type': 'application/json' },
       body: JSON.stringify({ month: currentModalMonth, contractor: contractor, new_cat: newCat, date: op ? op.date : undefined, amount: op ? op.amount : undefined })
     })
-    sel.classList.remove('saving')
-    if (r.ok || r.status === 200) {
-      sel.classList.add('changed')
-      if (saved) { saved.classList.add('show'); setTimeout(() => saved.classList.remove('show'), 2500) }
-    } else {
-      showToast('Сервер: ' + r.status + ' — обновлено локально', 'ok')
-      sel.classList.add('changed')
-      if (saved) { saved.classList.add('show'); setTimeout(() => saved.classList.remove('show'), 2500) }
-    }
-    // Обновляем локально в любом случае
-    if (op) {
-      op.cat = newCat
-      // Обновляем serverOpsCache
-      const mOps = serverOpsCache[currentModalMonth] || []
-      mOps.forEach(mop => {
-        if ((mop.contractor||'').toLowerCase().trim() === contractor.toLowerCase().trim()) mop.cat = newCat
-      })
-    }
-    await fetchData()
-  } catch(e) {
-    sel.classList.remove('saving')
+    if (!r.ok) throw new Error('Сервер: ' + r.status)
+    const result = await r.json()
+    if (result.ops_updated !== 1) throw new Error('Платёж не найден однозначно')
+    if (op) op.cat = newCat
     sel.classList.add('changed')
     if (saved) { saved.classList.add('show'); setTimeout(() => saved.classList.remove('show'), 2500) }
-    // Обновляем только локально
-    if (op) {
-      op.cat = newCat
-      const mOps = serverOpsCache[currentModalMonth] || []
-      mOps.forEach(mop => {
-        if ((mop.contractor||'').toLowerCase().trim() === contractor.toLowerCase().trim()) mop.cat = newCat
-      })
-    }
     await fetchData()
+  } catch(e) {
+    sel.value = op ? op.cat : ''
+    showToast('Категория не сохранена: ' + e.message, 'error')
   }
+  sel.classList.remove('saving')
   sel.disabled = false
 }
 
@@ -2191,13 +2174,13 @@ let dirSaving = {}
 
 const CAT_ALL = ['Лес','Перевозка леса','Смола','Плёнка','ГСМ','Расходники','Свет',
   'Вывоз мусора','НДС','НДФЛ','Упаковка','Перевозчик','ЗП','Аренда','Адм.',
-  'Прочие нераспознанные','Поступления от клиентов']
+  'Прочие нераспознанные','Из прибыли','Поступления от клиентов']
 
 async function loadDir() {
   document.getElementById('dir-tbody').innerHTML =
     '<tr><td colspan="5" class="dir-loading">Загрузка...</td></tr>'
   try {
-    const r = await fetch(API + '/api/contractors', {headers:{'X-API-Key':API_KEY}})
+    const r = await fetch(API + '/api/contractors', {headers:getAuthHeader()})
     if (r.ok) {
       dirData = await r.json()
       // Заполняем фильтр категорий
@@ -3173,6 +3156,7 @@ const CLOSE_CATEGORIES = [
   { key: 'Аренда помещений',       icon: '🏭', planKey: 'arenda' },
   { key: 'Административные',       icon: '📋', planKey: 'adm' },
   { key: 'Вывоз мусора',           icon: '🗑️', planKey: 'vuvozmys' },
+  { key: 'Из прибыли', icon: '💰', planKey: 'iz_pribyli' },
   { key: 'Прочие нераспознанные',  icon: '❓', planKey: 'prochie' },
 ]
 
@@ -3248,7 +3232,7 @@ async function closeLoad() {
     const API = window.API_BASE || 'https://api.zavodzavodov.ru'
     const yr = closeCurYear || new Date().getFullYear()
     const r = await fetch(`${API}/api/obligations?month=${encodeURIComponent(month)}&year=${yr}`, {
-      headers: {'X-API-Key': sessionStorage.getItem('nvt_api_key') || ''}
+      headers: getAuthHeader()
     })
     const data = await r.json()
     closeObligations = {}
@@ -3404,7 +3388,7 @@ function closeEdit(spanEl, category, field, currentVal, month) {
       const API = window.API_BASE || 'https://api.zavodzavodov.ru'
       await fetch(`${API}/api/obligations`, {
         method: 'POST',
-        headers: {'Content-Type':'application/json','X-API-Key': sessionStorage.getItem('nvt_api_key')||''},
+        headers: {...getAuthHeader(), 'Content-Type':'application/json'},
         body: JSON.stringify({
           year: closeCurYear || new Date().getFullYear(),
           month, category,
@@ -3431,7 +3415,7 @@ window._planData = {}
   try {
     const API = window.API_BASE || 'https://api.zavodzavodov.ru'
     const r = await fetch(`${API}/api/plan/all`, {
-      headers: {'X-API-Key': sessionStorage.getItem('nvt_api_key') || ''}
+      headers: getAuthHeader()
     })
     const d = await r.json()
     for (const [m, v] of Object.entries(d)) {
