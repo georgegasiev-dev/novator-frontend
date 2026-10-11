@@ -9,7 +9,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-html{overflow-x:hidden}
+html{overflow-x:hidden;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{background:#0b0b0b;color:#e0e0e0;font-family:system-ui,-apple-system,sans-serif;min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden;width:100%}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:#111}
@@ -407,7 +407,23 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
 ═══════════════════════════════════════════════ */
 @media (max-width: 768px) {
 
+  /* Keep the layout at the device width, including before initialization. */
+  body > div, #page-calendar, .tbl-wrap, .tbl-scroll, .mob-tbl-wrap {
+    min-width: 0;
+    max-width: 100%;
+  }
+  #login-screen { padding: 16px; }
+  .login-box { width: 340px; max-width: 100%; }
+
+  /* iOS zooms focused controls below 16px and can retain that zoom after login.
+     Include dynamically created controls with inline font sizes. */
+  input, select, textarea { font-size: 16px !important; }
+
   /* Шапка */
+  .hdr { padding: 12px 14px; gap: 10px; flex-wrap: wrap; }
+  .brand { min-width: 0; flex: 1 1 230px; }
+  .brand > div:last-child { min-width: 0; }
+  .hdr-right { gap: 8px; flex-wrap: wrap; }
   .brand-name { font-size: 15px; }
   .brand-sub  { display: none; }
   .last-upd   { display: none; }
@@ -428,11 +444,12 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
   .mbar { display: none; }
 
   /* Десктопная таблица — скрыть */
+  .tbl-wrap { display: none; }
   .tbl-wrap table { display: none; }
   .chart-panel { display: none; }
 
   /* Мобильный список — показать */
-  .mob-tbl-wrap { display: block !important; }
+  .mob-tbl-wrap { display: flex !important; width: 100%; }
 
   /* ── Статус-плашка (месяц + выписка + остаток) ── */
   .mob-status {
@@ -446,6 +463,7 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
     display: flex;
     align-items: center;
     gap: 8px;
+    flex-wrap: wrap;
     margin-bottom: 6px;
   }
   .mob-status-month {
@@ -494,12 +512,14 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
   }
   .mob-week-nav .mob-wn-btn:hover { border-color: #f0a500; color: #f0a500; }
   .mob-week-nav .mob-wn-btn:disabled { color: #2a2a2a; border-color: #1a1a1a; cursor: default; }
-  .mob-week-nav .mob-wn-info { text-align: center; flex: 1; }
+  .mob-week-nav .mob-wn-info { text-align: center; flex: 1; min-width: 0; }
   .mob-week-nav .mob-wn-num   { font-size: 13px; font-weight: 700; color: #f0a500; }
   .mob-week-nav .mob-wn-dates { font-size: 10px; color: #444; margin-top: 2px; letter-spacing: .3px; }
 
   /* Список строк */
-  .mob-rows { overflow-y: auto; flex: 1; }
+  .mob-rows { overflow-y: auto; flex: 1; min-width: 0; }
+  .mob-group-hdr .mob-grp-label { min-width: 0; overflow-wrap: anywhere; }
+  .mob-group-hdr .mob-grp-sum { flex-shrink: 0; white-space: nowrap; }
 
   /* Группа */
   .mob-group-hdr {
@@ -531,7 +551,7 @@ tr.income-sep td { height: 6px; background: #0b0b0b; border: none !important; pa
   }
   .mob-row:nth-child(even) { background: #141414; }
   .mob-row .mob-row-label {
-    font-size: 12px; color: #aaa; flex: 1; padding-right: 12px;
+    font-size: 12px; color: #aaa; flex: 1; min-width: 0; padding-right: 12px;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   .mob-row .mob-row-fact {
@@ -815,6 +835,7 @@ async function doLogin(){
     const r = await fetch(API+'/api/raiffeisen/status',{headers:{Authorization:auth}})
     if(r.status===200||r.status===404){
       sessionStorage.setItem('nvt_auth', auth)
+      document.getElementById('l-pass').blur()
       document.getElementById('login-screen').classList.add('hidden')
       err.textContent=''
       initApp()
@@ -1468,7 +1489,7 @@ function render() {
 // ── МОБИЛЬНЫЙ РЕНДЕР ──────────────────────────────────────────────────────────
 let mobWeekIdx = 0  // текущая отображаемая неделя на мобиле
 
-function isMobile() { return window.innerWidth <= 768 }
+function isMobile() { return window.matchMedia('(max-width: 768px)').matches }
 
 function initMobWeek() {
   const cwi = getCurWeekIdx(curMonth)
