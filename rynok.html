@@ -145,6 +145,10 @@
 <script>
 const API = 'https://api.zavodzavodov.ru';
 
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[ch]));
+}
+
 function fmtDate(iso) {
   const [y, m, d] = iso.split('-');
   return `${d}.${m}`;
@@ -261,12 +265,12 @@ function render(data) {
   html += '</tr></thead><tbody>';
 
   Object.keys(bySite).sort().forEach(site => {
-    html += `<tr class="site-row"><td colspan="${daysDisplay.length + 1}">🏭 ${site}</td></tr>`;
+    html += `<tr class="site-row"><td colspan="${daysDisplay.length + 1}">🏭 ${escapeHtml(site)}</td></tr>`;
 
     bySite[site].sort((a,b) => a.variant.localeCompare(b.variant)).forEach(p => {
       const nameHtml = p.url
-        ? `<a class="variant-link" href="${p.url}" target="_blank" rel="noopener">${p.variant}</a>`
-        : p.variant;
+        ? `<a class="variant-link" href="${escapeHtml(p.url)}" target="_blank" rel="noopener">${escapeHtml(p.variant)}</a>`
+        : escapeHtml(p.variant);
 
       // Тренд считаем в хронологическом порядке (старое → новое), независимо от порядка отображения,
       // чтобы стрелки ↑/↓ всегда сравнивали с действительно предыдущим по времени днём.
@@ -294,7 +298,7 @@ function render(data) {
         }
         const trend = trendByDate[d] || '';
         const stockNote = entry.in_stock === 0 ? '<span class="no-stock">нет в наличии</span>' : '';
-        html += `<td class="${cellCls}">${entry.price}₽${trend}${stockNote}</td>`;
+        html += `<td class="${cellCls}">${entry.price_is_from ? 'от ' : ''}${entry.price}₽${trend}${stockNote}</td>`;
       });
       html += '</tr>';
     });
