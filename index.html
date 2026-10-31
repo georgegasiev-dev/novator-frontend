@@ -833,10 +833,21 @@ function apiFetch(input, init = {}) {
   const headers = new Headers(input instanceof Request ? input.headers : undefined)
   new Headers(init.headers).forEach((value, key) => headers.set(key, value))
   const auth = sessionStorage.getItem('nvt_auth') || ''
+  if (!auth && ['/eovr.html', '/rynok.html'].includes(location.pathname)) {
+    location.replace('/?next=' + encodeURIComponent(location.pathname.slice(1)))
+    return Promise.reject(new Error('Войдите в календарь для доступа к странице'))
+  }
   if (auth && !headers.has('Authorization')) headers.set('Authorization', auth)
   return window.fetch(input, { ...init, headers })
 }
 
+
+function redirectToRequestedCalendarPage() {
+  const page = new URLSearchParams(location.search).get('next')
+  if (!['eovr.html', 'rynok.html'].includes(page)) return false
+  location.replace('/' + page)
+  return true
+}
 
 async function doLogin(){
   const user = 'admin'
@@ -850,6 +861,7 @@ async function doLogin(){
     const r = await apiFetch(API+'/api/raiffeisen/status',{headers:{Authorization:auth}})
     if(r.status===200){
       sessionStorage.setItem('nvt_auth', auth)
+      if (redirectToRequestedCalendarPage()) return
       document.getElementById('l-pass').blur()
       document.getElementById('login-screen').classList.add('hidden')
       err.textContent=''
@@ -3141,7 +3153,7 @@ async function initApp(){
 }
 
 // При загрузке — показываем логин если нет сессии
-if(sessionStorage.getItem('nvt_auth')){
+if(sessionStorage.getItem('nvt_auth') && !redirectToRequestedCalendarPage()){
   document.getElementById('login-screen').classList.add('hidden')
   initApp()
 }
