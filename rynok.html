@@ -143,6 +143,21 @@
 </main>
 
 <script>
+
+function apiFetch(input, init = {}) {
+  const target = new URL(input instanceof Request ? input.url : input, window.location.href)
+  const backend = new URL('https://api.zavodzavodov.ru')
+  const prefix = backend.pathname.replace(/\/$/, '') + '/api/'
+  if (target.origin !== backend.origin || !target.pathname.startsWith(prefix)) {
+    return window.fetch(input, init)
+  }
+  const headers = new Headers(input instanceof Request ? input.headers : undefined)
+  new Headers(init.headers).forEach((value, key) => headers.set(key, value))
+  const auth = sessionStorage.getItem('nvt_auth') || ''
+  if (auth && !headers.has('Authorization')) headers.set('Authorization', auth)
+  return window.fetch(input, { ...init, headers })
+}
+
 const API = 'https://api.zavodzavodov.ru';
 
 function escapeHtml(value) {
@@ -194,7 +209,7 @@ async function loadData(refresh = false) {
   btn.disabled = true;
   btn.textContent = '↻ Загрузка...';
   try {
-    const res = await fetch(`${API}/api/competitor-prices${refresh ? '/refresh' : ''}`, {
+    const res = await apiFetch(`${API}/api/competitor-prices${refresh ? '/refresh' : ''}`, {
       method: refresh ? 'POST' : 'GET',
       signal: AbortSignal.timeout(15000),
     });
