@@ -154,11 +154,22 @@ function apiFetch(input, init = {}) {
   const headers = new Headers(input instanceof Request ? input.headers : undefined)
   new Headers(init.headers).forEach((value, key) => headers.set(key, value))
   const auth = sessionStorage.getItem('nvt_auth') || ''
+  if (!auth && ['/eovr.html', '/rynok.html'].includes(location.pathname)) {
+    location.replace('/?next=' + encodeURIComponent(location.pathname.slice(1)))
+    return Promise.reject(new Error('Войдите в календарь для доступа к странице'))
+  }
   if (auth && !headers.has('Authorization')) headers.set('Authorization', auth)
   return window.fetch(input, { ...init, headers })
 }
 
 const API = 'https://api.zavodzavodov.ru';
+
+function safeExternalUrl(value) {
+  try {
+    const url = new URL(String(value))
+    return ['https:', 'http:'].includes(url.protocol) ? url.href : ''
+  } catch (_) { return '' }
+}
 
 function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[ch]));
@@ -269,7 +280,7 @@ function render(data) {
     `${positions.length} позиций · период ${fmtDate(rangeStart)}–${fmtDate(today)}`;
 
   // Группируем по сайту
-  const bySite = {};
+  const bySite = Object.create(null);
   positions.forEach(p => {
     (bySite[p.site] = bySite[p.site] || []).push(p);
   });
@@ -283,8 +294,9 @@ function render(data) {
     html += `<tr class="site-row"><td colspan="${daysDisplay.length + 1}">🏭 ${escapeHtml(site)}</td></tr>`;
 
     bySite[site].sort((a,b) => a.variant.localeCompare(b.variant)).forEach(p => {
-      const nameHtml = p.url
-        ? `<a class="variant-link" href="${escapeHtml(p.url)}" target="_blank" rel="noopener">${escapeHtml(p.variant)}</a>`
+      const safeUrl = safeExternalUrl(p.url);
+      const nameHtml = safeUrl
+        ? `<a class="variant-link" href="${escapeHtml(safeUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(p.variant)}</a>`
         : escapeHtml(p.variant);
 
       // Тренд считаем в хронологическом порядке (старое → новое), независимо от порядка отображения,
@@ -313,7 +325,7 @@ function render(data) {
         }
         const trend = trendByDate[d] || '';
         const stockNote = entry.in_stock === 0 ? '<span class="no-stock">нет в наличии</span>' : '';
-        html += `<td class="${cellCls}">${entry.price_is_from ? 'от ' : ''}${entry.price}₽${trend}${stockNote}</td>`;
+        html += `<td class="${cellCls}">${entry.price_is_from ? 'от ' : ''}${escapeHtml(entry.price)}₽${trend}${stockNote}</td>`;
       });
       html += '</tr>';
     });
