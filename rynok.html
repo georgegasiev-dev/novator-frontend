@@ -154,6 +154,10 @@ function apiFetch(input, init = {}) {
   const headers = new Headers(input instanceof Request ? input.headers : undefined)
   new Headers(init.headers).forEach((value, key) => headers.set(key, value))
   const auth = sessionStorage.getItem('nvt_auth') || ''
+  if (!auth && ['/eovr.html', '/rynok.html'].includes(location.pathname)) {
+    location.replace('/?next=' + encodeURIComponent(location.pathname.slice(1)))
+    return Promise.reject(new Error('Войдите в календарь для доступа к странице'))
+  }
   if (auth && !headers.has('Authorization')) headers.set('Authorization', auth)
   return window.fetch(input, { ...init, headers })
 }
