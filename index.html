@@ -1035,35 +1035,8 @@ const ROWS = [
   {id:'proizvod',   label:'Планируем произвести, л.',  grp:null, rt:'income'},
 ]
 
-const STD = {
-  les:[5000000,5000000,5000000,5000000,5000000],dolg_les:[0,0,0,0,0],
-  perev_les:[250000,250000,250000,250000,250000],smola:[1000000,2400000,1200000,1200000,1200000],
-  plenka:[0,2500000,0,0,3500000],gsm:[250000,250000,250000,250000,250000],
-  rashod:[200000,200000,200000,200000,200000],svet:[350000,350000,350000,500000,350000],
-  vuvozmys:[0,0,140000,0,140000],nds:[0,0,0,0,0],ndfl:[0,0,0,0,0],
-  upakovka:[0,0,0,0,0],perevozch:[0,0,0,0,0],
-  zp_avans:[0,5600000,1000000,0,1000000],zp_ofic:[0,0,0,0,0],
-  zp_bolnich:[100000,0,100000,0,100000],zp_shpon:[931500,1150000,0,0,0],
-  zp_av_shpon:[0,0,0,0,0],adm:[0,0,0,0,0],
-  arenda:[50000,50000,50000,50000,50000],
-  prochie:[0,0,0,0,0],
-  iz_pribyli:[0,0,0,0,0],
-  prikhod:[11820000,11820000,11820000,11820000,11820000],
-  proizvod:[0,0,0,0,0],
-}
-const MAY_FACT = {
-  les:[4795518,4662613,6129447,3500000,null],dolg_les:[null,null,null,null,null],
-  perev_les:[500000,350000,400000,500000,null],smola:[1200000,2400000,1200000,0,null],
-  plenka:[1001650,2500000,600000,0,null],gsm:[250000,300000,100000,100000,null],
-  rashod:[527963,30000,802997,35421,null],svet:[1403000,0,910226,413989,null],
-  vuvozmys:[0,0,15383,0,null],nds:[null,null,null,null,null],ndfl:[null,null,null,null,null],
-  upakovka:[181009,0,233640,0,null],perevozch:[100802,0,201840,0,null],
-  zp_avans:[0,4833000,0,0,null],zp_ofic:[null,null,null,null,null],
-  zp_bolnich:[null,null,null,null,null],zp_shpon:[null,null,null,null,null],
-  zp_av_shpon:[null,null,null,null,null],adm:[20200,192500,294636,0,null],
-  arenda:[200000,0,100000,0,null],prikhod:[10915909,12438892,13019370,7095000,null],
-  proizvod:[null,null,null,null,null],
-}
+const STD = Object.create(null)
+const MAY_FACT = Object.create(null)
 const CAT2ID = {
   'лес':'les','перевозка леса':'perev_les','смола':'smola','пленка':'plenka','плёнка':'plenka',
   'гсм':'gsm','расходники':'rashod','свет':'svet','вывоз мусора':'vuvozmys',
@@ -1120,7 +1093,7 @@ function dClass(d, isIncome) {
 // состояние
 let curMonth = 'Май'   // переопределится в initApp() через getCurrentMonthName()
 let uploadTimes = {}
-let _accountBalance = null  // { val: 3596297.89, fmt: '3 596 297 ₽', upd: '10.06 13:44' }
+let _accountBalance = null
 let uploadMonth = 'Май'  // переопределится в initApp()
 let serverFacts = {}
 let monthsWithFact = new Set(['Май'])
@@ -1484,14 +1457,14 @@ function render() {
   const _balHtml = _accountBalance
     ? '<span style="color:#2a2a2a;margin:0 12px;font-size:13px;font-weight:300">│</span>' +
       '<span style="font-size:14px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#e0e0e0">Остаток на счёту</span>' +
-      '<span style="color:#3db88a;font-size:10px;font-weight:400;letter-spacing:1px;margin-left:8px">' + (_accountBalance.upd || '') + '</span>' +
-      '<span style="margin-left:10px;font-size:14px;font-weight:700;font-family:monospace;color:#f0a500;letter-spacing:-.3px">' + _accountBalance.fmt + '</span>'
+      '<span style="color:#3db88a;font-size:10px;font-weight:400;letter-spacing:1px;margin-left:8px">' + escapeHtml(_accountBalance.upd || '') + '</span>' +
+      '<span style="margin-left:10px;font-size:14px;font-weight:700;font-family:monospace;color:#f0a500;letter-spacing:-.3px">' + escapeHtml(_accountBalance.fmt) + '</span>'
     : ''
   document.getElementById('mbar-title').innerHTML =
     curMonth.toUpperCase() + ' 2026' +
     (monthsWithFact.has(curMonth)
       ? '<span class="fact-tag">● ФАКТ ЗАГРУЖЕН' +
-        (uploadTimes[curMonth] ? ' · ' + uploadTimes[curMonth] : '') + '</span>' + _balHtml
+        (uploadTimes[curMonth] ? ' · ' + escapeHtml(uploadTimes[curMonth]) : '') + '</span>' + _balHtml
       : '')
   document.getElementById('mbar-w').textContent = (() => {
     const lastWi = lastRealWeekIdx(curMonth)
@@ -1540,7 +1513,7 @@ function renderMobile() {
     const hasFact = monthsWithFact.has(curMonth)
     const upd = uploadTimes[curMonth] || ''
     const balVal = _accountBalance ? _accountBalance.fmt : null
-    const balUpd = _accountBalance ? (_accountBalance.upd || '') : ''
+    const balUpd = _accountBalance ? escapeHtml(_accountBalance.upd || '') : ''
 
     stEl.innerHTML =
       '<div class="mob-status-top">' +
@@ -1552,12 +1525,12 @@ function renderMobile() {
         '<button onclick="manualSync()" style="margin-left:auto;padding:3px 9px;border:1px solid #2a2a2a;border-radius:5px;background:transparent;color:#555;font-size:11px;cursor:pointer;font-family:inherit" id="mob-sync-btn">&#x27F3; обновить</button>' +
       '</div>' +
       '<div class="mob-status-balance' + (balVal ? '' : ' no-bal') + '">' +
-        (balVal ? balVal : '') +
+        (balVal ? escapeHtml(balVal) : '') +
       '</div>' +
       '<div class="mob-status-upd">' +
         (balVal
-          ? 'Остаток на счету · обновлено <span>' + balUpd + '</span>'
-          : (hasFact ? 'Выписка загружена: <span>' + upd + '</span>' : 'Факт не загружен')) +
+          ? 'Остаток на счету · обновлено <span>' + escapeHtml(balUpd) + '</span>'
+          : (hasFact ? 'Выписка загружена: <span>' + escapeHtml(upd) + '</span>' : 'Факт не загружен')) +
       '</div>'
   }
 
@@ -1731,7 +1704,7 @@ function updateLastUpdDisplay() {
   if (!el) return
   const t = uploadTimes[curMonth]
   el.innerHTML = t
-    ? 'Обновлено: <span>' + curMonth + ' · ' + t + '</span>'
+    ? 'Обновлено: <span>' + curMonth + ' · ' + escapeHtml(t) + '</span>'
     : ''
 }
 
@@ -1841,6 +1814,19 @@ function parseCreditsFromOps(ops, month) {
 let serverOpsCache = {}
 
 
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+}
+function safeNumber(value) {
+  const number = Number(value)
+  return Number.isFinite(number) ? number : 0
+}
+function salesKeyId(value) {
+  return salesDeals.find(deal => String(deal.id) === String(value))?.id
+}
+
 function esc(s) {
   return String(s||'—')
     .replace(/&/g,'&amp;')
@@ -1901,7 +1887,7 @@ function renderContractorCard(name, all) {
 
   // Группируем по месяцам
   const monthOrder = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь']
-  const groups = {}
+  const groups = Object.create(null)
   for (const op of all) {
     const mk = op._month || 'Без месяца'
     if (!groups[mk]) groups[mk] = []
@@ -1946,7 +1932,7 @@ function renderContractorCard(name, all) {
 
     for (const op of ops) {
       const dt = esc(op.date)
-      const desc = esc(op.desc).slice(0, 120)
+      const desc = esc(String(op.desc || '').slice(0, 120))
       const cat = esc(op.cat || '')
       const amt = fmtN(op.amount || 0) + ' ₽'
       const color = op.is_debit ? '#d95f5f' : '#3db88a'
@@ -1972,11 +1958,6 @@ function showOpsModal(rowId, weekIdx) {
   const month = curMonth
   const allOps = serverOpsCache[month] || []
 
-  if (allOps.length > 0) {
-    const cats = [...new Set(allOps.map(o=>o.cat))].slice(0,10)
-    console.log('[Modal] sample cats:', cats)
-    console.log('[Modal] sample op:', allOps[0])
-  }
   const wm = WM[month]
   const weekLabel = weekIdx >= 0 && weekIdx < 5
     ? 'Нед ' + wm[weekIdx].n + ' · ' + wm[weekIdx].d
@@ -2016,15 +1997,15 @@ function showOpsModal(rowId, weekIdx) {
     // Сохраняем список операций для смены категории
     currentModalOps = ops
     tbody.innerHTML = ops.map((op, oi) => {
-      const c = esc(op.contractor).slice(0,60)
-      const d = esc(op.desc).slice(0,70)
+      const c = esc(String(op.contractor || '').slice(0,60))
+      const d = esc(String(op.desc || '').slice(0,70))
       const dt = esc(op.date)
       const amt = new Intl.NumberFormat('ru-RU').format(Math.round(op.amount||0)) + ' ₽'
       const catOpts = CAT_DISPLAY_LIST.map(cat =>
         '<option value="' + cat + '"' + (cat === op.cat ? ' selected' : '') + '>' + cat + '</option>'
       ).join('')
       return '<tr id="mop-row-' + oi + '">'
-        + '<td title="' + esc(op.contractor) + '" onclick="showContractorCard(\'' + esc(op.contractor).replace(/'/g,'&#39;') + '\')" style="color:#e0e0e0;padding:9px 14px;border-bottom:1px solid #161616;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;transition:color .15s" onmouseover="this.style.color=\'#f0a500\'" onmouseout="this.style.color=\'#e0e0e0\'">' + c + '</td>'
+        + '<td title="' + esc(op.contractor) + '" data-cname="' + escapeHtml(op.contractor) + '" onclick="showContractorCard(this.dataset.cname)" style="color:#e0e0e0;padding:9px 14px;border-bottom:1px solid #161616;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;transition:color .15s" onmouseover="this.style.color=\'#f0a500\'" onmouseout="this.style.color=\'#e0e0e0\'">' + c + '</td>'
         + '<td title="' + esc(op.desc) + '" style="color:#555;padding:9px 14px;border-bottom:1px solid #161616;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + d + '</td>'
         + '<td style="color:#666;padding:9px 14px;border-bottom:1px solid #161616;white-space:nowrap">' + dt + '</td>'
         + '<td style="padding:6px 10px;border-bottom:1px solid #161616">'
@@ -2096,7 +2077,7 @@ async function onModalCatChange(oi) {
 
 // ── справочник контрагентов ───────────────────────────────────────────────────
 // Данные: строим из всех ops во всех месяцах + MANUAL_MAP
-const STATIC_CONTRACTORS = {"ип параев максим владимирович": "Лес", "ип нестеров алексей валерьевич": "Лес", "ип шашков александр владимирович": "Лес", "ооо углелеспром-нн": "Лес", "ип асатрян давит ханикович": "Лес", "ип киров сергей владимирович": "Лес", "ип афонин павел николаевич": "Лес", "ип белоглазов сергей николаевич": "Лес", "ооо волга-лес": "Лес", "ип абакумов александр кузьмич": "Лес", "ип сироткин сергей сергеевич": "Лес", "ип слепышев сергей васильевич": "Лес", "ип грачёв павел иванович": "Перевозка леса", "ооо экспохим": "Смола", "ооо стандарт-старвуд": "Плёнка", "ооо горький транзит": "Перевозчик", "ооо автолайн": "Перевозчик", "ип смирнов сергей александрович": "Перевозчик", "ип северский юрий николаевич": "Перевозчик", "ип тихонов вячеслав валерьевич": "Перевозчик", "ооо симпл пак": "Упаковка", "ооо иракол": "Упаковка", "ооо картонснаб": "Упаковка", "ооо федеральная упаковочная компания": "Упаковка", "ао ситиматик нижний новгород": "Вывоз мусора", "ип семёнов евгений викторович": "Адм.", "индивидуальный предприниматель яшин сергей сергеевич": "Адм.", "ао райффайзенбанк г москва": "Адм.", "ооо хэдхантер": "Адм.", "ано редакция св": "Адм.", "ао пф скб контур": "Адм.", "ао уфанет": "Адм.", "ооо манго телеком": "Адм.", "ооо информ-плюс": "Адм.", "ооо тк руста-брокер": "Адм.", "ооо семенов-прогресс": "Аренда", "ип будаев сергей владимирович": "Аренда", "казначейство россии фнс": "НДФЛ", "ооо новатор": "ЗП", "ооо компания метро": "Расходники", "ооо химэкспо-нн": "Расходники", "ооо запасопт": "Расходники", "ооо гринстрой": "Расходники", "ооо всеинструменты ру": "Расходники", "ооо пента юниор": "Расходники", "зао кузьминки": "Расходники", "ооо отп": "Расходники", "ооо элком": "Расходники", "ооо компания ст": "Расходники", "ооо компания финко": "Расходники", "оао литейно-механический завод": "Расходники", "ип кирсанов л г": "Расходники", "ип куприянов м в": "Расходники", "ип куприянов максим валерьевич": "Расходники", "ип масленников с а": "Расходники", "ооо агреман": "Расходники", "ооо сму-152": "Расходники", "ооо агрозапчасть": "Расходники", "ооо промлайн": "Расходники", "ооо комус": "Расходники", "ип щербаков иван иванович": "Расходники", "пао тнс энерго нн": "Свет", "ооо газпромнефть региональные продажи": "ГСМ", "ооо исток": "Прочие нераспознанные"}
+const STATIC_CONTRACTORS = Object.create(null)
 
 // Комментарии хранятся локально
 let refComments = {}
@@ -2108,7 +2089,7 @@ function saveRefComments() {
 
 function buildRefData() {
   // Собираем суммы из всех ops всех месяцев
-  const totals = {}   // contractor → {sum, cat, firstDate}
+  const totals = Object.create(null)   // contractor → {sum, cat, firstDate}
   const dbCats = {}   // contractor → cat из serverOpsCache (пользовательские)
 
   // Сначала статичный справочник
@@ -2155,7 +2136,7 @@ function renderRef() {
     const comment = esc(refComments[r.name] || '')
     const dt = r.firstDate ? r.firstDate.slice(0,10).split('-').reverse().join('.') : '—'
     return '<tr>'
-      + '<td style="color:#444;white-space:nowrap">' + dt + '</td>'
+      + '<td style="color:#444;white-space:nowrap">' + escapeHtml(dt) + '</td>'
       + '<td style="color:#ccc;max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + esc(r.name) + '">' + esc(r.name) + '</td>'
       + '<td style="text-align:right;font-family:monospace;color:#f0a500;white-space:nowrap">' + amt + '</td>'
       + '<td><select class="ref-cat-sel" data-key="' + esc(r.name) + '" onchange="onRefCatChange(this)">' + opts + '</select></td>'
@@ -2223,7 +2204,7 @@ async function loadDir() {
       const cats = [...new Set(dirData.map(c => c.cat))].sort()
       const sel = document.getElementById('dir-cat-filter')
       sel.innerHTML = '<option value="">Все категории</option>' +
-        cats.map(c => '<option value="' + c + '">' + c + '</option>').join('')
+        cats.map(c => '<option value="' + escapeHtml(c) + '">' + escapeHtml(c) + '</option>').join('')
     } else {
       dirData = buildDirFromCache()
     }
@@ -2271,7 +2252,7 @@ function renderDir() {
     const cats = [...new Set(dirData.map(c => c.cat).filter(Boolean))].sort()
     const curVal = sel.value
     sel.innerHTML = '<option value="">Все категории</option>' +
-      cats.map(c => '<option value="' + c + '"' + (c === curVal ? ' selected' : '') + '>' + c + '</option>').join('')
+      cats.map(c => '<option value="' + escapeHtml(c) + '"' + (c === curVal ? ' selected' : '') + '>' + escapeHtml(c) + '</option>').join('')
   }
 
   let rows = dirData.filter(c => {
@@ -2302,7 +2283,7 @@ function renderDir() {
     ).join('')
     const dateStr = c.first_seen ? c.first_seen.slice(0, 10) : '—'
     return '<tr>' +
-      '<td class="dir-date">' + dateStr + '</td>' +
+      '<td class="dir-date">' + escapeHtml(dateStr) + '</td>' +
       '<td class="dir-name" title="' + esc(c.name || '') + '" data-cname="' + esc(c.name || '') + '" onclick="showContractorCard(this.dataset.cname)" style="cursor:pointer" onmouseover="this.style.color=\'#f0a500\'" onmouseout="this.style.color=\'\'">' + esc((c.name || '').slice(0, 55)) + '</td>' +
       '<td>' + N(c.total) + '</td>' +
       '<td><select class="dir-cat-sel" id="dcat-' + idx + '" onchange="onDirCatChange(' + idx + ')">' + catOpts + '</select></td>' +
@@ -2551,19 +2532,19 @@ function renderSales() {
         const srcBadge = d.source === 'auto'
           ? '<span class="deal-source auto">из выписки</span>'
           : '<span class="deal-source manual">вручную</span>'
-        return `<tr class="${rowClass}" data-id="${d.id}">
-          <td class="deal-company" data-company="${(d.company||'').replace(/"/g,'&quot;')}" onclick="showContractorCard(this.dataset.company)" title="${(d.company||'').replace(/"/g,'&quot;')}" style="cursor:pointer">${d.company || '—'}</td>
-          <td class="deal-date">${d.date || '—'}</td>
-          <td class="deal-amount">${(d.payment||0).toLocaleString('ru-RU')} ₽</td>
-          <td><input class="deal-edit" type="number" value="${d.sheets||0}" min="1" step="1"
-            onchange="salesUpdateSheets(${d.id}, +this.value)" title="Листов (цена пересчитается)"></td>
-          <td><input class="deal-edit" type="number" value="${d.pricePerSheet||0}" min="1" step="1"
-            onchange="salesUpdatePrice(${d.id}, +this.value)" title="Цена за лист (листы пересчитаются)"></td>
-          <td><input class="deal-comment" type="text" value="${(d.comment||'').replace(/"/g,'&quot;')}"
+        return `<tr class="${rowClass}" data-id="${escapeHtml(d.id)}">
+          <td class="deal-company" data-company="${escapeHtml(d.company)}" onclick="showContractorCard(this.dataset.company)" title="${escapeHtml(d.company)}" style="cursor:pointer">${escapeHtml(d.company || '—')}</td>
+          <td class="deal-date">${escapeHtml(d.date || '—')}</td>
+          <td class="deal-amount">${safeNumber(d.payment).toLocaleString('ru-RU')} ₽</td>
+          <td><input class="deal-edit" type="number" value="${safeNumber(d.sheets)}" min="1" step="1"
+            data-deal-id="${escapeHtml(d.id)}" onchange="salesUpdateSheets(salesKeyId(this.dataset.dealId), +this.value)" title="Листов (цена пересчитается)"></td>
+          <td><input class="deal-edit" type="number" value="${safeNumber(d.pricePerSheet)}" min="1" step="1"
+            data-deal-id="${escapeHtml(d.id)}" onchange="salesUpdatePrice(salesKeyId(this.dataset.dealId), +this.value)" title="Цена за лист (листы пересчитаются)"></td>
+          <td><input class="deal-comment" type="text" value="${escapeHtml(d.comment)}" data-deal-id="${escapeHtml(d.id)}"
             placeholder="Комментарий..."
-            onchange="salesUpdateField(${d.id},'comment',this.value)"></td>
+            onchange="salesUpdateField(salesKeyId(this.dataset.dealId),'comment',this.value)"></td>
           <td>${srcBadge}</td>
-          <td><button class="deal-del" onclick="salesDelete(${d.id})" title="Удалить">✕</button></td>
+          <td><button class="deal-del" data-deal-id="${escapeHtml(d.id)}" onclick="salesDelete(salesKeyId(this.dataset.dealId))" title="Удалить">✕</button></td>
         </tr>`
       }).join('')
     }
@@ -2719,49 +2700,21 @@ const MONTH_LBL_SHORT = {1:'Янв',2:'Фев',3:'Мар',4:'Апр',5:'Май',
   7:'Июл',8:'Авг',9:'Сен',10:'Окт',11:'Ноя',12:'Дек'}
 
 // Группируем разные варианты названий клиента в одну "группу"
+const CLIENT_GROUP_RULES = []
 function _anClientGroup(name) {
   if (!name) return 'Прочее'
-  const n = name.toLowerCase()
-  if (n.includes('промышленник'))           return 'Промышленник (группа)'
-  if (n.includes('стимлайн'))               return 'ТД СтимЛайн'
-  if (n.includes('волгастройкомплект'))     return 'ВОЛГАСТРОЙКОМПЛЕКТАЦИЯ'
-  if (n.includes('мерани'))                 return 'МЕРАНИ'
-  if (n.includes('будаев'))                 return 'Будаев С.В.'
-  if (n.includes('промстройконтракт'))      return 'ПРОМСТРОЙКОНТРАКТ-НН'
-  if (n.includes('фанерный завод'))         return 'ФАНЕРНЫЙ ЗАВОД'
-  if (n.includes('1ок') || n === 'ооо "1ок"' || n.includes('"1ок"')) return 'ООО 1ОК'
-  if (n.includes('сбс групп'))              return 'СБС ГРУПП (Кыргызстан)'
-  if (n.includes('строй-снаб'))             return 'ГРУППА СТРОЙ-СНАБ'
-  if (n.includes('гарант'))                 return 'ГАРАНТ ПОСТАВКА'
-  if (n.includes('бизнес-альянс'))          return 'БИЗНЕС-АЛЬЯНС'
-  if (n.includes('стройми'))                return 'СтройМир-НН'
-  if (n.includes('ли-строй'))               return 'ЛИ-СТРОЙ'
-  if (n.includes('маштул'))                 return 'МАШТУЛ-НН'
-  if (n.includes('грузи'))                  return 'Клиент Грузия'
-  // Если сумма < 500 000 — относим к "прочее"
+  name = String(name)
+  const normalized = name.toLowerCase()
+  for (const rule of CLIENT_GROUP_RULES) {
+    if (rule.includes.some(part => normalized.includes(part)) || rule.equals.includes(normalized)) return rule.label
+  }
   return name.length > 35 ? name.slice(0,33)+'…' : name
 }
 
-const AN_CLIENT_COLORS = {
-  'Промышленник (группа)':'#f0a500',
-  'ТД СтимЛайн':'#F5A040',
-  'ВОЛГАСТРОЙКОМПЛЕКТАЦИЯ':'#D4A020',
-  'МЕРАНИ':'#9B70D0',
-  'Будаев С.В.':'#C04040',
-  'ПРОМСТРОЙКОНТРАКТ-НН':'#40A8C0',
-  'ФАНЕРНЫЙ ЗАВОД':'#70B860',
-  'ООО 1ОК':'#E87060',
-  'Клиент Грузия':'#5BB86B',
-  'СБС ГРУПП (Кыргызстан)':'#7090D0',
-  'ГРУППА СТРОЙ-СНАБ':'#D07030',
-  'ГАРАНТ ПОСТАВКА':'#C0A030',
-  'БИЗНЕС-АЛЬЯНС':'#A07030',
-  'СтройМир-НН':'#A09060',
-  'ЛИ-СТРОЙ':'#80A050',
-  'МАШТУЛ-НН':'#A06080',
-}
+const AN_CLIENT_COLORS = Object.create(null)
 function _anClientColor(name) {
-  return AN_CLIENT_COLORS[name] || '#5A5A5A'
+  const color = AN_CLIENT_COLORS[name]
+  return /^#[0-9a-f]{6}$/i.test(color || '') ? color : '#5A5A5A'
 }
 
 const _fmtAn = v => v >= 1e6 ? (v/1e6).toFixed(1)+'M' : v >= 1e3 ? Math.round(v/1e3)+'K' : String(Math.round(v))
@@ -2835,10 +2788,10 @@ function showClientOpsCard(groupName) {
 
 // Собирает агрегаты из serverOpsCache
 function _anAggregate() {
-  const MONTHLY = {}
-  const WEEKLY  = {}
-  const CLIENTS = {}
-  const TXS     = {}
+  const MONTHLY = Object.create(null)
+  const WEEKLY  = Object.create(null)
+  const CLIENTS = Object.create(null)
+  const TXS     = Object.create(null)
 
   if (typeof serverOpsCache === 'undefined') return {MONTHLY, WEEKLY, CLIENTS, TXS, total:0, cnt:0}
 
@@ -2926,7 +2879,7 @@ function renderAnalytics() {
 
   const clientsTotal = clientsList.reduce((s,c) => s+c.total, 0)
   if (clientsList.length) {
-    document.getElementById('an-kpi-top').innerHTML = clientsList[0].name.replace(/ \(.+/,'<br>(группа)').replace(/ /g,' ').slice(0,40)
+    document.getElementById('an-kpi-top').textContent = clientsList[0].name.replace(/ \(.+/,' (группа)').slice(0,40)
     document.getElementById('an-kpi-top-pct').textContent =
       ((clientsList[0].total / (clientsTotal || 1)) * 100).toFixed(1) +
       '% от ' + (anSelMonth ? MONTH_LBL_FULL[parseInt(anSelMonth.split('-')[1],10)].toLowerCase() : 'оборота')
@@ -3062,7 +3015,7 @@ function renderAnalytics() {
   document.getElementById('an-donutLegend').innerHTML = donutData.map(c => `
     <div class="an-dl-item">
       <span class="an-dl-sq" style="background:${c.color}"></span>
-      <span class="an-dl-name">${c.name.length > 24 ? c.name.slice(0,22)+'…' : c.name}</span>
+      <span class="an-dl-name">${escapeHtml(c.name.length > 24 ? c.name.slice(0,22)+'…' : c.name)}</span>
       <span class="an-dl-pct">${((c.val/(donutDenom||1))*100).toFixed(0)}%</span>
     </div>`).join('')
 
@@ -3072,8 +3025,8 @@ function renderAnalytics() {
   document.getElementById('an-clientBars').innerHTML = clientsList.map(c => {
     const pct = (c.total/maxClient*100).toFixed(1)
     const color = _anClientColor(c.name)
-    return `<div class="an-client-bar-row" onclick="showClientOpsCard('${c.name.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">
-      <div class="an-client-name" title="${c.name}">${c.name}</div>
+    return `<div class="an-client-bar-row" data-client-name="${escapeHtml(c.name)}" onclick="showClientOpsCard(this.dataset.clientName)">
+      <div class="an-client-name" title="${escapeHtml(c.name)}">${escapeHtml(c.name)}</div>
       <div class="an-client-bar-outer" title="${_fmtAn2(c.total)} ₽">
         <div class="an-client-bar-inner" style="width:0%;background:${color}44;border-right:2px solid ${color}" data-w="${pct}"></div>
         <span class="an-client-bar-label" style="color:${color}">${_fmtAn(c.total)}</span>
@@ -3137,8 +3090,8 @@ function renderAnalytics() {
     const clr = _anClientColor(r.c)
     const big = r.a >= 3000000
     return `<tr class="${i%2?'alt':''}">
-      <td style="color:#666;white-space:nowrap">${r.d}</td>
-      <td><span class="an-dot" style="background:${clr}"></span>${r.c}</td>
+      <td style="color:#666;white-space:nowrap">${escapeHtml(r.d)}</td>
+      <td><span class="an-dot" style="background:${clr}"></span>${escapeHtml(r.c)}</td>
       <td class="r"><span class="an-amount-cell${big?' big':''}">${_fmtAn2(r.a)} ₽</span></td>
       <td class="r" style="color:#666;font-size:10px">${_pctAn(r.a, rowsTotal)}</td>
     </tr>`
@@ -3147,7 +3100,27 @@ function renderAnalytics() {
 
 
 // ── init ──────────────────────────────────────────────────────────────────────
-function initApp(){
+let privateUiConfigPromise = null
+async function loadPrivateUiConfig() {
+  if (!privateUiConfigPromise) {
+    privateUiConfigPromise = (async () => {
+      const response = await apiFetch(API + '/api/ui-config')
+      if (!response.ok) throw new Error('Private calendar configuration unavailable')
+      const config = await response.json()
+      for (const [target, key] of [[STD,'plan'],[MAY_FACT,'may_fact'],[STATIC_CONTRACTORS,'static_contractors'],[AN_CLIENT_COLORS,'client_colors']]) {
+        for (const name of Object.keys(target)) delete target[name]
+        Object.assign(target, config[key])
+      }
+      CLIENT_GROUP_RULES.splice(0, CLIENT_GROUP_RULES.length, ...config.client_group_rules)
+    })().catch(error => { privateUiConfigPromise = null; throw error })
+  }
+  return privateUiConfigPromise
+}
+
+async function initApp(){
+  try { await loadPrivateUiConfig() }
+  catch (_) { doLogout(); showToast('Не удалось загрузить защищённые настройки календаря'); return }
+
   // Устанавливаем текущий месяц
   curMonth = getCurrentMonthName()
   uploadMonth = curMonth
@@ -3309,16 +3282,16 @@ function closeRenderTable(plan) {
 
   for (const cat of CLOSE_CATEGORIES) {
     const ob    = closeObligations[cat.key] || {}
-    const fact  = closeFactMap[cat.key] || 0
-    const open  = ob.opening_debt || 0
-    const close = ob.closing_debt || 0
+    const fact  = safeNumber(closeFactMap[cat.key])
+    const open  = safeNumber(ob.opening_debt)
+    const close = safeNumber(ob.closing_debt)
     // Бюджет: из сохранённых обязательств или из плана (сумма по неделям)
     let budget = ob.planned_budget
     if (!budget && cat.planKey && plan[cat.planKey]) {
       const wArr = plan[cat.planKey]
-      budget = Array.isArray(wArr) ? wArr.reduce((a, b) => a + b, 0) : 0
+      budget = Array.isArray(wArr) ? wArr.reduce((a, b) => a + safeNumber(b), 0) : 0
     }
-    budget = budget || 0
+    budget = safeNumber(budget)
 
     const dev = budget ? budget - fact : 0
     const devSign = dev >= 0 ? '+' : ''
@@ -3332,25 +3305,25 @@ function closeRenderTable(plan) {
     const rowBg = cat.key === 'Прочие нераспознанные' ? 'background:rgba(255,255,255,.02)' : ''
     const comment = ob.comment || ''
 
-    rows += `<tr class="close-row" data-cat="${cat.key}" data-month="${month}" style="${rowBg}">
+    rows += `<tr class="close-row" data-cat="${cat.key}" data-month="${escapeHtml(month)}" style="${rowBg}">
       <td style="padding:10px 12px;color:#ddd;font-size:12px;border-bottom:1px solid #161616">
         <span style="margin-right:6px">${cat.icon}</span>${cat.key}
       </td>
       <td style="padding:10px 12px;text-align:right;border-bottom:1px solid #161616;color:${open>0?'#d95f5f':'#888'}"
           data-field="opening_debt" data-val="${open}">
         <span class="close-cell-val" style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px"
-              onclick="closeEdit(this,'${cat.key}','opening_debt',${open},'${month}')">${closeFmt(open)}</span>
+              data-category="${escapeHtml(cat.key)}" data-month="${escapeHtml(month)}" data-current="${open}" onclick="closeEdit(this,this.dataset.category,'opening_debt',safeNumber(this.dataset.current),this.dataset.month)">${closeFmt(open)}</span>
       </td>
       <td style="padding:10px 12px;text-align:right;border-bottom:1px solid #161616;color:#aaa"
           data-field="planned_budget" data-val="${budget}">
         <span class="close-cell-val" style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px"
-              onclick="closeEdit(this,'${cat.key}','planned_budget',${budget},'${month}')">${closeFmt(budget)}</span>
+              data-category="${escapeHtml(cat.key)}" data-month="${escapeHtml(month)}" data-current="${budget}" onclick="closeEdit(this,this.dataset.category,'planned_budget',safeNumber(this.dataset.current),this.dataset.month)">${closeFmt(budget)}</span>
       </td>
       <td style="padding:10px 12px;text-align:right;border-bottom:1px solid #161616;color:#3db88a;font-weight:600">${closeFmt(fact)}</td>
       <td style="padding:10px 12px;text-align:right;border-bottom:1px solid #161616;color:${close>0?'#d95f5f':'#888'}"
           data-field="closing_debt" data-val="${close}">
         <span class="close-cell-val" style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px"
-              onclick="closeEdit(this,'${cat.key}','closing_debt',${close},'${month}')">${closeFmt(close)}</span>
+              data-category="${escapeHtml(cat.key)}" data-month="${escapeHtml(month)}" data-current="${close}" onclick="closeEdit(this,this.dataset.category,'closing_debt',safeNumber(this.dataset.current),this.dataset.month)">${closeFmt(close)}</span>
       </td>
       <td style="padding:10px 12px;text-align:right;border-bottom:1px solid #161616;color:${dev>=0?'#3db88a':'#d95f5f'}">
         ${budget ? devSign + closeFmt(dev) : '—'}
@@ -3358,7 +3331,7 @@ function closeRenderTable(plan) {
       <td style="padding:10px 12px;border-bottom:1px solid #161616;color:#666;font-size:11px;min-width:140px"
           data-field="comment">
         <span class="close-cell-val" style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px"
-              onclick="closeEdit(this,'${cat.key}','comment','${comment.replace(/'/g,"\\'")}','${month}')">${comment||'<span style=color:#333>добавить...</span>'}</span>
+              data-category="${escapeHtml(cat.key)}" data-month="${escapeHtml(month)}" data-current="${escapeHtml(comment)}" onclick="closeEdit(this,this.dataset.category,'comment',this.dataset.current,this.dataset.month)">${comment ? escapeHtml(comment) : '<span style=color:#333>добавить...</span>'}</span>
         <span style="margin-left:6px;font-size:10px">${st.icon}</span>
       </td>
     </tr>`
