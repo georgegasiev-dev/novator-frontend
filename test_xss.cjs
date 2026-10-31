@@ -26,6 +26,16 @@ for (const filename of ['index.html','eovr.html','rynok.html']) {
     assert(!source.includes("esc(op.contractor).replace(/'/g"));
     assert(source.includes('this.dataset.clientName'));
     assert(source.includes('this.dataset.current'));
+    scope.URLSearchParams=URLSearchParams;
+    let redirected=null;scope.location={search:'?next=https://untrusted.example',replace:value=>{redirected=value}};
+    vm.runInContext(helper(source,'redirectToRequestedCalendarPage'),scope);
+    assert.equal(scope.redirectToRequestedCalendarPage(),false);assert.equal(redirected,null);
+    scope.location.search='?next=eovr.html';assert.equal(scope.redirectToRequestedCalendarPage(),true);assert.equal(redirected,'/eovr.html');
+  }
+  if(filename==='eovr.html'){
+    assert(!source.includes('API_KEY'));
+    assert(!source.includes('sheets.googleapis.com'));
+    assert(source.includes('/api/eovr/sheets'));
   }
   if(filename==='rynok.html'){
     scope.URL=URL;vm.runInContext(helper(source,'safeExternalUrl'),scope);
