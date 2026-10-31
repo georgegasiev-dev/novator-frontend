@@ -426,6 +426,12 @@
 
 <script>
 
+function escapeHtml(value) {
+  return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+}
+
+
 function apiFetch(input, init = {}) {
   const target = new URL(input instanceof Request ? input.url : input, window.location.href)
   const backend = new URL('https://api.zavodzavodov.ru')
@@ -436,12 +442,14 @@ function apiFetch(input, init = {}) {
   const headers = new Headers(input instanceof Request ? input.headers : undefined)
   new Headers(init.headers).forEach((value, key) => headers.set(key, value))
   const auth = sessionStorage.getItem('nvt_auth') || ''
+  if (!auth && ['/eovr.html', '/rynok.html'].includes(location.pathname)) {
+    location.replace('/?next=' + encodeURIComponent(location.pathname.slice(1)))
+    return Promise.reject(new Error('Войдите в календарь для доступа к странице'))
+  }
   if (auth && !headers.has('Authorization')) headers.set('Authorization', auth)
   return window.fetch(input, { ...init, headers })
 }
 
-const SHEET_ID = '1iYEuupLfhvM-jS4D8NiaL2dcnoUheu1GRPy5UJc9yUg';
-const API_KEY  = 'AIzaSyAdAPQ2x7EMsBH-JBusw6ioxQZ8xdPbEP0';
 
 // Месячный план по выпуску листов (Лущилка/Сушилка/Сборка меряются в тех же листах)
 const PLAN_SHEETS = 35000;
@@ -553,8 +561,7 @@ function daysToTotals(days) {
 // ─── Загрузка ──────────────────────────────────────────────────────────────
 
 async function fetchSheet(title) {
-  const range = encodeURIComponent(`'${title}'!A1:AA110`);
-  const res = await apiFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?key=${API_KEY}`);
+  const res = await apiFetch('https://api.zavodzavodov.ru/api/eovr/sheet?title=' + encodeURIComponent(title));
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = await res.json();
   return data.values || [];
@@ -563,7 +570,7 @@ async function fetchSheet(title) {
 async function connect() {
   showLoading(true, 'Получение списка листов...');
   try {
-    const res = await apiFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}?fields=sheets.properties&key=${API_KEY}`);
+    const res = await apiFetch('https://api.zavodzavodov.ru/api/eovr/sheets');
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
 
@@ -587,7 +594,7 @@ async function connect() {
 function buildSelects() {
   // Month select
   const ms = document.getElementById('month-select');
-  ms.innerHTML = sheets.map(s => `<option value="${s.title}">${s.label}</option>`).join('');
+  ms.innerHTML = sheets.map(s => `<option value="${escapeHtml(s.title)}">${escapeHtml(s.label)}</option>`).join('');
   ms.onchange = () => loadMonth(ms.value);
 
   // Year select — уникальные годы
@@ -936,7 +943,7 @@ function showDebug() {
   const rows = lastRawData;
   const maxCols = Math.max(...rows.map(r=>r.length), 22);
   const col = i => { let s='',n=i; do{s=String.fromCharCode(65+(n%26))+s;n=Math.floor(n/26)-1;}while(n>=0); return s; };
-  let html = `<div style="margin-bottom:8px;color:#aaf;">Лист: <b>${lastSheetTitle}</b> — строк: ${rows.length}</div>`;
+  let html = `<div style="margin-bottom:8px;color:#aaf;">Лист: <b>${escapeHtml(lastSheetTitle)}</b> — строк: ${rows.length}</div>`;
   html += '<table style="border-collapse:collapse;font-size:11px;"><tr><th style="background:#222;padding:4px 6px;border:1px solid #333;">#</th>';
   for(let c=0;c<maxCols;c++) html+=`<th style="padding:4px 6px;border:1px solid #333;background:#1f2436;color:#7df;min-width:55px;">${col(c)}<br><span style="color:#888;font-weight:normal;">[${c}]</span></th>`;
   html+='</tr>';
@@ -946,7 +953,7 @@ function showDebug() {
     for(let c=0;c<maxCols;c++){
       let v=String(row[c]||''); if(v.length>14)v=v.slice(0,12)+'…';
       const num=!isNaN(parseFloat(v))&&isFinite(v);
-      html+=`<td style="padding:3px 6px;border:1px solid #2a2e3a;background:${num&&parseFloat(v)>0?'#1a2e1a':'transparent'};white-space:nowrap;">${v||'<span style="color:#444">·</span>'}</td>`;
+      html+=`<td style="padding:3px 6px;border:1px solid #2a2e3a;background:${num&&parseFloat(v)>0?'#1a2e1a':'transparent'};white-space:nowrap;">${v ? escapeHtml(v) : '<span style="color:#444">·</span>'}</td>`;
     }
     html+='</tr>';
   }
