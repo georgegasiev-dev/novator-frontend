@@ -425,6 +425,21 @@
 </div>
 
 <script>
+
+function apiFetch(input, init = {}) {
+  const target = new URL(input instanceof Request ? input.url : input, window.location.href)
+  const backend = new URL('https://api.zavodzavodov.ru')
+  const prefix = backend.pathname.replace(/\/$/, '') + '/api/'
+  if (target.origin !== backend.origin || !target.pathname.startsWith(prefix)) {
+    return window.fetch(input, init)
+  }
+  const headers = new Headers(input instanceof Request ? input.headers : undefined)
+  new Headers(init.headers).forEach((value, key) => headers.set(key, value))
+  const auth = sessionStorage.getItem('nvt_auth') || ''
+  if (auth && !headers.has('Authorization')) headers.set('Authorization', auth)
+  return window.fetch(input, { ...init, headers })
+}
+
 const SHEET_ID = '1iYEuupLfhvM-jS4D8NiaL2dcnoUheu1GRPy5UJc9yUg';
 const API_KEY  = 'AIzaSyAdAPQ2x7EMsBH-JBusw6ioxQZ8xdPbEP0';
 
@@ -539,7 +554,7 @@ function daysToTotals(days) {
 
 async function fetchSheet(title) {
   const range = encodeURIComponent(`'${title}'!A1:AA110`);
-  const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?key=${API_KEY}`);
+  const res = await apiFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?key=${API_KEY}`);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = await res.json();
   return data.values || [];
@@ -548,7 +563,7 @@ async function fetchSheet(title) {
 async function connect() {
   showLoading(true, 'Получение списка листов...');
   try {
-    const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}?fields=sheets.properties&key=${API_KEY}`);
+    const res = await apiFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}?fields=sheets.properties&key=${API_KEY}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
 
@@ -950,7 +965,7 @@ async function refreshData() {
   btn.disabled = true;
   try {
     // Также триггерим синхронизацию на бэкенде (не ждём)
-    fetch('https://zavod-production.up.railway.app/api/eovr/sync', { method: 'POST' })
+    apiFetch('https://api.zavodzavodov.ru/api/eovr/sync', { method: 'POST' })
       .catch(() => {});
     if (currentTab === 'month') {
       const sel = document.getElementById('month-select');
